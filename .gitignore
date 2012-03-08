@@ -1,0 +1,16 @@
+# Build Output #
+###################
+impulse.js
+impulse.min.js
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Hidden Folders #
+###################
+.*
+
