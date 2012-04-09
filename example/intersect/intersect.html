@@ -6,21 +6,21 @@
 		<script type="text/javascript" src="../../impulse.js" charset="utf-8"></script>
 		<script type="text/javascript" src="intersect.js" charset="utf-8"></script>
 		<script type="text/javascript">
-			var canvas;
-			var console;
+			var intersect_canvas;
+			var intersect_console;
 
 			function Start() {
-				canvas = document.getElementById("canvas");
-				console = document.getElementById("console");
+				intersect_canvas = document.getElementById("canvas");
+				intersect_console = document.getElementById("console");
 				window.onresize = OnResize;
 				OnResize();
-				intersect.init(canvas, console);
+				intersect.init(intersect_canvas, intersect_console);
 			} // start( )
 
 			function OnResize() {
-				canvas.width = window.innerWidth;
-				canvas.height = window.innerHeight;
-				console.style.top = window.innerHeight - 129 + "px";
+				intersect_canvas.width = window.innerWidth;
+				intersect_canvas.height = window.innerHeight;
+				intersect_console.style.top = window.innerHeight - 129 + "px";
 
 				if (intersect.isInit)
 					intersect.draw();

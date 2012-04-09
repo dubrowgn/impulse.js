@@ -4,136 +4,139 @@
 Impulse.Input = (function() {
 	var Input = {};
 
-	Input.Mouse = (function() {
+	// imports
+	var EventDelegate = Impulse.EventDelegate;
 
-		// -------------------------------------
+	Input.MouseAdapter = (function() {
+		var MouseAdapter = function(scene) {
+			this._buttons = { left:false, middle:false, right:false };
+			this._camera = scene.getCamera();
 
-		var downEvents = new Array();
-		var moveEvents = new Array();
-		var upEvents = new Array();
+			// initialize mouse delegates
+			this.click = new EventDelegate();
+			this.doubleClick = new EventDelegate();
+			this.down = new EventDelegate();
+			this.move = new EventDelegate();
+			this.up = new EventDelegate();
+			this.wheel = new EventDelegate();
 
-		// -------------------------------------
+			// initialize custom event handlers for this instance
+			var maThis = this;
 
-		function FixMouseEvent(_e) {
-			// calculate _e.offsetX/Y if they don't exist (Firefox)
-			if (typeof _e.offsetX == "undefined") {
-				_e.offsetX = _e.pageX - _e.currentTarget.offsetLeft;
-				_e.offsetY = _e.pageY - _e.currentTarget.offsetTop;
-			} // if
-			return _e;
-		} // FixMouseEvent( )
+			this._onClick = function(e) {
+				e = maThis._normalizeMouseEvent(e);
+				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
+				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
+				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
+				maThis.click.dispatch(scene, e);
+			};
 
-		// -------------------------------------
+			MouseAdapter.prototype._onDoubleClick = function(e) {
+				e = maThis._normalizeMouseEvent(e);
+				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
+				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
+				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
+				maThis.doubleClick.dispatch(scene, e);
+			};
 
-		// calls all the event handlers in _register, passing event args _e
-		function OnMouseEvent(_register, _e) {
-			_e = FixMouseEvent(_e);
-			var lng = _register.length;
-			for (var i = 0; i < lng; i++) {
-				if (_register[i] != null)
-					_register[i](_e);
-			} // for( i )
-			CleanRegister(_register);
-		} // OnMouseEvent( )
+			MouseAdapter.prototype._onDown = function(e) {
+				e.preventDefault();
+				e = maThis._normalizeMouseEvent(e);
+				maThis._buttons.left = maThis._buttons.left || e.buttons.left;
+				maThis._buttons.middle = maThis._buttons.middle || e.buttons.middle;
+				maThis._buttons.right = maThis._buttons.right || e.buttons.right;
+				maThis.down.dispatch(scene, e);
+			};
 
-		// -------------------------------------
+			MouseAdapter.prototype._onMove = function(e) {
+				e = maThis._normalizeMouseEvent(e);
+				maThis._position = e.position.clone();
+				maThis.move.dispatch(scene, e);
+			};
 
-		function OnMouseDown(_e) {
-			OnMouseEvent(downEvents, _e);
-		} // OnMouseDown( )
+			MouseAdapter.prototype._onUp = function(e) {
+				e = maThis._normalizeMouseEvent(e);
+				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
+				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
+				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
+				maThis.up.dispatch(scene, e);
+			};
 
-		// -------------------------------------
+			MouseAdapter.prototype._onWheel = function(e) {
+				maThis.wheel.dispatch(scene, maThis._normalizeMouseEvent(e));
+			};
 
-		function OnMouseMove(_e) {
-			OnMouseEvent(moveEvents, _e);
-		} // OnMouseMove( )
+			// attach mouse delegates to the canvas object
+			var canvas = this._camera.getCanvas();
+			canvas.addEventListener('click', this._onClick, false);
+			canvas.addEventListener('contextmenu', this._onContextMenu, false);
+			canvas.addEventListener('dblclick', this._onDoubleClick, false);
+			canvas.addEventListener('mousedown', this._onDown, false);
+			canvas.addEventListener('mousemove', this._onMove, false);
+			canvas.addEventListener('mouseup', this._onUp, false);
+			canvas.addEventListener('mousewheel', this._onWheel, false);
+			canvas.addEventListener('DOMMouseScroll', this._onWheel, false); // firefox >= 3.5
+		}; // class MouseAdapter
 
-		// -------------------------------------
+		MouseAdapter.prototype._camera = undefined;
+		MouseAdapter.prototype._buttons = undefined;
+		MouseAdapter.prototype.click = undefined;
+		MouseAdapter.prototype.doubleClick = undefined;
+		MouseAdapter.prototype.down = undefined;
+		MouseAdapter.prototype.move = undefined;
+		MouseAdapter.prototype._onClick = undefined;
+		MouseAdapter.prototype._onDoubleClick = undefined;
+		MouseAdapter.prototype._onDown = undefined;
+		MouseAdapter.prototype._onMove = undefined;
+		MouseAdapter.prototype._onUp = undefined;
+		MouseAdapter.prototype._onWheel = undefined;
+		MouseAdapter.prototype._position = undefined;
+		MouseAdapter.prototype.up = undefined;
+		MouseAdapter.prototype.wheel = undefined;
 
-		function OnMouseUp(_e) {
-			OnMouseEvent(upEvents, _e);
-		} // OnMouseUp( )
 
-		// -------------------------------------
+		MouseAdapter.prototype.destroy = function() {
+			// detach mouse delegates from the canvas object
+			var canvas = this._camera.getCanvas();
+			canvas.removeEventListener('click', this._onClick, false);
+			canvas.removeEventListener('contextmenu', this._onContextMenu, false);
+			canvas.removeEventListener('dblclick', this._onDoubleClick, false);
+			canvas.removeEventListener('mousedown', this._onDown, false);
+			canvas.removeEventListener('mousemove', this._onMove, false);
+			canvas.removeEventListener('mouseup', this._onUp, false);
+			canvas.removeEventListener('mousewheel', this._onWheel, false);
+			canvas.removeEventListener('DOMMouseScroll', this._onWheel, false); // firefox >= 3.5
+		}; // destroy( )
 
-		function AddDownHandler(_handler) {
-			downEvents.push(_handler);
-		} // AddDownHandler( )
+		MouseAdapter.prototype.getButtons = function() {
+			return this._buttons;
+		}; // getButtons( )
 
-		// -------------------------------------
+		MouseAdapter.prototype.getPosition = function() {
+			return this._position;
+		}; // getPosition( )
 
-		function AddMoveHandler(_handler) {
-			moveEvents.push(_handler);
-		} // AddMoveHandler( )
+		MouseAdapter.prototype._normalizeMouseEvent = function(e) {
+			// build and return normalized event object
+			return {
+				buttons: {
+					left: e.which === 1,
+					middle: e.which === 2,
+					right: e.which === 3
+				},
+				position: this._camera.canvasToWorld(
+					e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
+					e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
+				),
+				wheel: e.wheelDelta !== undefined ? e.wheelDelta / 40 : e.detail !== undefined ? -e.detail : 0
+			};
+		}; // _normalizeMouseEvent( )
 
-		// -------------------------------------
+		MouseAdapter.prototype._onContextMenu = function (e) {
+			e.preventDefault();
+		}; // _onContextMenu( )
 
-		function AddUpHandler(_handler) {
-			upEvents.push(_handler);
-		} // AddUpHandler( )
-
-		// -------------------------------------
-
-		// Removes null handlers from a register. Call after handling an event to avoid
-		// problems with removing items from an array being iterated over
-		function CleanRegister(_register) {
-			var lng = _register.length;
-			for (var i = 0; i < lng; i++) {
-				if (_register[i] == null) {
-					_register.splice(i, 1);
-					lng--;
-					i--;
-					return;
-				} // if
-			} // for( i )
-		} // CleanRegister( )
-
-		// -------------------------------------
-
-		// removes the handler only once
-		function RemoveHandler(_register, _handler) {
-			var lng = _register.length;
-			for (var i = 0; i < lng; i++) {
-				if (_register[i] == _handler) {
-					//_register.splice(i, 1);
-					_register[i] = null;
-					return;
-				} // if
-			} // for( i )
-		} // RemoveHandler( )
-
-		// -------------------------------------
-
-		function RemoveDownHandler(_handler) {
-			RemoveHandler(downEvents, _handler);
-		} // RemoveDownHandler( )
-
-		// -------------------------------------
-
-		function RemoveMoveHandler(_handler) {
-			RemoveHandler(moveEvents, _handler);
-		} // RemoveMoveHandler( )
-
-		// -------------------------------------
-
-		function RemoveUpHandler(_handler) {
-			RemoveHandler(upEvents, _handler);
-		} // RemoveDownHandler( )
-
-		// -------------------------------------
-
-		// Public Members
-		return {
-			OnMouseDown:OnMouseDown,
-			OnMouseMove:OnMouseMove,
-			OnMouseUp:OnMouseUp,
-			AddDownHandler:AddDownHandler,
-			AddMoveHandler:AddMoveHandler,
-			AddUpHandler:AddUpHandler,
-			RemoveDownHandler:RemoveDownHandler,
-			RemoveMoveHandler:RemoveMoveHandler,
-			RemoveUpHandler:RemoveUpHandler
-		}; // public members
+		return MouseAdapter;
 	})();
 
 	return Input;

@@ -8,6 +8,7 @@ Impulse.Scene2D = (function() {
 	var Entity = Impulse.Entity;
 	var Intersect = Impulse.Shape2D.Intersect;
 	var Matrix = Impulse.Shape2D.Matrix;
+	var MouseAdapter = Impulse.Input.MouseAdapter;
 	var Polygon = Impulse.Shape2D.Polygon;
 	var Vector = Impulse.Shape2D.Vector;
 
@@ -269,16 +270,18 @@ Impulse.Scene2D = (function() {
 
 	Scene2D.Scene = (function() {
 		var Scene = function(camera, sceneGraph) {
-			this.camera = camera;
+			this._camera = camera;
 			this._canvas = camera.getCanvas();
 			this._context = this._canvas.getContext("2d");
-			this.sceneGraph = sceneGraph;
+			this._mouse = new MouseAdapter(this);
+			this._sceneGraph = sceneGraph;
 		}; // class Scene
 
-		Scene.prototype.camera = undefined;
+		Scene.prototype._camera = undefined;
 		Scene.prototype._canvas = undefined;
 		Scene.prototype._context = undefined;
-		Scene.prototype.sceneGraph = undefined;
+		Scene.prototype._mouse = undefined;
+		Scene.prototype._sceneGraph = undefined;
 
 		Scene.prototype.clear = function(rgb) {
 			if (rgb === undefined) {
@@ -289,10 +292,26 @@ Impulse.Scene2D = (function() {
 			} // if/else
 		}; // clear( )
 
+		Scene.prototype.destroy = function() {
+			this._mouse.destroy();
+		}; // destroy( )
+
+		Scene.prototype.getCamera = function() {
+			return this._camera;
+		}; // getCamera( )
+
+		Scene.prototype.getMouse = function() {
+			return this._mouse;
+		}; // getMouse( )
+
+		Scene.prototype.getSceneGraph = function() {
+			return this._sceneGraph;
+		}; // getSceneGraph( )
+
 		Scene.prototype.render = function() {
-			var ents = this.sceneGraph.queryIntersectWith(this.camera.getViewport(true));
+			var ents = this._sceneGraph.queryIntersectWith(this._camera.getViewport(true));
 			var timeMs = new Date() | 0;
-			var camMatrix = this.camera.getRenderMatrix();
+			var camMatrix = this._camera.getRenderMatrix();
 
 			var r = undefined;
 			var m = undefined;

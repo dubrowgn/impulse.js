@@ -18,6 +18,7 @@ var intersect = (function() {
 	// private variables
 	var _camera;
 	var _canvas;
+	var _console;
 	var _ctx;
 	var _intersecting;
 	var _moving;
@@ -33,7 +34,7 @@ var intersect = (function() {
 	}; // clearCanvas( )
 
 	intersect.clearConsole = function() {
-		console.innerHTML = "";
+		_console.innerHTML = "";
 	}; // clearConsole( )
 
 	intersect.printDebug = function() {
@@ -106,6 +107,7 @@ var intersect = (function() {
 	intersect.init = function(canvas, console) {
 		_canvas = canvas;
 		_camera = new Camera(canvas, 0, 0, 768, 480, 0);
+		_console = console;
 		_ctx = canvas.getContext("2d");
 		_mouseOffset = new Vector(0, 0);
 
@@ -217,8 +219,8 @@ var intersect = (function() {
 	}; // mouseUp( )
 
 	intersect.printLn = function(str) {
-		console.innerHTML += str + "<br />";
-	} // printLn( )
+		_console.innerHTML += str + "<br />";
+	}; // printLn( )
 
 	return intersect;
 })();

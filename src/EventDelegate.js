@@ -7,10 +7,10 @@ Impulse.EventDelegate = (function() {
 	 * @sign {EventDelegate} EventDelegate()
 	 * @returns {EventDelegate} Returns a new EventDelegate.
 	 */
-	function EventDelegate() {
+	var EventDelegate = function() {
 		this._handlers = new Array();
 		this._removeQueue = new Array();
-	} // class EventDelegate
+	}; // class EventDelegate
 
 	EventDelegate.prototype._handlers = undefined;
 	EventDelegate.prototype._isLocked = false;
@@ -25,10 +25,11 @@ Impulse.EventDelegate = (function() {
 	 */
 	EventDelegate.prototype.add = function(handler) {
 		this._handlers.push(handler);
-	} // add( )
+	}; // add( )
 
 	/**
-	 * Dispatches this EventDelegate, calling all the event handlers that have been previously added to this EventDelegate.
+	 * Dispatches this EventDelegate, calling all the event handlers that have been previously added to this
+	 * EventDelegate.
 	 *
 	 * @public
 	 * @sign {undefined} dispatch()
@@ -47,7 +48,7 @@ Impulse.EventDelegate = (function() {
 				this._handlers.splice(index, 1);
 		} // for( i )
 		this._removeQueue = new Array();
-	} // dispatch( )
+	}; // dispatch( )
 
 	/**
 	 * Removes an event handler from this EventDelegate.
@@ -57,9 +58,12 @@ Impulse.EventDelegate = (function() {
 	EventDelegate.prototype.remove = function(handler) {
 		if (this._isLocked)
 			this._removeQueue.push(handler);
-		else
-			this._handlers.splice(this._handlers.indexOf(handler), 1);
-	} // remove( )
+		else {
+			var index = this._handlers.indexOf(handler);
+			if (index >= 0)
+				this._handlers.splice(index, 1);
+		} // else
+	}; // remove( )
 
 	return EventDelegate;
 });
