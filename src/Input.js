@@ -5,7 +5,7 @@ Impulse.Input = (function() {
 	var Input = {};
 
 	// imports
-	var EventDelegate = Impulse.EventDelegate;
+	var EventDelegate = Impulse.Util.EventDelegate;
 
 	Input.MouseAdapter = (function() {
 		var MouseAdapter = function(camera) {

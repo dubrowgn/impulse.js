@@ -1,7 +1,7 @@
 Impulse.Entity = (function() {
 
 	// imports
-	var EventDelegate = Impulse.EventDelegate;
+	var EventDelegate = Impulse.Util.EventDelegate;
 	var Matrix = Impulse.Shape2D.Matrix;
 	var Vector = Impulse.Shape2D.Vector;
 
