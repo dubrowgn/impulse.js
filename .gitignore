@@ -1,5 +1,5 @@
 # Build Output #
-###################
+################
 impulse.js
 impulse.min.js
 
@@ -10,7 +10,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-# Hidden Folders #
-###################
+# Hidden Files and Folders #
+############################
 .*
 
