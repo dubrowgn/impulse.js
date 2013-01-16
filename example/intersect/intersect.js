@@ -45,8 +45,12 @@ var intersect = (function() {
 		} // for( i )
 	}; // printDebug( )
 
+	var drawing = false;
 	intersect.draw = function() {
-		this.clearCanvas();
+		if (drawing)
+			return;
+			
+		drawing = true;
 		this.clearCanvas();
 
 		for (var i = 0; i < _shapes.length; i++) {
@@ -57,6 +61,7 @@ var intersect = (function() {
 				case 3: intersect.drawVector(_shapes[i], _intersecting[i]); break;
 			} // switch
 		} // for( i )
+		drawing = false;
 	}; // draw( )
 
 	intersect.drawCircle = function(cir, intersecting) {
@@ -118,7 +123,9 @@ var intersect = (function() {
 		s = (new Circle(0, 0, 64)).setCenter(-80, 80);
 		_shapes.push(s);
 		// circle 2
-		s = s.clone().setCenter(240, 80);
+		s = s.clone();
+		s.r = 48;
+		s.setCenter(240, 80);
 		_shapes.push(s);
 
 		// polygon 1
@@ -143,7 +150,10 @@ var intersect = (function() {
 		s = new Rect(-64, 64, 128, 128).setCenter(-240, 80);
 		_shapes.push(s);
 		// rect 2
-		s = s.clone().setCenter(80, 80);
+		s = s.clone();
+		s.h = 84;
+		s.w = 84;
+		s.setCenter(80, 80);
 		_shapes.push(s);
 
 		// vector 1

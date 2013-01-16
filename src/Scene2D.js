@@ -154,7 +154,7 @@ Impulse.Scene2D = (function() {
 
 		// void setRotation(Number)
 		Camera.prototype.setRotation = function(rads) {
-			this._cameraMatrix(rads - this._cameraMatrix.getRotation());
+			this._cameraMatrix.rotate(rads - this._cameraMatrix.getRotation());
 		}; // setRotation( )
 
 		Camera.prototype.setZoom = function(zoom) {
@@ -244,7 +244,7 @@ Impulse.Scene2D = (function() {
 				ent = this._entities[i];
 				// test if ent.flags contain all of _flags
 				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags))) &&
-					Intersect.shapeVsShape(shape, ent.GetBoundingCircle()))
+					Intersect.shapeVsShape(shape, ent.getCollidable()))
 					entArray.push(ent);
 			} // for( i )
 
@@ -273,13 +273,14 @@ Impulse.Scene2D = (function() {
 			this._camera = camera;
 			this._canvas = camera.getCanvas();
 			this._context = this._canvas.getContext("2d");
-			this._mouse = new MouseAdapter(this);
+			this._mouse = new MouseAdapter(camera);
 			this._sceneGraph = sceneGraph;
 		}; // class Scene
 
 		Scene.prototype._camera = undefined;
 		Scene.prototype._canvas = undefined;
 		Scene.prototype._context = undefined;
+		Scene.prototype._lastRender = 0;
 		Scene.prototype._mouse = undefined;
 		Scene.prototype._sceneGraph = undefined;
 
@@ -309,8 +310,9 @@ Impulse.Scene2D = (function() {
 		}; // getSceneGraph( )
 
 		Scene.prototype.render = function() {
+			this._lastRender = this._lastRender || (new Date() | 0);
 			var ents = this._sceneGraph.queryIntersectWith(this._camera.getViewport(true));
-			var timeMs = new Date() | 0;
+			var timeMs = (new Date() | 0) - this._lastRender;
 			var camMatrix = this._camera.getRenderMatrix();
 
 			var r = undefined;
@@ -319,8 +321,8 @@ Impulse.Scene2D = (function() {
 			this._context.save();
 			var lng = ents.length;
 			for(var i = 0; i < lng; i++) {
-				r = ents[i].GetFrameRect(timeMs);
-				m = ents[i].GetRenderMatrix();
+				r = ents[i].getFrameRect(timeMs);
+				m = ents[i].getRenderMatrix();
 
 				if (r != undefined && m != undefined) {
 					// combine camera transformations
@@ -334,6 +336,8 @@ Impulse.Scene2D = (function() {
 				} // if
 			} // for( i )
 			this._context.restore();
+
+			this._lastRender += timeMs;
 		}; // render( )
 
 		return Scene;

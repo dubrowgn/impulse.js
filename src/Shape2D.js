@@ -2,7 +2,12 @@
  * @namespace
  */
 Impulse.Shape2D = (function() {
-	// enumeration of shape types and their associated ID's
+	/**
+	 * enumeration of shape types and their associated ID's
+	 *
+	 * @enum {number}
+	 * @private
+	 */
 	var _shapeID = {
 		Circle:0,
 		Polygon:1,
@@ -14,52 +19,48 @@ Impulse.Shape2D = (function() {
 
 	Shape2D.Shape = (function() {
 		/**
-		 * @abstract
+		 * @interface
 		 */
-		var Shape = function() {}; // class Shape
+		var Shape = function() { }; // class Shape
 
 		// Shape applyTransform();
-		Shape.prototype.applyTransform = function() {
-			throw "Not implemented!";
-		}; // applyTransform
+		Shape.prototype.applyTransform = function() { }; // applyTransform
 
 		// Shape clone();
-		Shape.prototype.clone = function() {
-			throw "Not implemented!";
-		}; // clone( )
+		Shape.prototype.clone = function() { }; // clone( )
 
 		// Boolean equals();
-		Shape.prototype.equals = function() {
-			throw "Not implemented!";
-		}; // equals( )
+		Shape.prototype.equals = function() { }; // equals( )
 
 		// Vector getCenter();
-		Shape.prototype.getCenter = function() {
-			throw "Not implemented!";
-		}; // getCenter( )
+		Shape.prototype.getCenter = function() { }; // getCenter( )
 
 		// Number getShapeID();
-		Shape.prototype.getShapeID = function() {
-			throw "Not implemented!";
-		}; // getShapeID( )
+		Shape.prototype.getShapeID = function() { }; // getShapeID( )
 
 		// Shape setCenter();
-		Shape.prototype.setCenter = function() {
-			throw "Not implemented!";
-		}; // setCenter( )
+		Shape.prototype.setCenter = function() { }; // setCenter( )
 
 		// String toString();
-		Shape.prototype.toString = function() {
-			throw "Not implemented!";
-		}; // toString( )
+		Shape.prototype.toString = function() { }; // toString( )
 
 		return Shape;
 	})();
 
 	Shape2D.Circle = (function() {
-		// Circle Circle(Circle);
-		// Circle Circle(Number, Number, Number);
-		// Circle Circle(Vector, Number);
+		/**
+		 * A simple circle class
+		 *
+		 * Circle Circle(Circle);
+		 * Circle Circle(Number, Number, Number);
+		 * Circle Circle(Vector, Number);
+		 *
+		 * @public
+		 * @constructor
+		 * @param x {Circle|number|Vector}
+		 * @param y {number=}
+		 * @param r {number=}
+		 */
 		var Circle = function(x, y, r) {
 			if (x instanceof Circle) {
 				this.x = x.x;
@@ -130,12 +131,12 @@ Impulse.Shape2D = (function() {
 			} // if/else
 
 			return this;
-		} // setCenter( )
+		}; // setCenter( )
 
 		// string toString();
 		Circle.prototype.toString = function() {
 			return "Circle(" + this.x + ", " + this.y + ", " + this.r + ")";
-		} // toString( )
+		}; // toString( )
 
 		return Circle;
 	})();
@@ -391,9 +392,9 @@ Impulse.Shape2D = (function() {
 
 	Shape2D.Matrix = (function() {
 		/**
-		 * Matrix
+		 * @class Matrix
 		 *
-		 * @class This is a 2D Matrix class. It is 3x3 to allow for affine transformations in 2D space.
+		 * This is a 2D Matrix class. It is 3x3 to allow for affine transformations in 2D space.
 		 * The third row is always assumed to be [0, 0, 1].
 		 *
 		 * Matrix uses the following form, as per the whatwg.org specifications for canvas.transform():
@@ -401,10 +402,12 @@ Impulse.Shape2D = (function() {
 		 * [b, d, f]
 		 * [0, 0, 1]
 		 *
+		 * public {Matrix} new Matrix();
+		 * public {Matrix} new Matrix(Matrix);
+		 * public {Matrix} new Matrix(Number, Number, Number, Number, Number, Number);
+		 *
 		 * @public
-		 * @sig public {Matrix} new Matrix();
-		 * @sig public {Matrix} new Matrix(Matrix);
-		 * @sig public {Matrix} new Matrix(Number, Number, Number, Number, Number, Number);
+		 * @constructor
 		 * @param {Matrix|Number=1} a
 		 * @param {Number=0} b
 		 * @param {Number=0} c
@@ -494,7 +497,7 @@ Impulse.Shape2D = (function() {
 		/**
 		 * getDeterminant( )
 		 *
-		 * Calculates the getDeterminant of this matrix
+		 * Calculates the determinant of this matrix
 		 *
 		 * @public
 		 * @sig public {Number} getDeterminant();
@@ -856,7 +859,7 @@ Impulse.Shape2D = (function() {
 				return false;
 
 			for (var i = 0; i < this._vertices.length; i++) {
-				if (!this._vertices[i].equals(polygon._vertices[i]));
+				if (!this._vertices[i].equals(polygon._vertices[i]))
 					return false;
 			} // for( i )
 
@@ -1012,6 +1015,11 @@ Impulse.Shape2D = (function() {
 			return new Shape2D.Vector(this.x + this.w/2, this.y - this.h/2);
 		}; // getCenter( )
 
+		// Number getShapeID();
+		Rect.prototype.getShapeID = function() {
+			return _shapeID.Rect;
+		}; // getShapeID( )
+
 		// Rect setCenter(Vector);
 		Rect.prototype.setCenter = function(x, y) {
 			if (x instanceof Shape2D.Vector) {
@@ -1024,11 +1032,6 @@ Impulse.Shape2D = (function() {
 
 			return this;
 		} // setCenter( )
-
-		// Number getShapeID();
-		Rect.prototype.getShapeID = function() {
-			return _shapeID.Rect;
-		}; // getShapeID( )s
 
 		// String toString();
 		Rect.prototype.toString = function() {
@@ -1047,10 +1050,12 @@ Impulse.Shape2D = (function() {
 		 * Vector uses the following form:
 		 * <x, y>
 		 *
+		 * public {Vector} Vector();
+		 * public {Vector} Vector(Vector);
+		 * public {Vector} Vector(Number, Number);
+		 *
 		 * @public
-		 * @sig public {Vector} Vector();
-		 * @sig public {Vector} Vector(Vector);
-		 * @sig public {Vector} Vector(Number, Number);
+		 * @constructor
 		 * @param {Vector|Number=0} x
 		 * @param {Number=0} y
 		 */
@@ -1075,8 +1080,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Adds the passed vector to this vector
 		 *
+		 * public {Vector} add(Vector);
+		 *
 		 * @public
-		 * @sig public {Vector} add(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Vector} this after adding
 		 */
@@ -1092,8 +1098,9 @@ Impulse.Shape2D = (function() {
 		 * Calculates the angle between the passed vector and this vector, using <0,0> as the point of reference.
 		 * Angles returned have the range (−π, π].
 		 *
+		 * public {Number} angleBetween(Vector);
+		 *
 		 * @public
-		 * @sig public {Number} angleBetween(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Number} the angle between the two vectors in radians
 		 */
@@ -1106,8 +1113,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Calculates the angle to the passed vector from this vector, using this vector as the point of reference.
 		 *
+		 * public {Number} angleTo(Vector);
+		 *
 		 * @public
-		 * @sig public {Number} angleTo(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Number} the angle to the passed vector in radians
 		 */
@@ -1121,8 +1129,9 @@ Impulse.Shape2D = (function() {
 		 * Applies the given matrix transformation onto this Vector.
 		 * Inherited from Shape2D.Shape.
 		 *
+		 * Vector applyTransform();
+		 *
 		 * @public
-		 * @sig Vector applyTransform();
 		 * @returns {Vector} this vector after applying the given transformation
 		 */
 		Vector.prototype.applyTransform = function(matrix) {
@@ -1137,8 +1146,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Creates and exact, numeric copy of this vector
 		 *
+		 * public {Vector} clone();
+		 *
 		 * @public
-		 * @sig public {Vector} clone();
 		 * @returns {Vector} the new vector
 		 */
 		Vector.prototype.clone = function() {
@@ -1150,8 +1160,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Calculates the distance from this vector to the passed vector.
 		 *
+		 * public {Number} distance(Vector);
+		 *
 		 * @public
-		 * @sig public {Number} distance(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Number} the distance between the two vectors
 		 */
@@ -1165,8 +1176,9 @@ Impulse.Shape2D = (function() {
 		 * Calculates the squared distance from this vector to the passed vector.
 		 * This function avoids calculating the square root, thus being slightly faster than .distance( ).
 		 *
+		 * public {Number} distanceSq(Vector);
+		 *
 		 * @public
-		 * @sig public {Number} distanceSq(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Number} the squared distance between the two vectors
 		 * @see Vector.distance( )
@@ -1180,8 +1192,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Divides this vector by the passed vector.
 		 *
+		 * public {Vector} divide(Vector);
+		 *
 		 * @public
-		 * @sig public {Vector} divide(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Vector} this vector after dividing
 		 */
@@ -1196,8 +1209,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Calculates the dot product of this and the passed vectors
 		 *
+		 * public {Number} dotProduct(Vector);
+		 *
 		 * @public
-		 * @sig public {Number} dotProduct(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Number} the resultant dot product
 		 */
@@ -1210,8 +1224,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Determines if this vector is numerically equivalent to the passed vector.
 		 *
+		 * public {Boolean} equals(Vector);
+		 *
 		 * @public
-		 * @sig public {Boolean} equals(Vector);
 		 * @param {Vector} vecRH
 		 * @returns {Boolean} true if the vectors are equivalent
 		 */
@@ -1226,8 +1241,9 @@ Impulse.Shape2D = (function() {
 		 * Gets the center of this Shape as a 2D Vector.
 		 * Inherited from Shape2D.Shape.
 		 *
+		 * {Vector} getCenter();
+		 *
 		 * @public
-		 * @sig {Vector} getCenter();
 		 * @returns {Vector} the center of this Shape as a 2D Vector
 		 */
 		Vector.prototype.getCenter = function() {
@@ -1239,8 +1255,9 @@ Impulse.Shape2D = (function() {
 		 *
 		 * Calculates a new right-handed normal vector for the line created by this and the passed vectors.
 		 *
+		 * public {Vector} getNormal([Vector]);
+		 *
 		 * @public
-		 * @sig public {Vector} getNormal([Vector]);
 		 * @param {Vector=<0,0>} [vecRH]
 		 * @returns {Vector} the new normal vector
 		 */

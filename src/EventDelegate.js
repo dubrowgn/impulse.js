@@ -1,10 +1,10 @@
 Impulse.EventDelegate = (function() {
 	/**
 	 * Creates a new EventDelegate object.
-	 * @class A delegate class for easily managing custom event handling.
 	 *
 	 * @public
-	 * @sign {EventDelegate} EventDelegate()
+	 * @constructor
+	 * @class A delegate class for easily managing custom event handling.
 	 * @returns {EventDelegate} Returns a new EventDelegate.
 	 */
 	var EventDelegate = function() {
@@ -17,11 +17,10 @@ Impulse.EventDelegate = (function() {
 	EventDelegate.prototype._removeQueue = undefined;
 
 	/**
-	 * Adds an event handler to this EventDelegate.
+	 * Adds an event handler to this EventDelegate
 	 *
 	 * @public
-	 * @sign {undefined} add()
-	 * @param {Function} handler
+	 * @param {function([Object])} handler
 	 */
 	EventDelegate.prototype.add = function(handler) {
 		this._handlers.push(handler);
@@ -32,7 +31,6 @@ Impulse.EventDelegate = (function() {
 	 * EventDelegate.
 	 *
 	 * @public
-	 * @sign {undefined} dispatch()
 	 */
 	EventDelegate.prototype.dispatch = function() {
 		this._isLocked = true;
@@ -52,8 +50,9 @@ Impulse.EventDelegate = (function() {
 
 	/**
 	 * Removes an event handler from this EventDelegate.
-	 * @sign {undefined} remove()
-	 * @param handler
+	 *
+	 * @public
+	 * @param {function([object])} handler
 	 */
 	EventDelegate.prototype.remove = function(handler) {
 		if (this._isLocked)

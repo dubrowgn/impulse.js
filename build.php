@@ -25,7 +25,7 @@ file_put_contents("impulse.js", $impulse);
 // FIXME make sure "use strict" is compatible with minifier
 print("Minifying 'impulse.js'\n");
 include("lib/jsmin-1.1.1.php");
-$impulse = JSMin::minify($impulse);
+$impulse = includeFile("LICENSE") . JSMin::minify($impulse);
 print("Writing 'impulse.min.js'\n");
 file_put_contents("impulse.min.js", $impulse);
 

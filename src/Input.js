@@ -8,9 +8,9 @@ Impulse.Input = (function() {
 	var EventDelegate = Impulse.EventDelegate;
 
 	Input.MouseAdapter = (function() {
-		var MouseAdapter = function(scene) {
+		var MouseAdapter = function(camera) {
 			this._buttons = { left:false, middle:false, right:false };
-			this._camera = scene.getCamera();
+			this._camera = camera;
 
 			// initialize mouse delegates
 			this.click = new EventDelegate();
@@ -28,7 +28,7 @@ Impulse.Input = (function() {
 				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
 				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
-				maThis.click.dispatch(scene, e);
+				maThis.click.dispatch(e);
 			};
 
 			MouseAdapter.prototype._onDoubleClick = function(e) {
@@ -36,7 +36,7 @@ Impulse.Input = (function() {
 				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
 				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
-				maThis.doubleClick.dispatch(scene, e);
+				maThis.doubleClick.dispatch(e);
 			};
 
 			MouseAdapter.prototype._onDown = function(e) {
@@ -45,13 +45,13 @@ Impulse.Input = (function() {
 				maThis._buttons.left = maThis._buttons.left || e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle || e.buttons.middle;
 				maThis._buttons.right = maThis._buttons.right || e.buttons.right;
-				maThis.down.dispatch(scene, e);
+				maThis.down.dispatch(e);
 			};
 
 			MouseAdapter.prototype._onMove = function(e) {
 				e = maThis._normalizeMouseEvent(e);
 				maThis._position = e.position.clone();
-				maThis.move.dispatch(scene, e);
+				maThis.move.dispatch(e);
 			};
 
 			MouseAdapter.prototype._onUp = function(e) {
@@ -59,11 +59,11 @@ Impulse.Input = (function() {
 				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
 				maThis._buttons.right = maThis._buttons.right && !e.buttons.right;
-				maThis.up.dispatch(scene, e);
+				maThis.up.dispatch(e);
 			};
 
 			MouseAdapter.prototype._onWheel = function(e) {
-				maThis.wheel.dispatch(scene, maThis._normalizeMouseEvent(e));
+				maThis.wheel.dispatch(maThis._normalizeMouseEvent(e));
 			};
 
 			// attach mouse delegates to the canvas object

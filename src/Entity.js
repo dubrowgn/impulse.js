@@ -1,179 +1,192 @@
 Impulse.Entity = (function() {
+
 	// imports
-	var Circle = Impulse.Shape2D.Circle;
+	var EventDelegate = Impulse.EventDelegate;
 	var Matrix = Impulse.Shape2D.Matrix;
 	var Vector = Impulse.Shape2D.Vector;
 
-	var Entity = function(_model, _position, _radius) {
-		this.radius = _radius;
+	var Entity = function(model, position, collidable) {
+		this._collidable = collidable;
 
-		this.SetModel(_model);
-		this.m_matrix = new Matrix();
-		this.m_matrix.preTranslate(_position);
+		this.setModel(model);
+		this._matrix = new Matrix(1, 0, 0, 1, position.x, position.y);
+		this.moved = new EventDelegate();
+        this.rotated = new EventDelegate();
 	}; // class Entity
 
-	// -----------------------------------------------------------------------------
-	//	class members
-	// -----------------------------------------------------------------------------
-
 	Entity.prototype.flags = 0;
-	Entity.prototype.m_animation;
-	Entity.prototype.m_animationPaused;
-	Entity.prototype.m_animationStart;
-	Entity.prototype.m_animationTime;
-	Entity.prototype.m_model;
-	Entity.prototype.m_matrix;
-	Entity.prototype.m_scale = 1;
-	Entity.prototype.radius;
+	Entity.prototype._animation = undefined;
+	Entity.prototype._animationPaused = undefined;
+	Entity.prototype._animationTime = undefined;
+	Entity.prototype._collidable = undefined;
+	Entity.prototype._model = undefined;
+	Entity.prototype.moved = undefined;
+	Entity.prototype._matrix = undefined;
+    Entity.prototype.rotated = undefined;
+	Entity.prototype._scale = 1; // FIXME???
 
-	// -----------------------------------------------------------------------------
-	//	class functions
-	// -----------------------------------------------------------------------------
+    // void face(Entity);
+    // void face(Vector);
+	Entity.prototype.face = function(vec) {
+        if (vec instanceof Entity)
+            vec = vec.getPosition();
 
-	// void FacePosition(Vector2D);
-	Entity.prototype.FacePosition = function(_pnt) {
-		this.SetRotation(this.GetPosition().angleTo(_pnt));
-	}; // FacePosition( )
+        this._matrix.preRotate(this.getPosition().angleTo(_pnt) - this._matrix.getRotation());
+	}; // face( )
 
-	// --------------------------------------
+    // Shape getCollidable();
+    Entity.prototype.getCollidable = function() {
+        // FIXME ??? this assumes the collidable should be transformed
+        return this._collidable.clone().applyTransform(this._matrix);
+    }; // getCollidable( )
 
-	// Circle GetBoundingCircle(number);
-	Entity.prototype.GetBoundingCircle = function() {
-		return new Circle(this.m_matrix.e, this.m_matrix.f, this.radius);
-	}; // GetBoundingCircle( )
-
-	// --------------------------------------
-
-	// Rect GetFrameRect(number);
-	Entity.prototype.GetFrameRect = function(_timeMs) {
-		if (this.m_animation == undefined)
+	// Rect getFrameRect(Number);
+	Entity.prototype.getFrameRect = function(timeDeltaMs) {
+        // make sure we have an animation assigned
+		if (this._animation === undefined)
 			return undefined;
 
-		if (this.m_animationPaused == true)
-			return this.m_animation.getFrameRect(this.m_animationTime);
-		return this.m_animation.getFrameRect(_timeMs - this.m_animationStart);
-	}; // GetFrameRect( )
+        // only advance animation time if the animation isn't paused
+        if (!this._animationPaused)
+            this._animationTime += timeDeltaMs;
 
-	// --------------------------------------
+        // finally, calculate the new frame rectangle
+        return this._animation.getFrameRect(this._animationTime);
+	}; // getFrameRect( )
 
 	// Image GetModelImage();
 	Entity.prototype.getModelImage = function() {
-		return this.model.image;
+		return this._model.image;
 	}; // GetRenderMatrix( )
 
-	// --------------------------------------
+	// Vector GetPosition();
+	Entity.prototype.getPosition = function() {
+		return new Vector(this._matrix.e, this._matrix.f);
+	}; // getPosition( )
 
-	// Vector2D GetPosition();
-	Entity.prototype.GetPosition = function() {
-		return new Vector(this.m_matrix.e, this.m_matrix.f);
-	}; // GetPosition( )
+	// Matrix getRenderMatrix();
+	Entity.prototype.getRenderMatrix = function() {
+        // make sure we have an animation assigned
+		if (this._animation == undefined)
+			return undefined;
 
-	// --------------------------------------
+        // return combined animation matrix and entity matrix
+		return this._animation.matrix.clone().combine(this._matrix);
+	}; // getRenderMatrix( )
 
-	// Matrix2D GetRenderMatrix();
-	Entity.prototype.GetRenderMatrix = function() {
-		if (this.m_animation == undefined)
-			return undefined
-		return this.m_animation.matrix.clone().combine(this.m_matrix);
-	}; // GetRenderMatrix( )
+	// Number getRotation();
+	Entity.prototype.getRotation = function() {
+		return this._matrix.getRotation();
+	}; // getRotation( )
 
-	// --------------------------------------
-
-	// bool IsPaused();
-	Entity.prototype.IsAnimationPaused = function() {
-		return this.m_animationPaused;
-	}; // IsPaused( )
-
-	// --------------------------------------
+	// bool isAnimationPaused();
+	Entity.prototype.isAnimationPaused = function() {
+		return this._animationPaused;
+	}; // isAnimationPaused( )
 
 	// void MoveForward(number);
 	Entity.prototype.MoveForward = function(_distance) {
-		this.m_matrix.e += (this.m_matrix.d / this.m_scale) * _distance;
-		this.m_matrix.f += (this.m_matrix.b / this.m_scale) * _distance;
+		this._matrix.e += (this._matrix.d / this._scale) * _distance;
+		this._matrix.f += (this._matrix.b / this._scale) * _distance;
 	}; // MoveForward( )
 
-	// --------------------------------------
+    Entity.prototype._onMove = function(oldPosition, newPosition) {
+        var e = {
+            dx: newPosition.x - oldPosition.x,
+            dy: newPosition.y - oldPosition.y
+        };
+        this.moved.dispatch(this, e);
+    }; // _onMove( )
 
-	// void PauseAnimation();
-	Entity.prototype.PauseAnimation = function() {
-		this.m_animationTime = (new Date() | 0) - this.m_animationStart;
-		this.m_animationPaused = true;
-	}; // PauseAnimation( )
+    Entity.prototype._onRotate = function(oldRotation, newRotation) {
+        var e = {
+            rotationDelta: newRotation - oldRotation
+        };
+        this.rotated.dispatch(this, e);
+    }; // _onRotate( )
 
-	// --------------------------------------
+	// void pauseAnimation();
+	Entity.prototype.pauseAnimation = function() {
+		this._animationPaused = true;
+	}; // pauseAnimation( )
 
-	// void ResumeAnimation();
-	Entity.prototype.ResumeAnimation = function() {
-		this.m_animationStart = (new Date() | 0) - this.m_animationTime;
-		this.m_animationPaused = false;
-	}; // ResumeAnimation( )
+	// void resumeAnimation();
+	Entity.prototype.resumeAnimation = function() {
+		this._animationPaused = false;
+	}; // resumeAnimation( )
 
-	// --------------------------------------
+	// void rotate(number);
+	Entity.prototype.rotate = function(_rads) {
+		this._matrix.preRotate(_rads);
+	}; // rotate( )
 
-	// void Rotate(number);
-	Entity.prototype.Rotate = function(_rads) {
-		this.m_matrix.preRotate(_rads);
-	}; // Rotate( )
+	// void setAnimation(AnimationType);
+	Entity.prototype.setAnimation = function(_animType) {
+		this._animation = this._model.animations[_animType];
+		this._animationTime = 0;
+	}; // setAnimation( )
 
-	// --------------------------------------
-
-	// void SetAnimation(AnimationType);
-	Entity.prototype.SetAnimation = function(_animType) {
-		this.m_animation = this.model.animations[_animType];
-		this.m_animationStart = new Date() | 0;
-	}; // SetAnimation( )
-
-	// --------------------------------------
-
-	// void SetModel(Model);
-	Entity.prototype.SetModel = function(_model) {
-		this.model = _model;
+	// void setModel(Model);
+	Entity.prototype.setModel = function(_model) {
+		this._model = _model;
+        this._animation = undefined;
 	}; // setModel( )
 
-	// --------------------------------------
+    // void setPosition(Entity)
+    // void setPosition(Vector)
+    // void setPosition(Number, Number)
+    Entity.prototype.setPosition = function(x, y) {
+        if (x instanceof Entity)
+            x = x.getPosition();
 
-	// void SetPosition(Vector2D);
-	Entity.prototype.SetPosition = function(_pnt) {
-		this.m_matrix.e = _pnt.x;
-		this.m_matrix.f = _pnt.y;
-	}; // SetPosition( );
+        if (x instanceof Vector) {
+            this._matrix.e = x.x;
+            this._matrix.f = x.y;
+        } else {
+            this._matrix.e = x;
+            this._matrix.f = y;
+        } // if / else
+	}; // setPosition( )
 
-	// --------------------------------------
-
-	// void SetPositionXY(number, number);
-	Entity.prototype.SetPositionXY = function(_x, _y) {
-		this.m_matrix.e = _x;
-		this.m_matrix.f = _y;
-	}; // SetPositionXY( );
-
-	// --------------------------------------
-
-	// void SetRotation(number);
-	Entity.prototype.SetRotation = function(_rads) {
-		var cos = Math.cos(_rads);
-		var sin = Math.sin(_rads);
-
-		this.m_matrix.a = cos * this.m_scale;
-		this.m_matrix.b = sin * this.m_scale;
-		this.m_matrix.c = -sin * this.m_scale;
-		this.m_matrix.d = cos * this.m_scale;
-	}; // SetRotation( )
-
-	// --------------------------------------
+	// void setRotation(number);
+	Entity.prototype.setRotation = function(rads) {
+        this._matrix.preRotate(rads - this._matrix.getRotation());
+	}; // setRotation( )
 
 	// void SetScale(number);
 	Entity.prototype.SetScale = function(_scale) {
-		this.m_matrix.preScale(_scale / this.m_scale);
-		this.m_scale = _scale;
+		this._matrix.preScale(_scale / this._scale);
+		this._scale = _scale;
 	}; // SetScale( )
-
-	// --------------------------------------
 
 	// void StrafeRight(number);
 	Entity.prototype.StrafeRight = function(_distance) {
-		this.m_matrix.e -= (this.m_matrix.b / this.m_scale) * _distance;
-		this.m_matrix.f += (this.m_matrix.d / this.m_scale) * _distance;
+		this._matrix.e -= (this._matrix.b / this._scale) * _distance;
+		this._matrix.f += (this._matrix.d / this._scale) * _distance;
 	}; // StrafeRight( )
+
+	Entity.prototype.translate = function(dx, dy) {
+		if (dx instanceof Vector) {
+			this._matrix.e += dx.x;
+			this._matrix.f += dx.y;
+		} else {
+			this._matrix.e += dx;
+			this._matrix.f += dy;
+		} // if / else
+	}; // translate( )
+
+	Entity.prototype.translateLocal = function(dx, dy) {
+		var b = this._matrix.b / this._scale;
+		var d = this._matrix.d / this._scale;
+
+		if (dx instanceof Vector) {
+			this._matrix.e += (d * dx.y) - (b * dx.x);
+			this._matrix.f += (b * dx.y) + (d * dx.x);
+		} else {
+			this._matrix.e += (d * dy) - (b * dx);
+			this._matrix.f += (b * dy) + (d * dx);
+		} // if / else
+	}; // translateLocal( )
 
 	return Entity;
 });
