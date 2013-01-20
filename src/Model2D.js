@@ -58,12 +58,12 @@ Impulse.Model2D = (function() {
 	Model2D.Model = (function() {
 		// Model Model(HTMLImage);
 		var Model = function(_img) {
-			this.animations = new Array;
+			this.animations = [];
 			this.image = _img;
 		} // class Model
 
-		Model.prototype.animations;
-		Model.prototype.image;
+		Model.prototype.animations = undefined;
+		Model.prototype.image = undefined;
 
 		return Model;
 	})();

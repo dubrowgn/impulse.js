@@ -256,5 +256,23 @@ Impulse.Networking = (function() {
 		return BinarySerializer;
 	})();
 
+	Networking.Sanitizer = (function() {
+		var Sanitizer = {};
+
+		// use to sanitize user content before attaching to the HTML DOM to prevent XSS attacks
+		Sanitizer.sanitizeForDom = function(str) {
+			str = str.replace(/&/g, "&amp;");
+			str = str.replace(/</g, "&lt;");
+			str = str.replace(/>/g, "&gt;");
+			str = str.replace(/"/g, "&quot;");
+			str = str.replace(/'/g, "&#x27;");
+			str = str.replace(/\//g, "&#x2F;");
+
+			return str;
+		};
+
+		return Sanitizer;
+	})();
+
 	return Networking;
 });
