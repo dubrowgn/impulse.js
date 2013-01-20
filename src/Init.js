@@ -1,4 +1,5 @@
 // Init Impulse in the correct order
+Impulse.Networking = Impulse.Networking();
 Impulse.Util = Impulse.Util();
 Impulse.Input = Impulse.Input(); // depends Util
 Impulse.Shape2D = Impulse.Shape2D();
