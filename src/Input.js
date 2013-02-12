@@ -8,8 +8,11 @@ Impulse.Input = (function() {
 	var EventDelegate = Impulse.Util.EventDelegate;
 
 	Input.MouseAdapter = (function() {
+		var MouseButtons = Input.MouseButtons;
+		var MouseState = Input.MouseState;
+
 		var MouseAdapter = function(camera) {
-			this._buttons = { left:false, middle:false, right:false };
+			this._buttons = new MouseButtons();
 			this._camera = camera;
 
 			// initialize mouse delegates
@@ -118,18 +121,18 @@ Impulse.Input = (function() {
 
 		MouseAdapter.prototype._normalizeMouseEvent = function(e) {
 			// build and return normalized event object
-			return {
-				buttons: {
-					left: e.which === 1,
-					middle: e.which === 2,
-					right: e.which === 3
-				},
-				position: this._camera.canvasToWorld(
+			return new MouseState(
+				this._camera.canvasToWorld(
 					e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
 					e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
 				),
-				wheel: e.wheelDelta !== undefined ? e.wheelDelta / 40 : e.detail !== undefined ? -e.detail : 0
-			};
+				new MouseButtons(
+					e.which === 1,
+					e.which === 2,
+					e.which === 3
+				),
+				e.wheelDelta !== undefined ? e.wheelDelta / 40 : e.detail !== undefined ? -e.detail : 0
+			);
 		}; // _normalizeMouseEvent( )
 
 		MouseAdapter.prototype._onContextMenu = function (e) {
@@ -137,7 +140,43 @@ Impulse.Input = (function() {
 		}; // _onContextMenu( )
 
 		return MouseAdapter;
-	})();
+	});
+
+	Input.MouseButtons = (function() {
+		var MouseButtons = function(left, middle, right) {
+			this.left = left === undefined ? false : left;
+			this.middle = middle === undefined ? false : middle;
+			this.right = right === undefined ? false : right;
+		}; // class
+
+		MouseButtons.prototype.left = false;
+		MouseButtons.prototype.middle = false;
+		MouseButtons.prototype.right = false;
+
+		return MouseButtons;
+	});
+
+	Input.MouseState = (function() {
+		var MouseButtons = Input.MouseButtons;
+		var Vector = Impulse.Shape2D.Vector;
+
+		var MouseState = function(position, buttons, wheel) {
+			this.button = buttons === undefined ? new MouseButtons() : buttons;
+			this.position = position === undefined ? new Vector() : position;
+			this.wheel = wheel === undefined ? 0 : wheel;
+		}; // class
+
+		MouseState.prototype.buttons = undefined;
+		MouseState.prototype.position = undefined;
+		MouseState.prototype.wheel = 0;
+
+		return MouseState;
+	});
+
+	// init in correct order
+	Input.MouseButtons = Input.MouseButtons();
+	Input.MouseState = Input.MouseState(); // requires MouseButtons
+	Input.MouseAdapter = Input.MouseAdapter(); // requires MouseButtons, MouseState
 
 	return Input;
 });

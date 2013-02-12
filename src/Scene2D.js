@@ -12,50 +12,6 @@ Impulse.Scene2D = (function() {
 	var Polygon = Impulse.Shape2D.Polygon;
 	var Vector = Impulse.Shape2D.Vector;
 
-	Scene2D.SceneGraph = (function() {
-		/**
-		 * @abstract
-		 */
-		var SceneGraph = function() {}; // class Shape
-
-		// void addEntity(Entity);
-		SceneGraph.prototype.addEntity = function(ent) {
-			throw "Not implemented!";
-		}; // addEntity( )
-
-		// void clear();
-		SceneGraph.prototype.clear = function() {
-			throw "Not implemented!";
-		}; // clear( )
-
-		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
-		SceneGraph.prototype.queryCenterIn = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryCenterIn( )
-
-		// Array<Entity> queryContainedIn(Shape, [Number], [Boolean]);
-		SceneGraph.prototype.queryContainedIn = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryContainedIn( )
-
-		// Array<Entity> queryIntersectWith(Shape, [Number], [Boolean]);
-		SceneGraph.prototype.queryIntersectWith = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryIntersectWith( )
-
-		// Array<Entity> queryOutsideOf(Shape, [Number], [Boolean]);
-		SceneGraph.prototype.queryOutsideOf = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryOutsideOf( )
-
-		// void removeEntity(Entity);
-		SceneGraph.prototype.removeEntity = function(ent) {
-			throw "Not implemented!";
-		}; // removeEntity( )
-
-		return SceneGraph;
-	})();
-
 	Scene2D.Camera = (function() {
 		var Camera = function(canvas, x, y, w, h, viewportMargin) {
 			this._cameraMatrix = new Matrix(1, 0, 0, 1, -x, -y);
@@ -199,14 +155,58 @@ Impulse.Scene2D = (function() {
 		}; // zoom( )
 
 		return Camera;
-	})();
+	});
+
+	Scene2D.ISceneGraph = (function() {
+		/**
+		 * @abstract
+		 */
+		var SceneGraph = function() {}; // class Shape
+
+		// void addEntity(Entity);
+		SceneGraph.prototype.addEntity = function(ent) {
+			throw "Not implemented!";
+		}; // addEntity( )
+
+		// void clear();
+		SceneGraph.prototype.clear = function() {
+			throw "Not implemented!";
+		}; // clear( )
+
+		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
+		SceneGraph.prototype.queryCenterIn = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // queryCenterIn( )
+
+		// Array<Entity> queryContainedIn(Shape, [Number], [Boolean]);
+		SceneGraph.prototype.queryContainedIn = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // queryContainedIn( )
+
+		// Array<Entity> queryIntersectWith(Shape, [Number], [Boolean]);
+		SceneGraph.prototype.queryIntersectWith = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // queryIntersectWith( )
+
+		// Array<Entity> queryOutsideOf(Shape, [Number], [Boolean]);
+		SceneGraph.prototype.queryOutsideOf = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // queryOutsideOf( )
+
+		// void removeEntity(Entity);
+		SceneGraph.prototype.removeEntity = function(ent) {
+			throw "Not implemented!";
+		}; // removeEntity( )
+
+		return SceneGraph;
+	});
 
 	Scene2D.LinearSG = (function() {
 		var LinearSG = function() {
 			this._entities = [];
 		}; // class LinearSG
 
-		LinearSG.prototype = new Scene2D.SceneGraph();
+		LinearSG.prototype = new Scene2D.ISceneGraph();
 		LinearSG.prototype._entities = undefined;
 
 		// void addEntity(Entity);
@@ -264,7 +264,7 @@ Impulse.Scene2D = (function() {
 		}; // removeEntity( )
 
 		return LinearSG;
-	})();
+	});
 
 	Scene2D.QuadTreeSG = {}; // stub
 
@@ -284,7 +284,7 @@ Impulse.Scene2D = (function() {
 		Scene.prototype._mouse = undefined;
 		Scene.prototype._sceneGraph = undefined;
 
-		Scene.prototype.clear = function(rgb) {
+		Scene.prototype.blank = function(rgb) {
 			if (rgb === undefined) {
 				this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
 			} else {
@@ -341,7 +341,13 @@ Impulse.Scene2D = (function() {
 		}; // render( )
 
 		return Scene;
-	})();
+	});
+
+	// init in correct order
+	Scene2D.Camera = Scene2D.Camera();
+	Scene2D.ISceneGraph = Scene2D.ISceneGraph();
+	Scene2D.LinearSG = Scene2D.LinearSG(); // requires ISceneGraph
+	Scene2D.Scene = Scene2D.Scene(); // requires Camera, ISceneGraph
 
 	return Scene2D;
 });

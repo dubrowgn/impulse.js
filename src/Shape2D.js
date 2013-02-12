@@ -17,36 +17,6 @@ Impulse.Shape2D = (function() {
 
 	var Shape2D = {};
 
-	Shape2D.Shape = (function() {
-		/**
-		 * @interface
-		 */
-		var Shape = function() { }; // class Shape
-
-		// Shape applyTransform();
-		Shape.prototype.applyTransform = function() { }; // applyTransform
-
-		// Shape clone();
-		Shape.prototype.clone = function() { }; // clone( )
-
-		// Boolean equals();
-		Shape.prototype.equals = function() { }; // equals( )
-
-		// Vector getCenter();
-		Shape.prototype.getCenter = function() { }; // getCenter( )
-
-		// Number getShapeID();
-		Shape.prototype.getShapeID = function() { }; // getShapeID( )
-
-		// Shape setCenter();
-		Shape.prototype.setCenter = function() { }; // setCenter( )
-
-		// String toString();
-		Shape.prototype.toString = function() { }; // toString( )
-
-		return Shape;
-	})();
-
 	Shape2D.Circle = (function() {
 		/**
 		 * A simple circle class
@@ -77,7 +47,7 @@ Impulse.Shape2D = (function() {
 			} // else
 		}; // class Circle
 
-		Circle.prototype = new Shape2D.Shape();
+		Circle.prototype = new Shape2D.IShape();
 		Circle.prototype.x = 0;
 		Circle.prototype.y = 0;
 		Circle.prototype.r = 1;
@@ -139,22 +109,186 @@ Impulse.Shape2D = (function() {
 		}; // toString( )
 
 		return Circle;
-	})();
+	});
 
 	Shape2D.Intersect = (function() {
+		var Intersection = Shape2D.Intersection;
+		var Vector = Shape2D.Vector;
+
 		// map shapeID to intersection functions
 		var _shapeMap = [];
+		var _shapeMapSat = [];
 
 		var Intersect = {};
 
 		// Boolean circleVsCircle(Circle, Circle);
 		Intersect.circleVsCircle = function(cir1, cir2) {
+			// return true if the squared distance between circle centers is less than the combined radii squared
+			// this prevents us from doing a square root operation to find actual distance between centers
+			// 0 distance between circles is assumed to be non-intersecting
 			return (cir2.x - cir1.x) * (cir2.x - cir1.x) +
-				(cir2.y - cir1.y) * (cir2.y - cir1.y) <=
+				(cir2.y - cir1.y) * (cir2.y - cir1.y) <
 				(cir1.r + cir2.r) * (cir1.r + cir2.r);
 		}; // circleVsCircle( )
 
-		// Boolean cirlceVsPolygon(Circle, Polygon);
+		// Intersection circleVsCircleSat(Circle, Circle);
+		Intersect.circleVsCircleSat = function(cir1, cir2) {
+			// calculate the vector between the circles' centers
+			var dc = new Vector(cir1.x - cir2.x, cir1.y - cir2.y);
+
+			// calculate magnitude of dc and combined radii
+			var l = dc.magnitude();
+			var rs = cir1.r + cir2.r;
+
+			// if magnitude of dc >= rs, circles do not intersect
+			if (l >= rs)
+				return undefined;
+
+			// circles intersect
+			// scale dc to magnitude of overlap
+			dc.scale((rs - l) / l);
+
+			// return dc as projection, and negative, normalized dc as surface normal
+			return dc;
+		}; // circleVsCircleSat( )
+
+		/**
+		 * Takes a circle and a collection of vertices and performs circle-polygon projections intersection on them.
+		 * Results are always from the perspective of cir, that is, the minimum translation vector needed to move cir
+		 * out of collision with v1.
+		 *
+		 * @param {Circle} cir The Circle to perform intersection tests against
+		 * @param {Array<Vector} v1 An array of vertices representing the polygon
+		 * @return {undefined|Vector} Returns the Minium Translation Vector if the circle and polygon intersect,
+		 * undefined otherwise
+		 * @private
+		 */
+		Intersect._circleVsEdges = function(cir, v1) {
+			var perp, min1, min2, max1, max2, dp, i, j, k, overlap, mtv, diff1, diff2;
+			var smallest = Number.MAX_VALUE;
+
+			// test edges stored in v1 against cir
+			for (i = 0, j = v1.length - 1; i < v1.length; j = i++) {
+				// calculate normalized vector perpendicular to each line segment of the polygon
+				perp = new Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x).normalize();
+
+				// assume the polygon has at least one vertex (see Shape2D.Polygon constructor)
+				// project the polygon onto the new axis (the perpendicular vector)
+				min1 = max1 = v1[0].dotProduct(perp);
+				for (k = 1; k < v1.length; k++) {
+					dp = v1[k].dotProduct(perp);
+					min1 = Math.min(min1, dp);
+					max1 = Math.max(max1, dp);
+				} // for( k )
+
+				// project the circle onto the new axis (the perpendicular vector)
+				min2 = cir.getCenter().dotProduct(perp) - cir.r;
+				max2 = min2 + 2 * cir.r;
+
+				// break early if projections don't overlap, no intersection exists
+				if (max1 < min2 || min1 > max2)
+					return undefined;
+
+				// otherwise, calculate overlap
+				overlap = Math.min(max1, max2) - Math.max(min1, min2);
+
+				// test for containment
+				if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
+					diff1 = Math.abs(min1 - min2);
+					diff2 = Math.abs(max1 - max2);
+
+					// append smallest difference to overlap, negating the axis if needed
+					if (diff1 < diff2) {
+						overlap += diff1;
+						if (min1 < min2)
+							perp.negate();
+					} // if
+					else {
+						overlap += diff2;
+						if (max1 < max2)
+							perp.negate();
+					} // else
+				} // if
+				else if (min1 > min2) {
+					// shortest intersection is in the negative direction relative to perp
+					perp.negate();
+				} // else if
+
+				// does this axis contain the smallest overlap so far?
+				if (overlap < smallest) {
+					smallest = overlap;
+					mtv = perp;
+				} // if
+			} // for( i )
+
+			// find closest vertex to cir
+			var v = undefined;
+			var distSqr = Number.MAX_VALUE;
+			for (i = 0; i < v1.length; i++) {
+				var d = (cir.x - v1[i].x) * (cir.x - v1[i].x) + (cir.y - v1[i].y) * (cir.y - v1[i].y);
+				if (d < distSqr) {
+					v = v1[i];
+					distSqr = d;
+				} // if
+			} // for( i )
+
+			// test closest vertex against cir
+			//perp = new Vector(-v.y + cir.y, v.x - cir.x).normalize();
+			perp = new Vector(cir.x - v.x, cir.y - v.y).normalize();
+
+			// project the polygon onto the new axis (the perpendicular vector)
+			min1 = max1 = v1[0].dotProduct(perp);
+			for (k = 1; k < v1.length; k++) {
+				dp = v1[k].dotProduct(perp);
+				min1 = Math.min(min1, dp);
+				max1 = Math.max(max1, dp);
+			} // for( k )
+
+			// project the circle onto the new axis (the perpendicular vector)
+			min2 = cir.getCenter().dotProduct(perp) - cir.r;
+			max2 = min2 + 2 * cir.r;
+
+			// break early if projections don't overlap, no intersection exists
+			if (max1 < min2 || min1 > max2)
+				return undefined;
+
+			// otherwise, calculate overlap
+			overlap = Math.min(max1, max2) - Math.max(min1, min2);
+
+			// test for containment
+			if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
+				diff1 = Math.abs(min1 - min2);
+				diff2 = Math.abs(max1 - max2);
+
+				// append smallest difference to overlap, negating the axis if needed
+				if (diff1 < diff2) {
+					overlap += diff1;
+					if (min1 < min2)
+						perp.negate();
+				} // if
+				else {
+					overlap += diff2;
+					if (max1 < max2)
+						perp.negate();
+				} // else
+			} // if
+			else if (min1 > min2) {
+				// shortest intersection is in the negative direction relative to perp
+				perp.negate();
+			} // else if
+
+			// does this axis contain the smallest overlap so far?
+			if (overlap < smallest) {
+				smallest = overlap;
+				mtv = perp;
+			} // if
+
+			// return the minimum translation vector (MTV)
+			// this is the perpendicular axis with the smallest overlap, scaled to said overlap
+			return mtv.scaleToMagnitude(smallest);
+		}; // _circleVsEdges( )
+
+		// Boolean circleVsPolygon(Circle, Polygon);
 		Intersect.circleVsPolygon = function(cir, poly) {
 			// quick rejection
 			if (!Intersect.circleVsCircle(cir, poly.getBoundingCircle()))
@@ -221,6 +355,16 @@ Impulse.Shape2D = (function() {
 			return true;
 		};
 
+		// Boolean circleVsPolygonSat(Circle, Polygon);
+		Intersect.circleVsPolygonSat = function(cir, poly) {
+			// coarse test
+			if (!Intersect.circleVsCircle(cir, poly.getBoundingCircle()))
+				return undefined;
+
+			// fine test
+			return Intersect._circleVsEdges(cir, poly.getVertices());
+		}; // circleVsPolygonSat( )
+
 		// Boolean circleVsRect(Circle, Rect);
 		Intersect.circleVsRect = function(cir, rect) {
 			// reorient rect with respect to cir, thus cir is the new origin
@@ -252,24 +396,190 @@ Impulse.Shape2D = (function() {
 				return true;
 		}; // circleVsRect( )
 
+		// Boolean circleVsRectSat(Circle, Rect);
+		Intersect.circleVsRectSat = function(cir, rect) {
+			// coarse test
+			if (!Intersect.circleVsRect(cir, rect))
+				return undefined;
+
+			// fine test
+			return Intersect._circleVsEdges(cir, rect.getVertices());
+		}; // circleVsRectSat( )
+
 		// bool circleVsVector(Circle, Point);
 		Intersect.circleVsVector = function(cir, vect) {
 			return (vect.x - cir.x) * (vect.x - cir.x) + (vect.y - cir.y) * (vect.y - cir.y) <= cir.r * cir.r;
 		}; // circleVsVector( )
 
+		// bool circleVsVectorSat(Circle, Point);
+		Intersect.circleVsVectorSat = function(cir, vect) {
+			// calculate the vector between the circles' centers
+			var dc = new Vector(cir.x - vect.x, cir.y - vect.y);
+
+			// calculate magnitude of dc
+			var l = dc.magnitude();
+
+			// if magnitude of dc >= rs, circle does not intersect with vect
+			if (l >= cir.r)
+				return undefined;
+
+			// scale dc to magnitude of overlap
+			dc.scale((cir.r - l) / l);
+
+			// return dc as mtv
+			return dc;
+		}; // circleVsVectorSat( )
+
+		/**
+		 * Takes two collections of vertices and performs polygon-polygon projections intersection on them. Results are
+		 * always from the perspective of v1, that is, the minimum translation vector needed to move v1 out of collision
+		 * with v2.
+		 * @param {Array<Vector>} v1 An array of vertices representing the first polygon
+		 * @param {Array<Vector>} v2 An array of vertices representing the second polygon
+		 * @return {undefined|Vector} Returns the Minium Translation Vector if the polygons intersect, undefined
+		 * otherwise
+		 * @private
+		 */
+		Intersect._edgesVsEdges = function(v1, v2) {
+			var perp, min1, min2, max1, max2, dp, i, j, k, overlap, mtv, diff1, diff2;
+			var smallest = Number.MAX_VALUE;
+
+			// test edges stored in v1 against edges stored in v2
+			for (i = 0, j = v1.length - 1; i < v1.length; j = i++) {
+				// calculate normalized vector perpendicular to each line segment of the polygon
+				perp = new Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x).normalize();
+
+				// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
+				// project the first polygon onto the new axis (the perpendicular vector)
+				min1 = max1 = v1[0].dotProduct(perp);
+				for (k = 1; k < v1.length; k++) {
+					dp = v1[k].dotProduct(perp);
+					min1 = Math.min(min1, dp);
+					max1 = Math.max(max1, dp);
+				} // for( k )
+
+				// project the second polygon onto the new axis (the perpendicular vector)
+				min2 = max2 = v2[0].dotProduct(perp);
+				for (k = 1; k < v2.length; k++) {
+					dp = v2[k].dotProduct(perp);
+					min2 = Math.min(min2, dp);
+					max2 = Math.max(max2, dp);
+				} // for( k )
+
+				// break early if projections don't overlap, no intersection exists
+				if (max1 < min2 || min1 > max2)
+					return undefined;
+
+				// otherwise, calculate overlap
+				overlap = Math.min(max1, max2) - Math.max(min1, min2);
+
+				// test for containment
+				if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
+					diff1 = Math.abs(min1 - min2);
+					diff2 = Math.abs(max1 - max2);
+
+					// append smallest difference to overlap, negating the axis if needed
+					if (diff1 < diff2) {
+						overlap += diff1;
+						if (min1 > min2)
+							perp.negate();
+					} // if
+					else {
+						overlap += diff2;
+						if (max1 > max2)
+							perp.negate();
+					} // else
+				} // if
+				else if (min1 < min2) {
+					// shortest intersection is in the negative direction relative to perp
+					perp.negate();
+				} // else if
+
+				// does this axis contain the smallest overlap so far?
+				if (overlap < smallest) {
+					smallest = overlap;
+					mtv = perp;
+				} // if
+			} // for( i )
+
+			// test edges stored in v2 against edges stored in v1
+			for (i = 0, j = v2.length - 1; i < v2.length; j = i++) {
+				// calculate normalized vector perpendicular to each line segment of the polygon
+				perp = new Vector(-v2[i].y + v2[j].y, v2[i].x - v2[j].x).normalize();
+
+				// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
+				// project the first polygon onto the new axis (the perpendicular vector)
+				min1 = max1 = v1[0].dotProduct(perp);
+				for (k = 1; k < v1.length; k++) {
+					dp = v1[k].dotProduct(perp);
+					min1 = Math.min(min1, dp);
+					max1 = Math.max(max1, dp);
+				} // for( k )
+
+				// project the second polygon onto the new axis (the perpendicular vector)
+				min2 = max2 = v2[0].dotProduct(perp);
+				for (k = 1; k < v2.length; k++) {
+					dp = v2[k].dotProduct(perp);
+					min2 = Math.min(min2, dp);
+					max2 = Math.max(max2, dp);
+				} // for( k )
+
+				// break early if projections don't overlap, no intersection exists
+				if (max1 < min2 || min1 > max2)
+					return undefined;
+
+				// otherwise, calculate overlap
+				overlap = Math.min(max1, max2) - Math.max(min1, min2);
+
+				// test for containment
+				if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
+					diff1 = Math.abs(min1 - min2);
+					diff2 = Math.abs(max1 - max2);
+
+					// append smallest difference to overlap, negating the axis if needed
+					if (diff1 < diff2) {
+						overlap += diff1;
+						if (min1 > min2)
+							perp.negate();
+					} // if
+					else {
+						overlap += diff2;
+						if (max1 > max2)
+							perp.negate();
+					} // else
+				} // if
+				else if (min1 < min2) {
+					// shortest intersection is in the negative direction relative to perp
+					perp.negate();
+				} // else if
+
+				// does this axis contain the smallest overlap so far?
+				if (overlap < smallest) {
+					smallest = overlap;
+					mtv = perp;
+				} // if
+			} // for( i )
+
+			// return the minimum translation vector (MTV)
+			// this is the perpendicular axis with the smallest overlap, scaled to said overlap
+			return mtv.scaleToMagnitude(smallest);
+		}; // _edgesVsEdges( )
+
 		// Boolean polygonVsPolygon(Polygon, Polygon);
 		Intersect.polygonVsPolygon = function(poly1, poly2) {
-			// quick rejection
+			return Intersect.polygonVsPolygonSat(poly1, poly2) !== undefined;
+		};
+
+		// Vector polygonVsPolygonSat(Polygon, Polygon);
+		// see http://content.gpwiki.org/index.php/Polygon_Collision
+		// see also http://www.codezealot.org/archives/55
+		Intersect.polygonVsPolygonSat = function(poly1, poly2) {
+			// coarse test
 			if (!Intersect.circleVsCircle(poly1.getBoundingCircle(), poly2.getBoundingCircle()))
-				return false;
+				return undefined;
 
-			// see http://content.gpwiki.org/index.php/Polygon_Collision
-			var v1 = poly1.getVertices();
-			var v2 = poly2.getVertices();
-
-			// check v1 against v2 and v2 against v1
-			// boolean short-circuit allows calling both functions only when needed
-			return Intersect._verticesVsVertices(v1, v2) && Intersect._verticesVsVertices(v2, v1);
+			// fine test
+			return Intersect._edgesVsEdges(poly1.getVertices(), poly2.getVertices());
 		};
 
 		// Boolean polygonVsRect(Polygon, Rect);
@@ -279,24 +589,29 @@ Impulse.Shape2D = (function() {
 				return false;
 
 			var v1 = poly.getVertices();
-			var v2 = [
-				new Shape2D.Vector(rect.x, rect.y),
-				new Shape2D.Vector(rect.x + rect.w, rect.y),
-				new Shape2D.Vector(rect.x + rect.w, rect.y - rect.h),
-				new Shape2D.Vector(rect.x, rect.y - rect.h)
-			];
+			var v2 = rect.getVertices();
 
 			// check v1 against v2 and v2 against v1
 			// boolean short-circuit allows calling both functions only when needed
 			return Intersect._verticesVsVertices(v1, v2) && Intersect._verticesVsVertices(v2, v1);
 		};
 
+		// Boolean polygonVsRectSat(Polygon, Rect);
+		Intersect.polygonVsRectSat = function(poly, rect) {
+			// coarse test
+			if (!Intersect.circleVsRect(poly.getBoundingCircle(), rect))
+				return undefined;
+
+			// fine test
+			return Intersect._edgesVsEdges(poly.getVertices(), rect.getVertices());
+		}; // polygonVsRectSat( )
+
 		// Boolean polygonVsVector(Polygon, Vector);
 		Intersect.polygonVsVector = function(poly, vect) {
 			// quick rejection
 			if (!Intersect.circleVsVector(poly.getBoundingCircle(), vect))
 				return false;
-			
+
 			// using Point Inclusion in Polygon test (aka Crossing test)
 			var c = false;
 			var v = poly.getVertices();
@@ -305,9 +620,19 @@ Impulse.Shape2D = (function() {
 					(vect.x < (v[j].x - v[i].x) * (vect.y - v[i].y) / (v[j].y - v[i].y) + v[i].x))
 					c = !c;
 			} // for( i )
-			
+
 			return c;
 		};
+
+		// Boolean polygonVsVectorSat(Polygon, Vector);
+		Intersect.polygonVsVectorSat = function(poly, vect) {
+			// coarse test
+			if (!Intersect.circleVsVector(poly.getBoundingCircle(), vect))
+				return undefined;
+
+			// fine test
+			return Intersect._edgesVsEdges(poly.getVertices(), [vect]);
+		}; // polygonVsVectorSat( )
 
 		// Boolean rectVsRect(Rect, Rect);
 		Intersect.rectVsRect = function(rect1, rect2) {
@@ -317,53 +642,51 @@ Impulse.Shape2D = (function() {
 				rect1.y - rect1.h <= rect2.y)
 		}; // rectVsRect( )
 
+		// Boolean rectVsRectSat(Rect, Rect);
+		Intersect.rectVsRectSat = function(rect1, rect2) {
+			// coarse test
+			if (!Intersect.rectVsRect(rect1, rect2))
+				return undefined;
+
+			// fine test
+			return Intersect._edgesVsEdges(rect1.getVertices(), rect2.getVertices());
+		}; // rectVsRectSat( )
+
 		// Boolean rectVsVector(Rect, Vector);
 		Intersect.rectVsVector = function(rect, vect) {
 			return vect.x >= rect.x && vect.x <= rect.x + rect.w &&
 				vect.y <= rect.y && vect.y >= rect.y - rect.h;
 		}; // rectVsVector( )
 
-		// Boolean shapeVsShape(Shape, Shape);
+		// Boolean rectVsVectorSat(Rect, Vector);
+		Intersect.rectVsVectorSat = function(rect, vect) {
+			// coarse test
+			if (!Intersect.rectVsVector(rect, vect))
+				return undefined;
+
+			// fine test
+			return Intersect._edgesVsEdges(rect.getVertices(), [vect]);
+		}; // rectVsVectorSat( )
+
+		// Boolean shapeVsShape(IShape, IShape);
 		Intersect.shapeVsShape = function(shape1, shape2) {
 			return _shapeMap[shape1.getShapeID()][shape2.getShapeID()](shape1, shape2);
-		}; // shapeVsShape( 0
+		}; // shapeVsShape( )
+
+		// Boolean shapeVsShapeSat(IShape, IShape);
+		Intersect.shapeVsShapeSat = function(shape1, shape2) {
+			return _shapeMapSat[shape1.getShapeID()][shape2.getShapeID()](shape1, shape2);
+		}; // shapeVsShape( )
 
 		// Boolean vectorVsVector(Vector, Vector);
 		Intersect.vectorVsVector = function(vect1, vect2) {
 			return vect1.equals(vect2);
 		};
 
-		// Boolean _verticesVsVertices(Array<Vector>, Array<Vector>);
-		Intersect._verticesVsVertices = function(v1, v2) {
-			var min1, min2, max1, max2, dp;
-
-			// test edges stored in v1 against edges stored in v2
-			var perp;
-			for (var i = 0, j = v1.length - 1; i < v1.length; j = i++) {
-				perp = new Shape2D.Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x);
-
-				var k;
-				min1 = max1 = v1[0].dotProduct(perp);
-				for (k = 1; k < v1.length; k++) {
-					dp = v1[k].dotProduct(perp);
-					min1 = Math.min(min1, dp);
-					max1 = Math.max(max1, dp);
-				} // for( k )
-
-				// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
-				min2 = max2 = v2[0].dotProduct(perp);
-				for (k = 1; k < v2.length; k++) {
-					dp = v2[k].dotProduct(perp);
-					min2 = Math.min(min2, dp);
-					max2 = Math.max(max2, dp);
-				} // for( k )
-
-				if (max1 < min2 || min1 > max2)
-					return false;
-			} // for( i )
-
-			return true;
-		}; // _verticesVsVertices( )
+		// Boolean vectorVsVectorSat(Vector, Vector);
+		Intersect.vectorVsVectorSat = function(vect1, vect2) {
+			return vect1.equals(vect2) ? new Shape2D.Vector(0, 0) : undefined;
+		};
 
 		// init shapeMap
 		_shapeMap[_shapeID.Circle] = [];
@@ -387,8 +710,88 @@ Impulse.Shape2D = (function() {
 		_shapeMap[_shapeID.Vector][_shapeID.Rect] = function(v, r) { return Intersect.rectVsVector(r, v); };
 		_shapeMap[_shapeID.Vector][_shapeID.Vector] = Intersect.vectorVsVector;
 
+		// init shapeMapSat
+		_shapeMapSat[_shapeID.Circle] = [];
+		_shapeMapSat[_shapeID.Circle][_shapeID.Circle] = Intersect.circleVsCircleSat;
+		_shapeMapSat[_shapeID.Circle][_shapeID.Polygon] = Intersect.circleVsPolygonSat;
+		_shapeMapSat[_shapeID.Circle][_shapeID.Rect] = Intersect.circleVsRectSat;
+		_shapeMapSat[_shapeID.Circle][_shapeID.Vector] = Intersect.circleVsVectorSat;
+		_shapeMapSat[_shapeID.Polygon] = [];
+		_shapeMapSat[_shapeID.Polygon][_shapeID.Circle] = function(p, c) {
+			var mtv = Intersect.circleVsPolygonSat(c, p);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Polygon][_shapeID.Polygon] = Intersect.polygonVsPolygonSat;
+		_shapeMapSat[_shapeID.Polygon][_shapeID.Rect] = Intersect.polygonVsRectSat;
+		_shapeMapSat[_shapeID.Polygon][_shapeID.Vector] = Intersect.polygonVsVectorSat;
+		_shapeMapSat[_shapeID.Rect] = [];
+		_shapeMapSat[_shapeID.Rect][_shapeID.Circle] = function(r, c) {
+			var mtv = Intersect.circleVsRectSat(c, r);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Rect][_shapeID.Polygon] = function(r, p) {
+			var mtv = Intersect.polygonVsRectSat(p, r);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Rect][_shapeID.Rect] = Intersect.rectVsRectSat;
+		_shapeMapSat[_shapeID.Rect][_shapeID.Vector] = Intersect.rectVsVectorSat;
+		_shapeMapSat[_shapeID.Vector] = [];
+		_shapeMapSat[_shapeID.Vector][_shapeID.Circle] = function(v, c) {
+			var mtv = Intersect.circleVsVectorSat(c, v);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Vector][_shapeID.Polygon] = function(v, p) {
+			var mtv = Intersect.polygonVsVectorSat(p, v);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Vector][_shapeID.Rect] = function(v, r) {
+			var mtv = Intersect.rectVsVectorSat(r, v);
+			return mtv === undefined ? undefined : mtv.negate();
+		};
+		_shapeMapSat[_shapeID.Vector][_shapeID.Vector] = Intersect.vectorVsVectorSat;
+
 		return Intersect;
-	})();
+	});
+
+	Shape2D.Intersection = (function() {
+		var Intersection = function(projection, normal) {
+			this.projection = projection;
+			this.normal = normal;
+		}; // class
+
+		Intersection.prototype.projection = undefined;
+		Intersection.prototype.normal = undefined;
+	});
+
+	Shape2D.IShape = (function() {
+		/**
+		 * @interface
+		 */
+		var IShape = function() { }; // class Shape
+
+		// Shape applyTransform();
+		IShape.prototype.applyTransform = function() { }; // applyTransform
+
+		// Shape clone();
+		IShape.prototype.clone = function() { }; // clone( )
+
+		// Boolean equals();
+		IShape.prototype.equals = function() { }; // equals( )
+
+		// Vector getCenter();
+		IShape.prototype.getCenter = function() { }; // getCenter( )
+
+		// Number getShapeID();
+		IShape.prototype.getShapeID = function() { }; // getShapeID( )
+
+		// Shape setCenter();
+		IShape.prototype.setCenter = function() { }; // setCenter( )
+
+		// String toString();
+		IShape.prototype.toString = function() { }; // toString( )
+
+		return IShape;
+	});
 
 	Shape2D.Matrix = (function() {
 		/**
@@ -808,7 +1211,7 @@ Impulse.Shape2D = (function() {
 		}; // translate( )
 
 		return Matrix;
-	})();
+	});
 
 	Shape2D.Polygon = (function() {
 		// Polygon(Polygon);
@@ -832,7 +1235,7 @@ Impulse.Shape2D = (function() {
 			} // for( i )
 		}; // class Polygon
 
-		Polygon.prototype = new Shape2D.Shape();
+		Polygon.prototype = new Shape2D.IShape();
 		Polygon.prototype._center = undefined;
 		Polygon.prototype._r = -1;
 		Polygon.prototype._vertices = undefined;
@@ -956,7 +1359,7 @@ Impulse.Shape2D = (function() {
 		}; // toString( )
 
 		return Polygon;
-	})();
+	});
 
 	Shape2D.Rect = (function() {
 		// Rect(Rect);
@@ -975,7 +1378,7 @@ Impulse.Shape2D = (function() {
 			} // else
 		}; // class Rect
 
-		Rect.prototype = new Shape2D.Shape();
+		Rect.prototype = new Shape2D.IShape();
 		Rect.prototype.h = 1;
 		Rect.prototype.w = 1;
 		Rect.prototype.x = -0.5;
@@ -1020,6 +1423,15 @@ Impulse.Shape2D = (function() {
 			return _shapeID.Rect;
 		}; // getShapeID( )
 
+		Rect.prototype.getVertices = function() {
+			return [
+				new Shape2D.Vector(this.x, this.y),
+				new Shape2D.Vector(this.x + this.w, this.y),
+				new Shape2D.Vector(this.x + this.w, this.y - this.h),
+				new Shape2D.Vector(this.x, this.y - this.h)
+			];
+		}; // getVertices( )
+
 		// Rect setCenter(Vector);
 		Rect.prototype.setCenter = function(x, y) {
 			if (x instanceof Shape2D.Vector) {
@@ -1039,7 +1451,7 @@ Impulse.Shape2D = (function() {
 		} // toString( )
 
 		return Rect;
-	})();
+	});
 
 	Shape2D.Vector = (function() {
 		/**
@@ -1071,7 +1483,7 @@ Impulse.Shape2D = (function() {
 		}; // class Vector
 
 		Vector.shapeID = _shapeID.Vector;
-		Vector.prototype = new Shape2D.Shape();
+		Vector.prototype = new Shape2D.IShape();
 		Vector.prototype.x = 0;
 		Vector.prototype.y = 0;
 
@@ -1379,6 +1791,23 @@ Impulse.Shape2D = (function() {
 		}; // normalize( )
 
 		/**
+		 * perpendicular( )
+		 *
+		 * Rotates this vector 90°, making it perpendicular to its current orientation
+		 *
+		 * @public
+		 * @sig public {Vector} perpendicular();
+		 * @returns {Vector} this vector after rotating 90°
+		 */
+		Vector.prototype.perpendicular = function() {
+			var x = this.x;
+			this.x = -this.y;
+			this.y = x;
+
+			return this;
+		}; // perpendicular( )
+
+		/**
 		 * scale( )
 		 *
 		 * Scales this vector by the passed amount(s)
@@ -1493,6 +1922,42 @@ Impulse.Shape2D = (function() {
 		}; // translate( )
 
 		/**
+		 * longest( )
+		 *
+		 * Returns whichever vector is the longest
+		 *
+		 * @public
+		 * @static
+		 * @sig public {Vector} longest(Vector, Vector);
+		 * @param {Vector} a
+		 * @param {Vector} b
+		 * @return {Vector} whichever vector is the longest. 'a' is returned if they are equal.
+		 */
+		Vector.longest = function(a, b) {
+			if (a.x * a.x + a.y * a.y >= b.x * b.x + b.y * b.y)
+				return a;
+			return b;
+		}; // longest( )
+
+		/**
+		 * shortest( )
+		 *
+		 * Returns whichever vector is the shortest
+		 *
+		 * @public
+		 * @static
+		 * @sig public {Vector} longest(Vector, Vector);
+		 * @param {Vector} a
+		 * @param {Vector} b
+		 * @return {Vector} whichever vector is the shortest. 'a' is returned if they are equal.
+		 */
+		Vector.shortest = function(a, b) {
+			if (a.x * a.x + a.y * a.y <= b.x * b.x + b.y * b.y)
+				return a;
+			return b;
+		}; // shortest( )
+
+		/**
 		 * tripleProduct( )
 		 *
 		 * Calculates the triple product of three vectors.
@@ -1513,7 +1978,17 @@ Impulse.Shape2D = (function() {
 		};
 
 		return Vector;
-	})();
+	});
+
+	// init in the correct order
+	Shape2D.IShape = Shape2D.IShape();
+	Shape2D.Circle = Shape2D.Circle(); // requires IShape
+	Shape2D.Rect = Shape2D.Rect(); // requires IShape
+	Shape2D.Vector = Shape2D.Vector(); // requires IShape
+	Shape2D.Polygon = Shape2D.Polygon(); // requires Vector
+	Shape2D.Matrix = Shape2D.Matrix(); // requires Vector
+	Shape2D.Intersection = Shape2D.Intersection(); // requires Vector
+	Shape2D.Intersect = Shape2D.Intersect(); // requires Circle, Polygon, Rect, Vector, Intersection
 
 	return Shape2D;
 });
