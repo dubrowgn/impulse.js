@@ -434,6 +434,10 @@ Impulse.Shape2D = (function() {
 		 * Takes two collections of vertices and performs polygon-polygon projections intersection on them. Results are
 		 * always from the perspective of v1, that is, the minimum translation vector needed to move v1 out of collision
 		 * with v2.
+		 *
+		 * see http://content.gpwiki.org/index.php/Polygon_Collision
+		 * see http://www.codezealot.org/archives/55
+		 *
 		 * @param {Array<Vector>} v1 An array of vertices representing the first polygon
 		 * @param {Array<Vector>} v2 An array of vertices representing the second polygon
 		 * @return {undefined|Vector} Returns the Minium Translation Vector if the polygons intersect, undefined
@@ -571,8 +575,6 @@ Impulse.Shape2D = (function() {
 		};
 
 		// Vector polygonVsPolygonSat(Polygon, Polygon);
-		// see http://content.gpwiki.org/index.php/Polygon_Collision
-		// see also http://www.codezealot.org/archives/55
 		Intersect.polygonVsPolygonSat = function(poly1, poly2) {
 			// coarse test
 			if (!Intersect.circleVsCircle(poly1.getBoundingCircle(), poly2.getBoundingCircle()))
