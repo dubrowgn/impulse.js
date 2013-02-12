@@ -688,6 +688,38 @@ Impulse.Shape2D = (function() {
 			return vect1.equals(vect2) ? new Shape2D.Vector(0, 0) : undefined;
 		};
 
+		// Boolean _verticesVsVertices(Array<Vector>, Array<Vector>);
+		Intersect._verticesVsVertices = function(v1, v2) {
+			var min1, min2, max1, max2, dp;
+
+			// test edges stored in v1 against edges stored in v2
+			var perp;
+			for (var i = 0, j = v1.length - 1; i < v1.length; j = i++) {
+				perp = new Shape2D.Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x);
+
+				var k;
+				min1 = max1 = v1[0].dotProduct(perp);
+				for (k = 1; k < v1.length; k++) {
+					dp = v1[k].dotProduct(perp);
+					min1 = Math.min(min1, dp);
+					max1 = Math.max(max1, dp);
+				} // for( k )
+
+				// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
+				min2 = max2 = v2[0].dotProduct(perp);
+				for (k = 1; k < v2.length; k++) {
+					dp = v2[k].dotProduct(perp);
+					min2 = Math.min(min2, dp);
+					max2 = Math.max(max2, dp);
+				} // for( k )
+
+				if (max1 < min2 || min1 > max2)
+					return false;
+			} // for( i )
+
+			return true;
+		}; // _verticesVsVertices( )
+
 		// init shapeMap
 		_shapeMap[_shapeID.Circle] = [];
 		_shapeMap[_shapeID.Circle][_shapeID.Circle] = Intersect.circleVsCircle;
