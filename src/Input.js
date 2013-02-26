@@ -161,7 +161,7 @@ Impulse.Input = (function() {
 		var Vector = Impulse.Shape2D.Vector;
 
 		var MouseState = function(position, buttons, wheel) {
-			this.button = buttons === undefined ? new MouseButtons() : buttons;
+			this.buttons = buttons === undefined ? new MouseButtons() : buttons;
 			this.position = position === undefined ? new Vector() : position;
 			this.wheel = wheel === undefined ? 0 : wheel;
 		}; // class

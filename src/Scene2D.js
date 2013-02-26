@@ -312,17 +312,19 @@ Impulse.Scene2D = (function() {
 		Scene.prototype.render = function() {
 			this._lastRender = this._lastRender || (new Date() | 0);
 			var ents = this._sceneGraph.queryIntersectWith(this._camera.getViewport(true));
-			var timeMs = (new Date() | 0) - this._lastRender;
+			var timeMs = new Date() | 0;
 			var camMatrix = this._camera.getRenderMatrix();
 
+			var animState = undefined;
 			var r = undefined;
 			var m = undefined;
 
 			this._context.save();
 			var lng = ents.length;
 			for(var i = 0; i < lng; i++) {
-				r = ents[i].getFrameRect(timeMs);
-				m = ents[i].getRenderMatrix();
+				animState = ents[i].getAnimationState(timeMs);
+				m = animState.matrix;
+				r = animState.frameRect;
 
 				if (r != undefined && m != undefined) {
 					// combine camera transformations
@@ -332,7 +334,7 @@ Impulse.Scene2D = (function() {
 					this._context.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 
 					// draw the image sprite to the canvas
-					this._context.drawImage(ents[i].getModelImage(), r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+					this._context.drawImage(animState.image, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
 				} // if
 			} // for( i )
 			this._context.restore();

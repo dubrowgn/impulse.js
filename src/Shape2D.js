@@ -787,16 +787,6 @@ Impulse.Shape2D = (function() {
 		return Intersect;
 	});
 
-	Shape2D.Intersection = (function() {
-		var Intersection = function(projection, normal) {
-			this.projection = projection;
-			this.normal = normal;
-		}; // class
-
-		Intersection.prototype.projection = undefined;
-		Intersection.prototype.normal = undefined;
-	});
-
 	Shape2D.IShape = (function() {
 		/**
 		 * @interface
@@ -2021,7 +2011,6 @@ Impulse.Shape2D = (function() {
 	Shape2D.Vector = Shape2D.Vector(); // requires IShape
 	Shape2D.Polygon = Shape2D.Polygon(); // requires Vector
 	Shape2D.Matrix = Shape2D.Matrix(); // requires Vector
-	Shape2D.Intersection = Shape2D.Intersection(); // requires Vector
 	Shape2D.Intersect = Shape2D.Intersect(); // requires Circle, Polygon, Rect, Vector, Intersection
 
 	return Shape2D;
