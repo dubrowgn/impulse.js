@@ -1793,7 +1793,7 @@ Impulse.Shape2D = (function() {
 		 * normalize( )
 		 *
 		 * Normalizes this vector (scales the vector so that its new magnitude is 1)
-		 * For vectors where magnitude is 0, <1,0> is returned.
+		 * For vectors where magnitude is 0, <0,0> is returned.
 		 *
 		 * @public
 		 * @sig public {Vector} normalize();
@@ -1802,11 +1802,7 @@ Impulse.Shape2D = (function() {
 		Vector.prototype.normalize = function() {
 			var lng = Math.sqrt(this.x * this.x + this.y * this.y);
 
-			if (lng === 0) {
-				// default due East
-				this.x = 1;
-				this.y = 0;
-			} else {
+			if (lng !== 0) {
 				this.x /= lng;
 				this.y /= lng;
 			} // else

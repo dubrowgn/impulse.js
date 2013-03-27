@@ -165,5 +165,26 @@ Impulse.Util = (function() {
 		return EventedCollection;
 	})();
 
+	Util.Timing = (function() {
+		var Timing = {
+			isHighResolution: false,
+			now: undefined
+		};
+
+		// IE 9 has performance, but not performance.now
+		if (window.performance !== undefined && performance.now !== undefined) {
+			Timing.isHighResolution = true;
+			Timing.now = function() {
+				return performance.now();
+			};
+		} // if
+		else {
+			var start = new Date() | 0;
+			Timing.now = function() { return (new Date() | 0) - start; };
+		} // else
+
+		return Timing;
+	})();
+
 	return Util;
 });

@@ -6,6 +6,7 @@ Impulse.Scene2D = (function() {
 
 	// imports
 	var Entity = Impulse.Entity;
+	var EventDelegate = Impulse.Util.EventDelegate;
 	var Intersect = Impulse.Shape2D.Intersect;
 	var Matrix = Impulse.Shape2D.Matrix;
 	var MouseAdapter = Impulse.Input.MouseAdapter;
@@ -16,9 +17,12 @@ Impulse.Scene2D = (function() {
 		var Camera = function(canvas, x, y, w, h, viewportMargin) {
 			this._cameraMatrix = new Matrix(1, 0, 0, 1, -x, -y);
 			this._canvas = canvas;
+			this.moved = new EventDelegate();
+			this.rotated = new EventDelegate();
 			this._targetH = h;
 			this._targetW = w;
 			this.viewportMargin = viewportMargin === undefined ? 0 : viewportMargin;
+			this.zoomed = new EventDelegate();
 
 			// hook into the window resize event handler
 			var thisCamera = this;
@@ -33,11 +37,14 @@ Impulse.Scene2D = (function() {
 		Camera.prototype._canvas = undefined;
 		Camera.prototype._canvasMatrix = undefined;
 		Camera.prototype._h = undefined;
+		Camera.prototype.moved = undefined;
 		Camera.prototype._resizeHandler = undefined;
+		Camera.prototype.rotated = undefined;
 		Camera.prototype._targetH = 0;
 		Camera.prototype._targetW = 0;
 		Camera.prototype.viewportMargin = 0;
 		Camera.prototype._w = undefined;
+		Camera.prototype.zoomed = undefined;
 
 		// Vector canvasToWorld(Number, Number);
 		// Vector canvasToWorld(Vector);
@@ -106,15 +113,19 @@ Impulse.Scene2D = (function() {
 				this._cameraMatrix.e = -x;
 				this._cameraMatrix.f = -y;
 			} // if / else
+
+			this.moved.dispatch(this);
 		}; // setPosition( )
 
 		// void setRotation(Number)
 		Camera.prototype.setRotation = function(rads) {
 			this._cameraMatrix.rotate(rads - this._cameraMatrix.getRotation());
+			this.rotated.dispatch(this);
 		}; // setRotation( )
 
 		Camera.prototype.setZoom = function(zoom) {
 			this._cameraMatrix.preScale(zoom / this._cameraMatrix.getScale());
+			this.zoomed.dispatch(this);
 		}; // setZoom( )
 
 		// void translate(Vector)
@@ -124,6 +135,8 @@ Impulse.Scene2D = (function() {
 				this._cameraMatrix.preTranslate(-x.x, -x.y);
 			else
 				this._cameraMatrix.preTranslate(-x, -y);
+
+			this.moved.dispatch(this);
 		}; // translate( )
 
 		// void _updateCanvasValues();
@@ -137,6 +150,9 @@ Impulse.Scene2D = (function() {
 
 			// rebuild the transformation matrix
 			this._canvasMatrix = new Matrix(zoom, 0, 0, -zoom, this._canvas.width/2, this._canvas.height/2);
+
+			// dispatch zoom changed event
+			this.zoomed.dispatch(this);
 		}; // _updateCanvasValues( )
 
 		// Vector worldToCanvas(Number, Number);
@@ -152,6 +168,7 @@ Impulse.Scene2D = (function() {
 		// void zoom(Number)
 		Camera.prototype.zoom = function(zoom) {
 			this._cameraMatrix.preScale(zoom);
+			this.zoomed(this);
 		}; // zoom( )
 
 		return Camera;
@@ -202,6 +219,8 @@ Impulse.Scene2D = (function() {
 	});
 
 	Scene2D.LinearSG = (function() {
+		var Vector = Impulse.Shape2D.Vector;
+
 		var LinearSG = function() {
 			this._entities = [];
 		}; // class LinearSG
@@ -218,6 +237,30 @@ Impulse.Scene2D = (function() {
 		LinearSG.prototype.clear = function() {
 			this._entities = [];
 		}; // clear( )
+
+		// Vector getMtv(Shape, [Number], [Boolean]);
+		LinearSG.prototype.getMtv = function(shape, flags, useOr) {
+			// init default values
+			if (flags === undefined)
+				flags = 0;
+			if (useOr === undefined)
+				useOr = true;
+
+			var ent;
+			var mtv = new Vector(0, 0);
+
+			for (var i = 0; i < this._entities.length; i++) {
+				ent = this._entities[i];
+				// test if ent.flags contain all of _flags
+				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags)))) {
+					var localMtv = Intersect.shapeVsShapeSat(shape, ent.getCollidable());
+					if (localMtv !== undefined)
+						mtv.add(localMtv);
+				} // if
+			} // for( i )
+
+			return mtv;
+		}; // getMtv( )
 
 		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
 		LinearSG.prototype.queryCenterIn = function(shape, flags, useOr) {
@@ -237,7 +280,7 @@ Impulse.Scene2D = (function() {
 			if (useOr === undefined)
 				useOr = true;
 
-			var entArray = new Array();
+			var entArray = [];
 			var ent;
 
 			for (var i = 0; i < this._entities.length; i++) {
@@ -269,6 +312,8 @@ Impulse.Scene2D = (function() {
 	Scene2D.QuadTreeSG = {}; // stub
 
 	Scene2D.Scene = (function() {
+		var Timing = Impulse.Util.Timing;
+
 		var Scene = function(camera, sceneGraph) {
 			this._camera = camera;
 			this._canvas = camera.getCanvas();
@@ -312,7 +357,7 @@ Impulse.Scene2D = (function() {
 		Scene.prototype.render = function() {
 			this._lastRender = this._lastRender || (new Date() | 0);
 			var ents = this._sceneGraph.queryIntersectWith(this._camera.getViewport(true));
-			var timeMs = new Date() | 0;
+			var timeMs = Timing.now();
 			var camMatrix = this._camera.getRenderMatrix();
 
 			var animState = undefined;

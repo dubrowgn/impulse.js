@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Top-Down Shooter</title>
+		<script type="text/javascript" src="keymaster.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../../impulse.js" charset="utf-8"></script>
+		<script type="text/javascript" src="shooter.js" charset="utf-8"></script>
+		<script type="text/javascript">
+			var vpHeight = 432;
+			var vpWidth = 768;
+			var canvas;
+			var ui_btns;
+			var ui_status_fps;
+			var ui_status_lives;
+			var ui_status_money;
+			var ui_status_version;
+			var ui_status_wave;
+
+			function Start() {
+				canvas = document.getElementById("canvas");
+				ui_status_fps = document.getElementById("ui_status_fps");
+
+				window.addEventListener("resize", OnResize);
+				OnResize();
+
+				var shooter = new Shooter(canvas);
+				shooter.fpsChanged.add(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
+
+//				ui_btns = document.getElementById("ui_btns");
+//				ui_status_fps = document.getElementById("ui_status_fps");
+//				ui_status_lives = document.getElementById("ui_status_lives");
+//				ui_status_money = document.getElementById("ui_status_money");
+//				ui_status_version = document.getElementById("ui_status_version");
+//				ui_status_wave = document.getElementById("ui_status_wave");
+//
+//				window.onresize = OnResize;
+//				OnResize();
+//				CanvasTD.Setup(canvas, vpWidth, vpHeight);
+//
+//				// init button and their event handlers
+//				var btn;
+//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 0);
+//				btn.onclick = CanvasTD.BuildTowerGreen;
+//				ui_btns.appendChild(btn);
+//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 32);
+//				btn.onclick = CanvasTD.BuildTowerBlue;
+//				ui_btns.appendChild(btn);
+//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 64);
+//				btn.onclick = CanvasTD.BuildTowerRed;
+//				ui_btns.appendChild(btn);
+//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 96);
+//				btn.onclick = CanvasTD.BuildTowerBlack;
+//				ui_btns.appendChild(btn);
+//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 128);
+//				btn.onclick = CanvasTD.BuildTowerWhite;
+//				ui_btns.appendChild(btn);
+//
+//				// init keyboard event handlers
+//				key("space", CanvasTD.TogglePause);
+//				key("escape", CanvasTD.CancelBuild);
+//				key("q", CanvasTD.BuildTowerGreen);
+//				key("w", CanvasTD.BuildTowerBlue);
+//				key("e", CanvasTD.BuildTowerRed);
+//				key("r", CanvasTD.BuildTowerBlack);
+//				key("t", CanvasTD.BuildTowerWhite);
+//
+//				// init status event handlers
+//				CanvasTD.FpsChanged = function(_fps) {
+//					ui_status_fps.innerHTML = "FPS: " + _fps.toFixed(2);
+//				};
+//				CanvasTD.LivesChanged = function(_lives) {
+//					ui_status_lives.innerHTML = _lives + " Lives";
+//				};
+//				CanvasTD.MoneyChanged = function(_money) {
+//					ui_status_money.innerHTML = "$" + _money.toFixed(2);
+//				};
+//				CanvasTD.WaveChanged = function(_wave) {
+//					ui_status_wave.innerHTML = "Wave: " + _wave;
+//				};
+//
+//				// init static information
+//				ui_status_version.innerHTML = CanvasTD.version;
+			} // start( )
+
+			function OnResize() {
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+			} // OnResize( )
+		</script>
+		<style type="text/css">
+			canvas { position:absolute; }
+			body { margin:0; }
+			#ui_bg { background:url("img/ui_dark.png") repeat-x; position:absolute; width:100%; height:48px; bottom:0px; }
+			#ui_btns { text-align:center; position:absolute; width:100%; bottom:0px; }
+			#ui_status_top { position:absolute; top:0px; font:9pt helvetica; font-weight:bold; padding:2px; }
+			#ui_status_version { color:#fff; }
+			#ui_status_fps { color:#fff; }
+			#ui_status_bottom { position:absolute; bottom:0px; font:9pt helvetica; font-weight:bold; padding:2px; }
+			#ui_status_money { color:#ffff00; }
+			#ui_status_lives { color:#ff0000; }
+			#ui_status_wave { color:#000000; }
+		</style>
+	</head>
+	<body onload="Start();">
+		<canvas id="canvas"></canvas>
+		<div id="ui_status_top">
+			<!--div id="ui_status_version"></div-->
+			<div id="ui_status_fps">FPS: &mdash;</div>
+		</div>
+		<!--div id="ui_bg"></div>
+		<div id="ui_btns"></div>
+		<div id="ui_status_bottom">
+			<div id="ui_status_money">$40.00</div>
+			<div id="ui_status_lives">50 Lives</div>
+			<div id="ui_status_wave">Wave: 1</div>
+		</div-->
+	</body>
+</html>

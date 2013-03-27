@@ -6,6 +6,7 @@ Impulse.Input = (function() {
 
 	// imports
 	var EventDelegate = Impulse.Util.EventDelegate;
+	var Vector = Impulse.Shape2D.Vector;
 
 	Input.MouseAdapter = (function() {
 		var MouseButtons = Input.MouseButtons;
@@ -34,7 +35,7 @@ Impulse.Input = (function() {
 				maThis.click.dispatch(e);
 			};
 
-			MouseAdapter.prototype._onDoubleClick = function(e) {
+			this._onDoubleClick = function(e) {
 				e = maThis._normalizeMouseEvent(e);
 				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
@@ -42,7 +43,7 @@ Impulse.Input = (function() {
 				maThis.doubleClick.dispatch(e);
 			};
 
-			MouseAdapter.prototype._onDown = function(e) {
+			this._onDown = function(e) {
 				e.preventDefault();
 				e = maThis._normalizeMouseEvent(e);
 				maThis._buttons.left = maThis._buttons.left || e.buttons.left;
@@ -51,13 +52,14 @@ Impulse.Input = (function() {
 				maThis.down.dispatch(e);
 			};
 
-			MouseAdapter.prototype._onMove = function(e) {
+			this._onMove = function(e) {
+				maThis._updateRawPosition(e);
 				e = maThis._normalizeMouseEvent(e);
 				maThis._position = e.position.clone();
 				maThis.move.dispatch(e);
 			};
 
-			MouseAdapter.prototype._onUp = function(e) {
+			this._onUp = function(e) {
 				e = maThis._normalizeMouseEvent(e);
 				maThis._buttons.left = maThis._buttons.left && !e.buttons.left;
 				maThis._buttons.middle = maThis._buttons.middle && !e.buttons.middle;
@@ -65,9 +67,19 @@ Impulse.Input = (function() {
 				maThis.up.dispatch(e);
 			};
 
-			MouseAdapter.prototype._onWheel = function(e) {
+			this._onWheel = function(e) {
 				maThis.wheel.dispatch(maThis._normalizeMouseEvent(e));
 			};
+
+			// attach to camera events
+			this._onCameraEvent = function(source) {
+				if (maThis._rawPosition !== undefined)
+					maThis._position = maThis._camera.canvasToWorld(maThis._rawPosition);
+			};
+
+			camera.moved.add(this._onCameraEvent);
+			camera.rotated.add(this._onCameraEvent);
+			camera.zoomed.add(this._onCameraEvent);
 
 			// attach mouse delegates to the canvas object
 			var canvas = this._camera.getCanvas();
@@ -87,6 +99,7 @@ Impulse.Input = (function() {
 		MouseAdapter.prototype.doubleClick = undefined;
 		MouseAdapter.prototype.down = undefined;
 		MouseAdapter.prototype.move = undefined;
+		MouseAdapter.prototype._onCameraEvent = undefined;
 		MouseAdapter.prototype._onClick = undefined;
 		MouseAdapter.prototype._onDoubleClick = undefined;
 		MouseAdapter.prototype._onDown = undefined;
@@ -94,6 +107,7 @@ Impulse.Input = (function() {
 		MouseAdapter.prototype._onUp = undefined;
 		MouseAdapter.prototype._onWheel = undefined;
 		MouseAdapter.prototype._position = undefined;
+		MouseAdapter.prototype._rawPosition = undefined;
 		MouseAdapter.prototype.up = undefined;
 		MouseAdapter.prototype.wheel = undefined;
 
@@ -109,6 +123,11 @@ Impulse.Input = (function() {
 			canvas.removeEventListener('mouseup', this._onUp, false);
 			canvas.removeEventListener('mousewheel', this._onWheel, false);
 			canvas.removeEventListener('DOMMouseScroll', this._onWheel, false); // firefox >= 3.5
+
+			// detach camera delegates
+			camera.moved.remove(this._onCameraEvent);
+			camera.rotated.remove(this._onCameraEvent);
+			camera.zoomed.remove(this._onCameraEvent);
 		}; // destroy( )
 
 		MouseAdapter.prototype.getButtons = function() {
@@ -138,6 +157,13 @@ Impulse.Input = (function() {
 		MouseAdapter.prototype._onContextMenu = function (e) {
 			e.preventDefault();
 		}; // _onContextMenu( )
+
+		MouseAdapter.prototype._updateRawPosition = function(e) {
+			this._rawPosition = new Vector(
+				e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
+				e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
+			);
+		};
 
 		return MouseAdapter;
 	});
