@@ -6,80 +6,35 @@
 		<script type="text/javascript" src="../../impulse.js" charset="utf-8"></script>
 		<script type="text/javascript" src="shooter.js" charset="utf-8"></script>
 		<script type="text/javascript">
-			var vpHeight = 432;
-			var vpWidth = 768;
 			var canvas;
-			var ui_btns;
+			var ui_status_deaths;
 			var ui_status_fps;
-			var ui_status_lives;
-			var ui_status_money;
-			var ui_status_version;
-			var ui_status_wave;
+			var ui_status_health;
+			var ui_status_kills;
+			var ui_status_ping;
+			var shooter;
 
 			function Start() {
 				canvas = document.getElementById("canvas");
+				ui_status_deaths = document.getElementById("ui_status_deaths");
 				ui_status_fps = document.getElementById("ui_status_fps");
+				ui_status_health = document.getElementById("ui_status_health");
+				ui_status_kills = document.getElementById("ui_status_kills");
+				ui_status_ping = document.getElementById("ui_status_ping");
 
 				window.addEventListener("resize", OnResize);
 				OnResize();
 
-				var shooter = new Shooter(canvas);
-				shooter.fpsChanged.add(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
+				shooter = new Shooter(canvas);
 
-//				ui_btns = document.getElementById("ui_btns");
-//				ui_status_fps = document.getElementById("ui_status_fps");
-//				ui_status_lives = document.getElementById("ui_status_lives");
-//				ui_status_money = document.getElementById("ui_status_money");
-//				ui_status_version = document.getElementById("ui_status_version");
-//				ui_status_wave = document.getElementById("ui_status_wave");
-//
-//				window.onresize = OnResize;
-//				OnResize();
-//				CanvasTD.Setup(canvas, vpWidth, vpHeight);
-//
-//				// init button and their event handlers
-//				var btn;
-//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 0);
-//				btn.onclick = CanvasTD.BuildTowerGreen;
-//				ui_btns.appendChild(btn);
-//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 32);
-//				btn.onclick = CanvasTD.BuildTowerBlue;
-//				ui_btns.appendChild(btn);
-//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 64);
-//				btn.onclick = CanvasTD.BuildTowerRed;
-//				ui_btns.appendChild(btn);
-//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 96);
-//				btn.onclick = CanvasTD.BuildTowerBlack;
-//				ui_btns.appendChild(btn);
-//				btn = UIFactory.CreateButton("img/btnTowers.png", 32, 32, 128);
-//				btn.onclick = CanvasTD.BuildTowerWhite;
-//				ui_btns.appendChild(btn);
-//
-//				// init keyboard event handlers
-//				key("space", CanvasTD.TogglePause);
-//				key("escape", CanvasTD.CancelBuild);
-//				key("q", CanvasTD.BuildTowerGreen);
-//				key("w", CanvasTD.BuildTowerBlue);
-//				key("e", CanvasTD.BuildTowerRed);
-//				key("r", CanvasTD.BuildTowerBlack);
-//				key("t", CanvasTD.BuildTowerWhite);
-//
-//				// init status event handlers
-//				CanvasTD.FpsChanged = function(_fps) {
-//					ui_status_fps.innerHTML = "FPS: " + _fps.toFixed(2);
-//				};
-//				CanvasTD.LivesChanged = function(_lives) {
-//					ui_status_lives.innerHTML = _lives + " Lives";
-//				};
-//				CanvasTD.MoneyChanged = function(_money) {
-//					ui_status_money.innerHTML = "$" + _money.toFixed(2);
-//				};
-//				CanvasTD.WaveChanged = function(_wave) {
-//					ui_status_wave.innerHTML = "Wave: " + _wave;
-//				};
-//
-//				// init static information
-//				ui_status_version.innerHTML = CanvasTD.version;
+				shooter.deathsChanged.add(function(deaths) { ui_status_deaths.innerHTML = "Deaths: " + deaths; });
+				shooter.fpsChanged.add(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
+				shooter.healthChanged.add(function(current, max) { ui_status_health.style.width = (current / max) * 100 + "%"; });
+				shooter.killsChanged.add(function(kills) { ui_status_kills.innerHTML = "Kills: " + kills; });
+				shooter.pingChanged.add(function(ping) { ui_status_ping.innerHTML = "Ping: " + ping.toFixed(2) + "ms"; });
+
+				shooter.connected.add(function() { shooter.run(); });
+				shooter.connect();
 			} // start( )
 
 			function OnResize() {
@@ -90,29 +45,25 @@
 		<style type="text/css">
 			canvas { position:absolute; }
 			body { margin:0; }
-			#ui_bg { background:url("img/ui_dark.png") repeat-x; position:absolute; width:100%; height:48px; bottom:0px; }
-			#ui_btns { text-align:center; position:absolute; width:100%; bottom:0px; }
-			#ui_status_top { position:absolute; top:0px; font:9pt helvetica; font-weight:bold; padding:2px; }
-			#ui_status_version { color:#fff; }
-			#ui_status_fps { color:#fff; }
-			#ui_status_bottom { position:absolute; bottom:0px; font:9pt helvetica; font-weight:bold; padding:2px; }
-			#ui_status_money { color:#ffff00; }
-			#ui_status_lives { color:#ff0000; }
-			#ui_status_wave { color:#000000; }
+			#ui_status_top { position:absolute; top:0; font:12pt helvetica; font-weight:bold; padding:2px; color:#fff; text-shadow: 1px 1px 4px #000; }
+			#ui_status_health {
+				width:100%;
+				height:24px;
+				background:url("assets/image/health.png");
+				position:absolute;;
+				bottom:0;
+			}
+			#ui_status_ping { color:#fff; }
 		</style>
 	</head>
 	<body onload="Start();">
 		<canvas id="canvas"></canvas>
 		<div id="ui_status_top">
-			<!--div id="ui_status_version"></div-->
 			<div id="ui_status_fps">FPS: &mdash;</div>
+			<div id="ui_status_ping">Ping: &mdash;</div>
+			<div id="ui_status_kills">Kills: 0</div>
+			<div id="ui_status_deaths">Deaths: 0</div>
 		</div>
-		<!--div id="ui_bg"></div>
-		<div id="ui_btns"></div>
-		<div id="ui_status_bottom">
-			<div id="ui_status_money">$40.00</div>
-			<div id="ui_status_lives">50 Lives</div>
-			<div id="ui_status_wave">Wave: 1</div>
-		</div-->
+		<div id="ui_status_health"></div>
 	</body>
 </html>

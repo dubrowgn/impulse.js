@@ -190,6 +190,16 @@ Impulse.Scene2D = (function() {
 			throw "Not implemented!";
 		}; // clear( )
 
+		// Vector getMtv(Shape, [Number], [Boolean]);
+		SceneGraph.prototype.getMtv = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // getMtv( )
+
+		// Array<Entity> query([Number], [Boolean]);
+		SceneGraph.prototype.query = function(flags, useOr) {
+			throw "Not implemented!";
+		}; // query( )
+
 		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
 		SceneGraph.prototype.queryCenterIn = function(shape, flags, useOr) {
 			throw "Not implemented!";
@@ -241,6 +251,11 @@ Impulse.Scene2D = (function() {
 		// Vector getMtv(Shape, [Number], [Boolean]);
 		LinearSG.prototype.getMtv = function(shape, flags, useOr) {
 			// init default values
+			var entity = undefined;
+			if (shape instanceof Entity) {
+				entity = shape;
+				shape = shape.getCollidable();
+			} // if
 			if (flags === undefined)
 				flags = 0;
 			if (useOr === undefined)
@@ -251,6 +266,11 @@ Impulse.Scene2D = (function() {
 
 			for (var i = 0; i < this._entities.length; i++) {
 				ent = this._entities[i];
+
+				// don't check against the original entity, if there is one
+				if (ent === entity)
+					continue;
+
 				// test if ent.flags contain all of _flags
 				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags)))) {
 					var localMtv = Intersect.shapeVsShapeSat(shape, ent.getCollidable());
@@ -262,18 +282,8 @@ Impulse.Scene2D = (function() {
 			return mtv;
 		}; // getMtv( )
 
-		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
-		LinearSG.prototype.queryCenterIn = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryCenterIn( )
-
-		// Array<Entity> queryContainedIn(Shape, [Number], [Boolean]);
-		LinearSG.prototype.queryContainedIn = function(shape, flags, useOr) {
-			throw "Not implemented!";
-		}; // queryContainedIn( )
-
-		// Array<Entity> queryIntersectWith(Shape, [Number], [Boolean]);
-		LinearSG.prototype.queryIntersectWith = function(shape, flags, useOr) {
+		// Array<Entity> query([Number], [Boolean]);
+		LinearSG.prototype.query = function(flags, useOr) {
 			// init default values
 			if (flags === undefined)
 				flags = 0;
@@ -285,6 +295,75 @@ Impulse.Scene2D = (function() {
 
 			for (var i = 0; i < this._entities.length; i++) {
 				ent = this._entities[i];
+				// test if ent.flags contain all of _flags
+				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags))))
+					entArray.push(ent);
+			} // for( i )
+
+			return entArray;
+		}; // query( )
+
+		// Array<Entity> queryCenterIn(Shape, [Number], [Boolean]);
+		LinearSG.prototype.queryCenterIn = function(shape, flags, useOr) {
+			// init default values
+			var entity = undefined;
+			if (shape instanceof Entity) {
+				entity = shape;
+				shape = shape.getCollidable();
+			} // if
+			shape = shape.getCenter();
+			if (flags === undefined)
+				flags = 0;
+			if (useOr === undefined)
+				useOr = true;
+
+			var entArray = [];
+			var ent;
+
+			for (var i = 0; i < this._entities.length; i++) {
+				ent = this._entities[i];
+
+				// don't check against the original entity, if there is one
+				if (ent === entity)
+					continue;
+
+				// test if ent.flags contain all of _flags
+				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags))) &&
+					Intersect.shapeVsShape(shape, ent.getCollidable()))
+					entArray.push(ent);
+			} // for( i )
+
+			return entArray;
+		}; // queryCenterIn( )
+
+		// Array<Entity> queryContainedIn(Shape, [Number], [Boolean]);
+		LinearSG.prototype.queryContainedIn = function(shape, flags, useOr) {
+			throw "Not implemented!";
+		}; // queryContainedIn( )
+
+		// Array<Entity> queryIntersectWith(Shape, [Number], [Boolean]);
+		LinearSG.prototype.queryIntersectWith = function(shape, flags, useOr) {
+			// init default values
+			var entity = undefined;
+			if (shape instanceof Entity) {
+				entity = shape;
+				shape = shape.getCollidable();
+			} // if
+			if (flags === undefined)
+				flags = 0;
+			if (useOr === undefined)
+				useOr = true;
+
+			var entArray = [];
+			var ent;
+
+			for (var i = 0; i < this._entities.length; i++) {
+				ent = this._entities[i];
+
+				// don't check against the original entity, if there is one
+				if (ent === entity)
+					continue;
+
 				// test if ent.flags contain all of _flags
 				if ((!flags || ((useOr && (ent.flags & flags) > 0) || (!useOr && (ent.flags & flags) === flags))) &&
 					Intersect.shapeVsShape(shape, ent.getCollidable()))

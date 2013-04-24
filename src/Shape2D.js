@@ -1828,6 +1828,59 @@ Impulse.Shape2D = (function() {
 		}; // perpendicular( )
 
 		/**
+		 * projectOnto( )
+		 *
+		 * Projects this vector onto vecRH
+		 *
+		 * projection of a onto b:
+		 *
+		 * proj.x = (dp / (b.x * b.x + b.y * b.y)) * b.x;
+		 * proj.y = (dp / (b.x * b.x + b.y * b.y)) * b.y;
+		 *
+		 * dp is the dot product of a and b
+		 * (b.x * b.x + b.y * b.y) is the magnitude of b squared
+		 *
+		 * @public
+		 * @sig public {Vector} projectOnto(Vector);
+		 * @param {Vector} vecRH
+		 * @returns {Vector} this vector after projection
+		 */
+		Vector.prototype.projectOnto = function(vecRH) {
+			// projection of a onto b:
+			//
+			// proj.x = (dp / (b.x * b.x + b.y * b.y)) * b.x;
+			// proj.y = (dp / (b.x * b.x + b.y * b.y)) * b.y;
+			//
+			// dp is the dot product of a and b
+			// (b.x * b.x + b.y * b.y) is the magnitude of b squared
+
+			var scalar = this.dotProduct(vecRH) / vecRH.magnitudeSq();
+
+			this.x = scalar * vecRH.x;
+			this.y = scalar * vecRH.y;
+
+			return this;
+		}; // projectOnto( )
+
+		/**
+		 * rotate( )
+		 *
+		 * Rotates this vector about its origin by 'rads' radians
+		 *
+		 * @public
+		 * @sig public {Vector} rotate(Number);
+		 * @param {Number} rads
+		 * @returns {Vector} this vector after rotation
+		 */
+		Vector.prototype.rotate = function(rads) {
+			var x = this.x;
+			this.x = x * Math.cos(rads) - this.y * Math.sin(rads);
+			this.y = x * Math.sin(rads) - this.y * Math.cos(rads);
+
+			return this;
+		}; // rotate( )
+
+		/**
 		 * scale( )
 		 *
 		 * Scales this vector by the passed amount(s)

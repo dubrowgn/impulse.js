@@ -20,6 +20,10 @@ Impulse.Util = (function() {
 			this._arr.splice(0, this._arr.length);
 		}; // clear( )
 
+		Collection.prototype.contains = function(item) {
+			return this._arr.indexOf(item) >=0;
+		}; // contains( )
+
 		Collection.prototype.insert = function(index, item) {
 			this._arr.splice(index, 0, item);
 		}; // insert( )
