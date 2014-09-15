@@ -14,3 +14,5 @@ Thumbs.db
 ############################
 .*
 
+# sublime project files
+*.sublime-*

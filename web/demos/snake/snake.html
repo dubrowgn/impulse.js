@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Snake!</title>
+		<link rel="shortcut icon" type="image/x-icon" href="assets/optimize/icon.png" />
+		<link rel="stylesheet" type="text/css" href="css/global.css">
+		<script type="text/javascript" src="lib/require.min.js" data-main="src/main" charset="utf-8"></script>
+	</head>
+	<body>
+		<!-- GAME MENU - table was the fastest/easiest way to center content -->
+		<table id="ui_menu" class="menu-container">
+			<tr>
+				<td class="bg">
+					<h1>Snake!</h1>
+					<p>
+						<h2>In-Game Keys:</h2>
+						<div>space: pause/unpause</div>
+						<div>f: toggle fullscreen</div>
+						<div>left mouse: reset game</div>
+						<div>arrow keys: change direction</div>
+					</p>
+					<p>
+						<h2>Difficulty:</h2>
+						<label><input type="radio" name="difficulty" value="0.5" />slow</label>
+						<label><input type="radio" name="difficulty" value="1.0" checked />normal</label>
+						<label><input type="radio" name="difficulty" value="2.0" />fast</label>
+					</p>
+					<p>
+						<h2>Map Size:</h2>
+						<label><input type="radio" name="size" value="14,10" />tiny</label>
+						<label><input type="radio" name="size" value="21,15" checked />normal</label>
+						<label><input type="radio" name="size" value="28,20" />large</label>
+					</p>
+					<p><input id="btn_play" type="button" value="Play!"/></p>
+				</td>
+			</tr>
+		<table>
+
+		<!-- RENDER TARGET - canvas for the game to use as 2D render target -->
+		<canvas id="layer1" class="layer"></canvas>
+
+		<!-- GAME UI - use HTML to describe game UI, and update it by listening to game event delegates -->
+		<div id="ui_paused" class="ui top lg">PAUSED<div class="xsm">Press space to unpause</div></div>
+		<div id="ui_lost" class="ui top lg hidden">YOU LOSE!<div class="xsm">Click the board to reset</div></div>
+		<div id="ui_score" class="ui bottom sm">Score: <span id="ui_score_value">&mdash;</span></div>
+		<div class="ui ui-2nd bottom right xsm">High Score: <span id="ui_highScore_value">&mdash;</span></div>
+		<div class="ui ui-2nd bottom left xsm"><a id="quit" href="#">Exit</a></div>
+	</body>
+</html>

@@ -183,8 +183,8 @@ Impulse.Util = (function() {
 			};
 		} // if
 		else {
-			var start = new Date() | 0;
-			Timing.now = function() { return (new Date() | 0) - start; };
+			var start = Date.now();
+			Timing.now = function() { return Date.now() - start; };
 		} // else
 
 		return Timing;
