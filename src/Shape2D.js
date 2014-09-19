@@ -922,6 +922,27 @@ Impulse.Shape2D = (function() {
 		}; // equals( )
 
 		/**
+		 * export( )
+		 *
+		 * Returns a generic object containing the current state of this matrix.
+		 * This is useful for storing state via JSON for example.
+		 *
+		 * @public
+		 * @sig public {Object} export();
+		 * @return {Object}
+		 */
+		Matrix.prototype.export = function() {
+			return {
+				a: this.a,
+				b: this.b,
+				c: this.c,
+				d: this.d,
+				e: this.e,
+				f: this.f
+			};
+		}; // export( )
+
+		/**
 		 * getDeterminant( )
 		 *
 		 * Calculates the determinant of this matrix
@@ -1197,6 +1218,14 @@ Impulse.Shape2D = (function() {
 		}; // setValues( )
 
 		/**
+		 * toJSON( )
+		 *
+		 * Returns a JSON ready copy of this object's current state.
+		 * @return {Object}
+		 */
+		Matrix.prototype.toJSON = Matrix.prototype.export;
+
+		/**
 		 * toString( )
 		 *
 		 * Returns the string representation of this matrix.
@@ -1233,6 +1262,23 @@ Impulse.Shape2D = (function() {
 
 			return this;
 		}; // translate( )
+
+		/**
+		 * import( )
+		 *
+		 * Creates a new matrix with an internal state equal to the values of
+		 * the passed generic object. This is useful for restoring state from
+		 * JSON for example.
+		 *
+		 * @public
+		 * @static
+		 * @sig public {Animation} import({Object});
+		 * @param  {Object} obj
+		 * @return {Animation}
+		 */
+		Matrix.import = function(obj) {
+			return new Matrix(obj.a, obj.b, obj.c, obj.d, obj.e, obj.f);
+		}; // import( )
 
 		return Matrix;
 	});
@@ -1437,6 +1483,25 @@ Impulse.Shape2D = (function() {
 				this.h == rect.h);
 		} // equals( )
 
+		/**
+		 * export( )
+		 *
+		 * Returns a generic object containing the current state of this rect.
+		 * This is useful for storing state via JSON for example.
+		 *
+		 * @public
+		 * @sig public {Object} export();
+		 * @return {Object}
+		 */
+		Rect.prototype.export = function() {
+			return {
+				x: this.x,
+				y: this.y,
+				w: this.w,
+				h: this.h
+			};
+		}; // export( )
+
 		// Vector getCenter();
 		Rect.prototype.getCenter = function() {
 			return new Shape2D.Vector(this.x + this.w/2, this.y - this.h/2);
@@ -1469,10 +1534,35 @@ Impulse.Shape2D = (function() {
 			return this;
 		} // setCenter( )
 
+		/**
+		 * toJSON( )
+		 *
+		 * Returns a JSON ready copy of this object's current state.
+		 * @return {Object}
+		 */
+		Rect.prototype.toJSON = Rect.prototype.export;
+
 		// String toString();
 		Rect.prototype.toString = function() {
 			return "Rect(" + this.x + ", " + this.y + ", " + this.w + ", " + this.h + ")";
 		} // toString( )
+
+		/**
+		 * import( )
+		 *
+		 * Creates a new rect with an internal state equal to the values of the
+		 * passed generic object. This is useful for restoring state from JSON
+		 * for example.
+		 *
+		 * @public
+		 * @static
+		 * @sig public {Rect} import({Object});
+		 * @param  {Object} obj
+		 * @return {Rect}
+		 */
+		Rect.import = function(obj) {
+			return new Rect(obj.x, obj.y, obj.w, obj.h);
+		}; // import( )
 
 		return Rect;
 	});

@@ -36,6 +36,25 @@ Impulse.Model2D = (function() {
 		Animation.prototype.matrix = undefined;
 
 		/**
+		 * export( )
+		 *
+		 * Returns a generic object containing the current state of this
+		 * animation. This is useful for storing state via JSON for example.
+		 *
+		 * @public
+		 * @sig public {Object} export();
+		 * @return {Object}
+		 */
+		Animation.prototype.export = function() {
+			return {
+				rect: this._firstFrameRect.export(),
+				frames: this._numberOfFrames,
+				duration: this._frameDuration * this._numberOfFrames,
+				matrix: this.matrix.export()
+			};
+		}; // export( )
+
+		/**
 		 * Returns the correct frame Rect from this animation for the specified point in time.
 		 *
 		 * @public
@@ -51,6 +70,36 @@ Impulse.Model2D = (function() {
 				this._firstFrameRect.w,
 				this._firstFrameRect.h);
 		}; // GetFrameRect( )
+
+		/**
+		 * toJSON( )
+		 *
+		 * Returns a JSON ready copy of this object's current state.
+		 * @return {Object}
+		 */
+		Animation.prototype.toJSON = Animation.prototype.export;
+
+		/**
+		 * import( )
+		 *
+		 * Creates a new animation with an internal state equal to the values of
+		 * the passed generic object. This is useful for restoring state from
+		 * JSON for example.
+		 *
+		 * @public
+		 * @static
+		 * @sig public {Animation} import({Object});
+		 * @param  {Object} obj
+		 * @return {Animation}
+		 */
+		Animation.import = function(obj) {
+			return new Animation(
+				Rect.import(obj.rect),
+				obj.frames,
+				obj.duration,
+				Matrix.import(obj.matrix)
+			);
+		}; // import( )
 
 		return Animation;
 	};
@@ -71,9 +120,9 @@ Impulse.Model2D = (function() {
 
 	Model2D.Model = function() {
 		// Model Model(HTMLImage);
-		var Model = function(_img) {
+		var Model = function(img) {
 			this.animations = [];
-			this.image = _img;
+			this.image = img;
 		}; // class Model
 
 		Model.prototype.animations = undefined;

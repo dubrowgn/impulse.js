@@ -176,7 +176,8 @@ Impulse.Util = (function() {
 		};
 
 		// IE 9 has performance, but not performance.now
-		if (window.performance !== undefined && performance.now !== undefined) {
+		// make sure window exists for node.js compatability
+		if (typeof window !== "undefined" && window.performance !== undefined && performance.now !== undefined) {
 			Timing.isHighResolution = true;
 			Timing.now = function() {
 				return performance.now();
