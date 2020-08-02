@@ -335,7 +335,7 @@ window.Shooter = (function() {
 			return undefined;
 		}; // getEntityById( )
 
-		this._netAdapter = new NetAdapter('ws://dubrowgn.dyndns.info:1400');
+		this._netAdapter = new NetAdapter('ws://impulsejs.com:1400');
 
 		this._netAdapter.closed.add(function() {
 			if (pingInterval !== undefined)
