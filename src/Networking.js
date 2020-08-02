@@ -1,7 +1,4 @@
-/**
- * @namespace
- */
-Impulse.Networking = (function() {
+export default (function() {
 	var Networking = {};
 
 	Networking.Types = {
@@ -275,4 +272,4 @@ Impulse.Networking = (function() {
 	})();
 
 	return Networking;
-});
+})();

@@ -1,11 +1,8 @@
-Impulse.Entity = (function() {
-	// imports
-	var EventDelegate = Impulse.Util.EventDelegate;
-	var EventedCollection = Impulse.Util.EventedCollection;
-	var Matrix = Impulse.Shape2D.Matrix;
-	var ModelState = Impulse.Model2D.ModelState;
-	var Vector = Impulse.Shape2D.Vector;
+import { ModelState } from "Model2D";
+import { Matrix, Vector } from "Shape2D";
+import { EventDelegate, EventedCollection } from "Util";
 
+export default (function() {
 	var Entity = function(model, position, collidable, parent, flags) {
 		this.children = new EventedCollection();
 		this._collidable = collidable;
@@ -174,4 +171,4 @@ Impulse.Entity = (function() {
 	}; // translateLocal( )
 
 	return Entity;
-});
+})();

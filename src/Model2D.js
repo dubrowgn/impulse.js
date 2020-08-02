@@ -1,12 +1,7 @@
-/**
- * @namespace
- */
-Impulse.Model2D = (function() {
-	var Model2D = {};
+import { Matrix, Rect } from "Shape2D"
 
-	// imports
-	var Matrix = Impulse.Shape2D.Matrix;
-	var Rect = Impulse.Shape2D.Rect;
+export default (function() {
+	var Model2D = {};
 
 	Model2D.Animation = function() {
 		/**
@@ -239,4 +234,4 @@ Impulse.Model2D = (function() {
 	Model2D.ModelState = Model2D.ModelState();
 
 	return Model2D;
-});
+})();

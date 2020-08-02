@@ -1,12 +1,8 @@
-/**
- * @namespace
- */
+import { Vector } from "Shape2D"
+import { EventDelegate } from "Util"
+
 Impulse.Input = (function() {
 	var Input = {};
-
-	// imports
-	var EventDelegate = Impulse.Util.EventDelegate;
-	var Vector = Impulse.Shape2D.Vector;
 
 	Input.MouseAdapter = (function() {
 		var MouseButtons = Input.MouseButtons;
@@ -184,7 +180,6 @@ Impulse.Input = (function() {
 
 	Input.MouseState = (function() {
 		var MouseButtons = Input.MouseButtons;
-		var Vector = Impulse.Shape2D.Vector;
 
 		var MouseState = function(position, buttons, wheel) {
 			this.buttons = buttons === undefined ? new MouseButtons() : buttons;
@@ -205,4 +200,4 @@ Impulse.Input = (function() {
 	Input.MouseAdapter = Input.MouseAdapter(); // requires MouseButtons, MouseState
 
 	return Input;
-});
+})();

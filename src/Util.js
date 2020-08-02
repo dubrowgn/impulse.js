@@ -1,4 +1,4 @@
-Impulse.Util = (function() {
+export default (function() {
 	var Util = {};
 
 	Util.Collection = (function() {
@@ -192,4 +192,4 @@ Impulse.Util = (function() {
 	})();
 
 	return Util;
-});
+})();

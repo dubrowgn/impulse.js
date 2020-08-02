@@ -1,18 +1,11 @@
-# Build Output #
-################
-impulse.js
-impulse.min.js
+# node
+node_modules
 
-# OS generated files #
-######################
+# build artifacts
+dist/*
+
+# OS generated files
 .DS_Store*
 ehthumbs.db
 Icon?
 Thumbs.db
-
-# Hidden Files and Folders #
-############################
-.*
-
-# sublime project files
-*.sublime-*

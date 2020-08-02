@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"declaration": false,
+		"module": "amd",
+		"outDir": "dist",
+		"outFile": "dist/impulse.js",
+		"sourceMap": true,
+		"strict": false,
+		"target": "es6"
+	},
+	"include": [
+		"src/main.ts"
+	]
+}

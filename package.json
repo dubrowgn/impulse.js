@@ -1,0 +1,33 @@
+{
+  "name": "impulse.js",
+  "version": "0.1.1",
+  "description": "Impulse.js is a high performance HTML5 game engine for JavaScript.",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx tsc && cat LICENSE dist/impulse.js > dist/impulse.js.lic && mv dist/impulse.js.lic dist/impulse.js",
+    "build-release": "npx tsc && npm run -s compress",
+    "clean": "rm -rf dist",
+    "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "npx tsc -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dubrowgn/impulse.js.git"
+  },
+  "keywords": [
+    "game",
+    "engine",
+    "web"
+  ],
+  "author": "me@dubrowgn.com",
+  "license": "GPL-2.0-only",
+  "bugs": {
+    "url": "https://github.com/dubrowgn/impulse.js/issues"
+  },
+  "homepage": "https://github.com/dubrowgn/impulse.js",
+  "devDependencies": {
+    "typescript": "^3.9.7",
+    "uglify-es": "^3.3.9"
+  }
+}

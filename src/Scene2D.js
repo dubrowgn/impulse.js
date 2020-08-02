@@ -1,17 +1,10 @@
-/**
- * @namespace
- */
-Impulse.Scene2D = (function() {
-	var Scene2D = {};
+import * as Entity from "Entity";
+import { MouseAdapter } from "Input";
+import { Intersect, Matrix, Polygon, Vector } from "Shape2D";
+import { EventDelegate, Timing } from "Util";
 
-	// imports
-	var Entity = Impulse.Entity;
-	var EventDelegate = Impulse.Util.EventDelegate;
-	var Intersect = Impulse.Shape2D.Intersect;
-	var Matrix = Impulse.Shape2D.Matrix;
-	var MouseAdapter = Impulse.Input.MouseAdapter;
-	var Polygon = Impulse.Shape2D.Polygon;
-	var Vector = Impulse.Shape2D.Vector;
+export default (function() {
+	var Scene2D = {};
 
 	Scene2D.Camera = (function() {
 		var Camera = function(canvas, x, y, w, h, viewportMargin) {
@@ -229,8 +222,6 @@ Impulse.Scene2D = (function() {
 	});
 
 	Scene2D.LinearSG = (function() {
-		var Vector = Impulse.Shape2D.Vector;
-
 		var LinearSG = function() {
 			this._entities = [];
 		}; // class LinearSG
@@ -391,8 +382,6 @@ Impulse.Scene2D = (function() {
 	Scene2D.QuadTreeSG = {}; // stub
 
 	Scene2D.Scene = (function() {
-		var Timing = Impulse.Util.Timing;
-
 		var Scene = function(camera, sceneGraph) {
 			this._camera = camera;
 			this._canvas = camera.getCanvas();
@@ -476,4 +465,4 @@ Impulse.Scene2D = (function() {
 	Scene2D.Scene = Scene2D.Scene(); // requires Camera, ISceneGraph
 
 	return Scene2D;
-});
+})();

@@ -1,7 +1,4 @@
-/**
- * @namespace
- */
-Impulse.Shape2D = (function() {
+export default (function() {
 	/**
 	 * enumeration of shape types and their associated ID's
 	 *
@@ -2153,4 +2150,4 @@ Impulse.Shape2D = (function() {
 	Shape2D.Intersect = Shape2D.Intersect(); // requires Circle, Polygon, Rect, Vector, Intersection
 
 	return Shape2D;
-});
+})();
