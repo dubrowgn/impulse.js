@@ -8,7 +8,9 @@
     "build-release": "npx tsc && npm run -s compress",
     "clean": "rm -rf dist",
     "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "shell": "npx ts-node",
+    "shell-test": "npx ts-node --project test/tsconfig.json --dir .",
+    "test": "npx ts-node --project test/tsconfig.json --dir . $(npx which pta) test/**/*.ts",
     "watch": "npx tsc -w"
   },
   "repository": {
@@ -27,6 +29,8 @@
   },
   "homepage": "https://github.com/dubrowgn/impulse.js",
   "devDependencies": {
+    "pta": "^0.1.3",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.7",
     "uglify-es": "^3.3.9"
   }
