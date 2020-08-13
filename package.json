@@ -10,7 +10,7 @@
     "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
     "shell": "npx ts-node",
     "shell-test": "npx ts-node --project test/tsconfig.json --dir .",
-    "test": "npx ts-node --project test/tsconfig.json --dir . $(npx which pta) test/**/*.ts",
+    "test": "npx ts-node --project test/tsconfig.json --dir . $(npx which pta) test/**/*.{j,t}s",
     "watch": "npx tsc -w"
   },
   "repository": {

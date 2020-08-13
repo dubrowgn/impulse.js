@@ -1,4 +1,4 @@
-import { Vector } from "../src/Shape2D";
+import { Vector } from "../../src/Shape2D";
 
 export default t => {
 	t.test("constructor", t => {
@@ -98,6 +98,10 @@ export default t => {
 
 		t.equal(v10.getNormal().equals(new Vector(0,1)), true, "<1,0>.getNormal() = <0,1>");
 		t.equal(v10.getNormal(v32).equals((new Vector(1,-1)).normalize()), true, "<1,0>.getNormal(<3,2>) = <sqrt(2)/2,-sqrt(2)/2>");
+	});
+
+	t.test("getShapeID()", t => {
+		t.ok(new Vector().getShapeID() > 0);
 	});
 
 	t.test("isZero()", t => {
