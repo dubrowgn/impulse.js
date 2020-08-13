@@ -1,4 +1,4 @@
-export default (function() {
+const { Collection, EventDelegate, EventedCollection, Timing } = (function() {
 	var Util = {};
 
 	Util.Collection = (function() {
@@ -193,3 +193,5 @@ export default (function() {
 
 	return Util;
 })();
+
+export { Collection, EventDelegate, EventedCollection, Timing };

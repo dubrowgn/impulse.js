@@ -2,7 +2,7 @@ import { ModelState } from "Model2D";
 import { Matrix, Vector } from "Shape2D";
 import { EventDelegate, EventedCollection } from "Util";
 
-export default (function() {
+export const Entity = (function() {
 	var Entity = function(model, position, collidable, parent, flags) {
 		this.children = new EventedCollection();
 		this._collidable = collidable;

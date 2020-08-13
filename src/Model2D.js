@@ -1,6 +1,6 @@
 import { Matrix, Rect } from "Shape2D"
 
-export default (function() {
+const { Animation, AnimationState, Model, ModelState } = (function() {
 	var Model2D = {};
 
 	Model2D.Animation = function() {
@@ -235,3 +235,5 @@ export default (function() {
 
 	return Model2D;
 })();
+
+export { Animation, AnimationState, Model, ModelState };

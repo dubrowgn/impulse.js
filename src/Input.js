@@ -1,7 +1,7 @@
 import { Vector } from "Shape2D"
 import { EventDelegate } from "Util"
 
-Impulse.Input = (function() {
+const { MouseButtons, MouseState, MouseAdapter } = (function() {
 	var Input = {};
 
 	Input.MouseAdapter = (function() {
@@ -201,3 +201,5 @@ Impulse.Input = (function() {
 
 	return Input;
 })();
+
+export { MouseButtons, MouseState, MouseAdapter };

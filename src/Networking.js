@@ -1,4 +1,4 @@
-export default (function() {
+const { Types, BinarySerializer, Sanitizer } = (function() {
 	var Networking = {};
 
 	Networking.Types = {
@@ -273,3 +273,5 @@ export default (function() {
 
 	return Networking;
 })();
+
+export { Types, BinarySerializer, Sanitizer };

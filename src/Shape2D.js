@@ -1,4 +1,4 @@
-export default (function() {
+const { IShape, Circle, Rect, Vector, Polygon, Matrix, Intersect } = (function() {
 	/**
 	 * enumeration of shape types and their associated ID's
 	 *
@@ -2151,3 +2151,5 @@ export default (function() {
 
 	return Shape2D;
 })();
+
+export { IShape, Circle, Rect, Vector, Polygon, Matrix, Intersect };

@@ -1,9 +1,9 @@
-import * as Entity from "Entity";
+import { Entity } from "Entity";
 import { MouseAdapter } from "Input";
 import { Intersect, Matrix, Polygon, Vector } from "Shape2D";
 import { EventDelegate, Timing } from "Util";
 
-export default (function() {
+const { Camera, ISceneGraph, LinearSG, Scene } = (function() {
 	var Scene2D = {};
 
 	Scene2D.Camera = (function() {
@@ -466,3 +466,5 @@ export default (function() {
 
 	return Scene2D;
 })();
+
+export { Camera, ISceneGraph, LinearSG, Scene };

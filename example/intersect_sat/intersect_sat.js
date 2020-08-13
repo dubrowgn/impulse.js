@@ -1,15 +1,17 @@
 "use strict";
 
+const { Scene2D, Shape2D } = require("impulse");
+
 var intersect = (function() {
 	var intersect = {};
 
 	// imports
-	var Camera = Impulse.Scene2D.Camera;
-	var Circle = Impulse.Shape2D.Circle;
-	var Intersect = Impulse.Shape2D.Intersect;
-	var Polygon = Impulse.Shape2D.Polygon;
-	var Rect = Impulse.Shape2D.Rect;
-	var Vector = Impulse.Shape2D.Vector;
+	var Camera = Scene2D.Camera;
+	var Circle = Shape2D.Circle;
+	var Intersect = Shape2D.Intersect;
+	var Polygon = Shape2D.Polygon;
+	var Rect = Shape2D.Rect;
+	var Vector = Shape2D.Vector;
 
 	// constants
 	var _borderColorNormal = "#ffffff";

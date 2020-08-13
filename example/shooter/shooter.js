@@ -1,6 +1,10 @@
+"use strict";
+
+const { Entity, Model2D, Scene2D, Shape2D, Util } = require("impulse");
+
 window.NetAdapter = (function()  {
 	// imports
-	var EventDelegate = Impulse.Util.EventDelegate;
+	var EventDelegate = Util.EventDelegate;
 
 	// enumerations
 	var commandId = {
@@ -190,19 +194,18 @@ window.NetAdapter = (function()  {
 
 window.Shooter = (function() {
 	// imports
-	var Animation = Impulse.Model2D.Animation;
-	var Camera = Impulse.Scene2D.Camera;
-	var Circle = Impulse.Shape2D.Circle;
-	var Collection = Impulse.Util.Collection;
-	var Entity = Impulse.Entity;
-	var EventDelegate = Impulse.Util.EventDelegate;
-	var LinearSG = Impulse.Scene2D.LinearSG;
-	var Matrix = Impulse.Shape2D.Matrix;
-	var Model = Impulse.Model2D.Model;
-	var Rect = Impulse.Shape2D.Rect;
-	var Scene = Impulse.Scene2D.Scene;
-	var Timing = Impulse.Util.Timing;
-	var Vector = Impulse.Shape2D.Vector;
+	var Animation = Model2D.Animation;
+	var Camera = Scene2D.Camera;
+	var Circle = Shape2D.Circle;
+	var Collection = Util.Collection;
+	var EventDelegate = Util.EventDelegate;
+	var LinearSG = Scene2D.LinearSG;
+	var Matrix = Shape2D.Matrix;
+	var Model = Model2D.Model;
+	var Rect = Shape2D.Rect;
+	var Scene = Scene2D.Scene;
+	var Timing = Util.Timing;
+	var Vector = Shape2D.Vector;
 
 	// enumerations
 	var animId = {
@@ -476,7 +479,7 @@ window.Shooter = (function() {
 
 				// collision detection and response
 				if (shots[i].cid !== this._clientId) {
-					if (Impulse.Shape2D.Intersect.shapeVsShape(shots[i].getCollidable().getCenter(), this._player.getCollidable())) {
+					if (Shape2D.Intersect.shapeVsShape(shots[i].getCollidable().getCenter(), this._player.getCollidable())) {
 						this._health -= 7;
 						if (this._health < 0)
 							this._health = 0;

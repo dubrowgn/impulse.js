@@ -1,5 +1,4 @@
-import Shape2D from "../src/Shape2D";
-const { Vector } = Shape2D;
+import { Vector } from "../src/Shape2D";
 
 export default t => {
 	t.test("constructor", t => {
