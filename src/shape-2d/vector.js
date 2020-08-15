@@ -22,6 +22,8 @@ export const Vector = (function() {
 		if (x instanceof Vector) {
 			this.x = x.x;
 			this.y = x.y;
+		} else if (arguments.length === 0) {
+			this.x = this.y = 0;
 		} else if (arguments.length === 2) {
 			this.x = x;
 			this.y = y;
@@ -369,18 +371,14 @@ export const Vector = (function() {
 	 * @returns {Vector} this vector after projection
 	 */
 	Vector.prototype.projectOnto = function(vecRH) {
-		// projection of a onto b:
-		//
-		// proj.x = (dp / (b.x * b.x + b.y * b.y)) * b.x;
-		// proj.y = (dp / (b.x * b.x + b.y * b.y)) * b.y;
-		//
-		// dp is the dot product of a and b
-		// (b.x * b.x + b.y * b.y) is the magnitude of b squared
+		if (vecRH.isZero()) {
+			this.x = this.y = 0;
+		} else {
+			let k = this.dotProduct(vecRH) / vecRH.magnitudeSq();
 
-		var scalar = this.dotProduct(vecRH) / vecRH.magnitudeSq();
-
-		this.x = scalar * vecRH.x;
-		this.y = scalar * vecRH.y;
+			this.x = k * vecRH.x;
+			this.y = k * vecRH.y;
+		}
 
 		return this;
 	}; // projectOnto( )
@@ -436,9 +434,13 @@ export const Vector = (function() {
 	 * @returns {Vector} this vector after scaling
 	 */
 	Vector.prototype.scaleToMagnitude = function(mag) {
-		var k = mag / this.magnitude();
+		if (this.isZero())
+			return this;
+
+		let k = mag / this.magnitude();
 		this.x *= k;
 		this.y *= k;
+
 		return this;
 	}; // scaleToMagnitude( )
 

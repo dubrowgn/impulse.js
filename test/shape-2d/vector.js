@@ -157,6 +157,11 @@ export default t => {
 		t.equal(v_79.normalize().equals(new Vector(-0.6139406135149205,0.7893522173763263)), true, "<-7,9>.normalize() = <-0.6139406135149205,0.7893522173763263>");
 	});
 
+	t.test("projectOnto()", t => {
+		t.equal(new Vector(1, 1).projectOnto(new Vector()), new Vector(), "<1,1>.projectOnto(<0,0>) = <0,0>")
+		t.equal(new Vector(1, 1).projectOnto(new Vector(2, 2)), new Vector(1, 1), "<1,1>.projectOnto(<2,2>) = <2,2>")
+	});
+
 	t.test("scale()", t => {
 		let v11 = new Vector(1, 1);
 
@@ -164,10 +169,11 @@ export default t => {
 		t.equal(v11.scale(2, -3).equals(new Vector(4, -6)), true, "<2,2>.scale(2, -3) = <4,-6>");
 	});
 
-	t.test("magnitudeSq()", t => {
+	t.test("scaleToMagnitude()", t => {
 		let v34 = new Vector(3, 4);
 
-		t.equal(v34.normalize().scaleToMagnitude(5).equals(new Vector(3, 4)), true, "<3,4>.normalize().scaleToMagnitude(5) = <3,4>");
+		t.equal(new Vector().scaleToMagnitude(1), new Vector(), "<0,0>.scaleToMagnitude(1) = <0,0>");
+		t.equal(v34.normalize().scaleToMagnitude(5), new Vector(3, 4), "<3,4>.normalize().scaleToMagnitude(5) = <3,4>");
 	});
 
 	t.test("subtract()", t => {
