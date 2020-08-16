@@ -83,9 +83,9 @@ export default t => {
 			true, "(new Matrix()).scale(2, 3).equals(new Matrix(2, 0, 0, 3, 0, 0))");
 	});
 
-	t.test("setValues()", t => {
-		t.equal((new Matrix()).setValues(1, 2, 3, 4, 5, 6).equals(new Matrix(1, 2, 3, 4, 5, 6)),
-			true, "(new Matrix()).setValues(1, 2, 3, 4, 5, 6).equals(new Matrix(1, 2, 3, 4, 5, 6))");
+	t.test("set()", t => {
+		t.equal(new Matrix().set(1, 2, 3, 4, 5, 6), new Matrix(1, 2, 3, 4, 5, 6),
+			true, "(new Matrix()).set(1, 2, 3, 4, 5, 6).equals(new Matrix(1, 2, 3, 4, 5, 6))");
 	});
 
 	t.test("toString()", t => {

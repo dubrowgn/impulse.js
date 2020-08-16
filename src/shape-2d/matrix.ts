@@ -1,13 +1,30 @@
 import { Vector } from "./vector";
 
-export const Matrix = (function() {
+interface MatrixJson {
+	a: number;
+	b: number;
+	c: number;
+	d: number;
+	e: number;
+	f: number;
+};
+
+export class Matrix {
+	a: number = 1;
+	b: number = 0;
+	c: number = 0;
+	d: number = 1;
+	e: number = 0;
+	f: number = 0;
+
 	/**
 	 * @class Matrix
 	 *
-	 * This is a 2D Matrix class. It is 3x3 to allow for affine transformations in 2D space.
-	 * The third row is always assumed to be [0, 0, 1].
+	 * This is a 2D Matrix class. It is 3x3 to allow for affine transformations in 2D
+	 * space. The third row is always assumed to be [0, 0, 1].
 	 *
-	 * Matrix uses the following form, as per the whatwg.org specifications for canvas.transform():
+	 * Matrix uses the following form, as per the whatwg.org specifications for
+	 * canvas.transform():
 	 * [a, c, e]
 	 * [b, d, f]
 	 * [0, 0, 1]
@@ -25,31 +42,12 @@ export const Matrix = (function() {
 	 * @param {Number=0} e
 	 * @param {Number=0} f
 	 */
-	var Matrix = function(a, b, c, d, e, f) {
-		if (a instanceof Matrix) {
-			this.a = a.a;
-			this.b = a.b;
-			this.c = a.c;
-			this.d = a.d;
-			this.e = a.e;
-			this.f = a.f;
-		} else if (arguments.length === 6) {
-			this.a = a;
-			this.b = b;
-			this.c = c;
-			this.d = d;
-			this.e = e;
-			this.f = f;
-		} else if (arguments.length > 0)
-			throw "Unexpected number of arguments for Matrix()";
-	}; // class Matrix
-
-	Matrix.prototype.a = 1;
-	Matrix.prototype.b = 0;
-	Matrix.prototype.c = 0;
-	Matrix.prototype.d = 1;
-	Matrix.prototype.e = 0;
-	Matrix.prototype.f = 0;
+	constructor();
+	constructor(matrix: Matrix);
+	constructor(a: number, b: number, c: number, d: number, e: number, f: number);
+	constructor(a?: any, b?: number, c?: number, d?: number, e?: number, f?: number) {
+		this._set(a, b, c, d, e, f);
+	}
 
 	/**
 	 * clone( )
@@ -60,9 +58,9 @@ export const Matrix = (function() {
 	 * @sig public {Matrix} clone();
 	 * @returns {Matrix}
 	 */
-	Matrix.prototype.clone = function() {
+	clone(): Matrix {
 		return new Matrix(this);
-	}; // clone( )
+	}
 
 	/**
 	 * combine( )
@@ -72,21 +70,24 @@ export const Matrix = (function() {
 	 *
 	 * @public
 	 * @sig public {Matrix} combine(Matrix);
-	 * @param {Matrix} mtrxRH
+	 * @param {Matrix} right
 	 * @returns {Matrix} this matrix after combination
 	 */
-	Matrix.prototype.combine = function(mtrxRH) {
-		var tmp = this.a;
-		this.a = tmp * mtrxRH.a + this.b * mtrxRH.c;
-		this.b = tmp * mtrxRH.b + this.b * mtrxRH.d;
-		tmp = this.c;
-		this.c = tmp * mtrxRH.a + this.d * mtrxRH.c;
-		this.d = tmp * mtrxRH.b + this.d * mtrxRH.d;
-		tmp = this.e;
-		this.e = tmp * mtrxRH.a + this.f * mtrxRH.c + mtrxRH.e;
-		this.f = tmp * mtrxRH.b + this.f * mtrxRH.d + mtrxRH.f;
+	combine(right: Matrix): Matrix {
+		let a = this.a;
+		this.a = a * right.a + this.b * right.c;
+		this.b = a * right.b + this.b * right.d;
+
+		let c = this.c;
+		this.c = c * right.a + this.d * right.c;
+		this.d = c * right.b + this.d * right.d;
+
+		let e = this.e;
+		this.e = e * right.a + this.f * right.c + right.e;
+		this.f = e * right.b + this.f * right.d + right.f;
+
 		return this;
-	}; // combine( )
+	}
 
 	/**
 	 * equals( )
@@ -95,14 +96,14 @@ export const Matrix = (function() {
 	 *
 	 * @public
 	 * @sig public {Boolean} equals(Matrix);
-	 * @param {Matrix} mtrxRH
+	 * @param {Matrix} right
 	 * @returns {Boolean} true if the two matrices are numerically equal
 	 */
-	Matrix.prototype.equals = function(mtrxRH) {
-		return mtrxRH instanceof Matrix &&
-			this.a == mtrxRH.a && this.b == mtrxRH.b && this.c == mtrxRH.c &&
-			this.d == mtrxRH.d && this.e == mtrxRH.e && this.f == mtrxRH.f;
-	}; // equals( )
+	equals(right: Matrix): boolean {
+		return right instanceof Matrix &&
+			this.a == right.a && this.b == right.b && this.c == right.c &&
+			this.d == right.d && this.e == right.e && this.f == right.f;
+	}
 
 	/**
 	 * export( )
@@ -114,16 +115,12 @@ export const Matrix = (function() {
 	 * @sig public {Object} export();
 	 * @return {Object}
 	 */
-	Matrix.prototype.export = function() {
+	export(): MatrixJson {
 		return {
-			a: this.a,
-			b: this.b,
-			c: this.c,
-			d: this.d,
-			e: this.e,
-			f: this.f
+			a: this.a, b: this.b, c: this.c,
+			d: this.d, e: this.e, f: this.f
 		};
-	}; // export( )
+	}
 
 	/**
 	 * getDeterminant( )
@@ -134,9 +131,9 @@ export const Matrix = (function() {
 	 * @sig public {Number} getDeterminant();
 	 * @returns {Number} det(this matrix)
 	 */
-	Matrix.prototype.getDeterminant = function() {
+	getDeterminant(): number {
 		return this.a * this.d - this.b * this.c;
-	}; // getDeterminant( )
+	}
 
 	/**
 	 * getRotation( )
@@ -148,9 +145,9 @@ export const Matrix = (function() {
 	 * @sig public {Number} getRotation();
 	 * @returns {Number} the rotation applied to this matrix in radians as a scalar value
 	 */
-	Matrix.prototype.getRotation = function() {
+	getRotation(): number {
 		return Math.atan2(this.b, this.a);
-	}; // getRotation( )
+	}
 
 	/**
 	 * getScale( )
@@ -161,11 +158,11 @@ export const Matrix = (function() {
 	 * @sig public {Vector} getScale();
 	 * @returns {Vector} 2D vector with the scaling factors for each axis
 	 */
-	Matrix.prototype.getScale = function() {
+	getScale(): Vector {
 		return new Vector(
 			Math.sqrt(this.a * this.a + this.b * this.b),
 			Math.sqrt(this.c * this.c + this.d * this.d));
-	}; // getScale( )
+	}
 
 	/**
 	 * getTranslation( )
@@ -176,9 +173,9 @@ export const Matrix = (function() {
 	 * @sig public {Vector} getTranslation();
 	 * @returns {Vector} the translation applied to this vector as a 2D vector
 	 */
-	Matrix.prototype.getTranslation = function() {
+	getTranslation(): Vector {
 		return new Vector(this.e, this.f);
-	}; // getTranslation( )
+	}
 
 	/**
 	 * invert( )
@@ -190,29 +187,23 @@ export const Matrix = (function() {
 	 * @returns {Matrix} this inverted matrix or the original matrix on failure
 	 * @see Matrix.isInvertible( )
 	 */
-	Matrix.prototype.invert = function() {
-		var det = this.getDeterminant();
+	invert(): Matrix {
+		let det = this.getDeterminant();
 
 		// matrix is invertible if its getDeterminant is non-zero
-		if (det !== 0) {
-			var old = {
-				a: this.a,
-				b: this.b,
-				c: this.c,
-				d: this.d,
-				e: this.e,
-				f: this.f
-			};
-			this.a = old.d / det;
-			this.b = -old.b / det;
-			this.c = -old.c / det;
-			this.d = old.a / det;
-			this.e = (old.c * old.f - old.e * old.d) / det;
-			this.f = (old.e * old.b - old.a * old.f) / det;
-		} // if
+		if (det === 0)
+			return this;
+
+		let { a, b, c, d, e, f } = this;
+		this.a = d / det;
+		this.b = -b / det;
+		this.c = -c / det;
+		this.d = a / det;
+		this.e = (c * f - e * d) / det;
+		this.f = (e * b - a * f) / det;
 
 		return this;
-	}; // invert( )
+	}
 
 	/**
 	 * isIdentity( )
@@ -223,9 +214,10 @@ export const Matrix = (function() {
 	 * @sig public {Boolean} isIdentity();
 	 * @returns {Boolean}
 	 */
-	Matrix.prototype.isIdentity = function() {
-		return this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.e === 0 && this.f === 0;
-	}; // isIdentity( )
+	isIdentity(): boolean {
+		return this.a === 1 && this.b === 0 && this.c === 0 &&
+			this.d === 1 && this.e === 0 && this.f === 0;
+	}
 
 	/**
 	 * isInvertible( )
@@ -237,9 +229,9 @@ export const Matrix = (function() {
 	 * @returns {Boolean} true if this matrix is invertible
 	 * @see Matrix.invert( )
 	 */
-	Matrix.prototype.isInvertible = function() {
+	isInvertible(): boolean {
 		return this.getDeterminant() !== 0;
-	}; // isInvertible( )
+	}
 
 	/**
 	 * preRotate( )
@@ -251,19 +243,20 @@ export const Matrix = (function() {
 	 * @param {number} rads - angle to rotate in radians
 	 * @returns {Matrix} this matrix after pre-rotation
 	 */
-	Matrix.prototype.preRotate = function(rads) {
-		var cos = Math.cos(rads);
-		var sin = Math.sin(rads);
+	preRotate(rads: number): Matrix {
+		let cos = Math.cos(rads);
+		let sin = Math.sin(rads);
 
-		var tmp = this.a;
-		this.a = cos * tmp - sin * this.b;
-		this.b = sin * tmp + cos * this.b;
-		tmp = this.c;
-		this.c = cos * tmp - sin * this.d;
-		this.d = sin * tmp + cos * this.d;
+		let a = this.a;
+		this.a = cos * a - sin * this.b;
+		this.b = sin * a + cos * this.b;
+
+		let c = this.c;
+		this.c = cos * c - sin * this.d;
+		this.d = sin * c + cos * this.d;
 
 		return this;
-	}; // preRotate( )
+	}
 
 	/**
 	 * preScale( )
@@ -272,21 +265,27 @@ export const Matrix = (function() {
 	 *
 	 * @public
 	 * @sig public {Matrix} preScale(Number[, Number]);
-	 * @param {Number} scalarX
+	 * @param {Number|Vector} scalarX
 	 * @param {Number} [scalarY] scalarX is used if scalarY is undefined
 	 * @returns {Matrix} this after pre-scaling
 	 */
-	Matrix.prototype.preScale = function(scalarX, scalarY) {
-		if (scalarY === undefined)
+	preScale(vect: Vector): Matrix;
+	preScale(scalarX: number, scalarY?: number): Matrix;
+	preScale(scalarX: any, scalarY?: number): Matrix {
+		if (scalarX instanceof Vector) {
+			scalarY = scalarX.y;
+			scalarX = scalarX.x;
+		} else if (scalarY === undefined) {
 			scalarY = scalarX;
+		}
 
 		this.a *= scalarX;
-		this.b *= scalarY;
+		this.b *= scalarY as number;
 		this.c *= scalarX;
-		this.d *= scalarY;
+		this.d *= scalarY as number;
 
 		return this;
-	}; // preScale( )
+	}
 
 	/**
 	 * preTranslate( )
@@ -300,17 +299,21 @@ export const Matrix = (function() {
 	 * @param {Number} dy
 	 * @returns {Matrix} this matrix after pre-translation
 	 */
-	Matrix.prototype.preTranslate = function(dx, dy) {
-		if (typeof dx === "number") {
-			this.e += dx;
-			this.f += dy;
-		} else {
-			this.e += dx.x;
-			this.f += dx.y;
-		} // else
+	preTranslate(vect: Vector): Matrix;
+	preTranslate(dx: number, dy?: number): Matrix;
+	preTranslate(dx: any, dy?: number): Matrix {
+		if (dx instanceof Vector) {
+			dy = dx.y;
+			dx = dx.x;
+		} else if (dy === undefined) {
+			dy = dx;
+		}
+
+		this.e += dx;
+		this.f += dy as number;
 
 		return this;
-	}; // preTranslate( )
+	}
 
 	/**
 	 * rotate( )
@@ -322,56 +325,33 @@ export const Matrix = (function() {
 	 * @param {Number} rads - angle to rotate in radians
 	 * @returns {Matrix} this matrix after rotation
 	 */
-	Matrix.prototype.rotate = function(rads) {
-		var cos = Math.cos(rads);
-		var sin = Math.sin(rads);
+	rotate(rads: number): Matrix {
+		let cos = Math.cos(rads);
+		let sin = Math.sin(rads);
 
-		var tmp = this.a;
-		this.a = cos * tmp - sin * this.b;
-		this.b = sin * tmp + cos * this.b;
-		tmp = this.c;
-		this.c = cos * tmp - sin * this.d;
-		this.d = sin * tmp + cos * this.d;
-		tmp = this.e;
-		this.e = cos * tmp - sin * this.f;
-		this.f = sin * tmp + cos * this.f;
+		let a = this.a;
+		this.a = cos * a - sin * this.b;
+		this.b = sin * a + cos * this.b;
 
-		return this;
-	}; // rotate( )
+		let c = this.c;
+		this.c = cos * c - sin * this.d;
+		this.d = sin * c + cos * this.d;
 
-	/**
-	 * scale( )
-	 *
-	 * Applies a post-scaling to this matrix
-	 *
-	 * @public
-	 * @sig public {Matrix} scale(Number[, Number]);
-	 * @param {Number} scalarX
-	 * @param {Number} [scalarY] scalarX is used if scalarY is undefined
-	 * @returns {Matrix} this after post-scaling
-	 */
-	Matrix.prototype.scale = function(scalarX, scalarY) {
-		if (scalarY === undefined)
-			scalarY = scalarX;
-
-		this.a *= scalarX;
-		this.b *= scalarY;
-		this.c *= scalarX;
-		this.d *= scalarY;
-		this.e *= scalarX;
-		this.f *= scalarY;
+		let e = this.e;
+		this.e = cos * e - sin * this.f;
+		this.f = sin * e + cos * this.f;
 
 		return this;
-	}; // scale( )
+	}
 
 	/**
-	 * setValues( )
+	 * set( )
 	 *
 	 * Sets the values of this matrix
 	 *
 	 * @public
-	 * @sig public {Matrix} setValues(Matrix);
-	 * @sig public {Matrix} setValues(Number, Number, Number, Number, Number, Number);
+	 * @sig public {Matrix} set(Matrix);
+	 * @sig public {Matrix} set(Number, Number, Number, Number, Number, Number);
 	 * @param {Matrix|Number} a
 	 * @param {Number} b
 	 * @param {Number} c
@@ -380,7 +360,14 @@ export const Matrix = (function() {
 	 * @param {Number} f
 	 * @returns {Matrix} this matrix containing the new values
 	 */
-	Matrix.prototype.setValues = function(a, b, c, d, e, f) {
+	set(): Matrix;
+	set(matrix: Matrix): Matrix;
+	set(a: number, b: number, c: number, d: number, e: number, f: number): Matrix;
+	set(a?: any, b?: number, c?: number, d?: number, e?: number, f?: number): Matrix {
+		return this._set(a, b, c, d, e, f);
+	}
+
+	private _set(a?: any, b?: number, c?: number, d?: number, e?: number, f?: number): Matrix {
 		if (a instanceof Matrix) {
 			this.a = a.a;
 			this.b = a.b;
@@ -388,17 +375,55 @@ export const Matrix = (function() {
 			this.d = a.d;
 			this.e = a.e;
 			this.f = a.f;
-		} else {
+		} else if (typeof a === "number") {
 			this.a = a;
-			this.b = b;
-			this.c = c;
-			this.d = d;
-			this.e = e;
-			this.f = f;
-		} // else
+			this.b = b as number;
+			this.c = c as number;
+			this.d = d as number;
+			this.e = e as number;
+			this.f = f as number;
+		} else {
+			this.a = 1;
+			this.b = 0;
+			this.c = 0;
+			this.d = 1;
+			this.e = 0;
+			this.f = 0;
+		}
 
 		return this;
-	}; // setValues( )
+	}
+
+	/**
+	 * scale( )
+	 *
+	 * Applies a post-scaling to this matrix
+	 *
+	 * @public
+	 * @sig public {Matrix} scale(Number[, Number]);
+	 * @param {Number|Vector} scalarX
+	 * @param {Number} [scalarY] scalarX is used if scalarY is undefined
+	 * @returns {Matrix} this after post-scaling
+	 */
+	scale(vect: Vector): Matrix;
+	scale(scalarX: number, scalarY?: number): Matrix;
+	scale(scalarX: any, scalarY?: number): Matrix {
+		if (scalarX instanceof Vector) {
+			scalarY = scalarX.y;
+			scalarX = scalarX.x;
+		} else if (scalarY === undefined) {
+			scalarY = scalarX;
+		}
+
+		this.a *= scalarX;
+		this.b *= scalarY as number;
+		this.c *= scalarX;
+		this.d *= scalarY as number;
+		this.e *= scalarX;
+		this.f *= scalarY as number;
+
+		return this;
+	}
 
 	/**
 	 * toJSON( )
@@ -406,7 +431,7 @@ export const Matrix = (function() {
 	 * Returns a JSON ready copy of this object's current state.
 	 * @return {Object}
 	 */
-	Matrix.prototype.toJSON = Matrix.prototype.export;
+	toJSON = Matrix.prototype.export;
 
 	/**
 	 * toString( )
@@ -417,10 +442,10 @@ export const Matrix = (function() {
 	 * @sig public {String} toString();
 	 * @returns {String}
 	 */
-	Matrix.prototype.toString = function() {
+	toString(): string {
 		return "Matrix([" + this.a + ", " + this.c + ", " + this.e +
 			"] [" + this.b + ", " + this.d + ", " + this.f + "] [0, 0, 1])";
-	}; // toString( )
+	}
 
 	/**
 	 * translate( )
@@ -434,17 +459,21 @@ export const Matrix = (function() {
 	 * @param {Number} dy
 	 * @returns {Matrix} this matrix after post-translation
 	 */
-	Matrix.prototype.translate = function(dx, dy) {
-		if (typeof dx === "number") {
-			this.e += this.a * dx + this.c * dy;
-			this.f += this.b * dx + this.d * dy;
-		} else {
-			this.e += this.a * dx.x + this.c * dx.y;
-			this.f += this.b * dx.x + this.d * dx.y;
-		} // else
+	translate(vect: Vector): Matrix;
+	translate(dx: number, dy?: number): Matrix;
+	translate(dx: any, dy?: number): Matrix {
+		if (dx instanceof Vector) {
+			dy = dx.y;
+			dx = dx.x;
+		} else if (dy === undefined) {
+			dy = dx;
+		}
+
+		this.e += this.a * dx + this.c * (dy as number);
+		this.f += this.b * dx + this.d * (dy as number);
 
 		return this;
-	}; // translate( )
+	}
 
 	/**
 	 * import( )
@@ -455,13 +484,11 @@ export const Matrix = (function() {
 	 *
 	 * @public
 	 * @static
-	 * @sig public {Animation} import({Object});
+	 * @sig public {Matrix} import({Object});
 	 * @param  {Object} obj
-	 * @return {Animation}
+	 * @return {Matrix}
 	 */
-	Matrix.import = function(obj) {
+	static import(obj: MatrixJson): Matrix {
 		return new Matrix(obj.a, obj.b, obj.c, obj.d, obj.e, obj.f);
-	}; // import( )
-
-	return Matrix;
-})();
+	}
+};
