@@ -456,6 +456,71 @@ export const Intersect = (function() {
 		return mtv.scaleToMagnitude(smallest);
 	}; // _edgesVsEdges( )
 
+	/**
+	 * Performs a projections intersection between a convex polygon and a single vertex.
+	 * Results are always from the perspective of p, that is, the minimum translation
+	 * vector needed to move p out of collision with v.
+	 *
+	 * see http://content.gpwiki.org/index.php/Polygon_Collision
+	 * see http://www.codezealot.org/archives/55
+	 *
+	 * @param {Array<Vector>} p An array of vertices representing a polygon
+	 * @param {Vector} v A single vertex
+	 * @return {undefined|Vector} Returns the Minium Translation Vector if there is an
+	 * intersection, undefined otherwise
+	 * @private
+	 */
+	Intersect._edgesVsVector = function(p, v) {
+		var i, j, mtv;
+		var smallest = Number.MAX_VALUE;
+
+		// test edges stored in p against v
+		for (i = 0, j = p.length - 1; i < p.length; j = i++) {
+			// calculate normalized vector perpendicular to each line segment of the polygon
+			let perp = new Vector(-p[i].y + p[j].y, p[i].x - p[j].x).normalize();
+
+			// assume both poly's have at least one vertex (see Polygon constructor)
+			// project the first polygon onto the new axis (the perpendicular vector)
+			let p_min = p[0].dotProduct(perp);
+			let p_max = p_min;
+			for (let k = 1; k < p.length; k++) {
+				let dist = p[k].dotProduct(perp);
+				p_min = Math.min(p_min, dist);
+				p_max = Math.max(p_max, dist);
+			}
+
+			// project the v onto the new axis (the perpendicular vector)
+			let v_dist = v.dotProduct(perp);
+
+			// break early if projections don't overlap, no intersection exists
+			if (p_min > v_dist || v_dist > p_max)
+				return undefined;
+
+			// otherwise, calculate overlap
+			let diff1 = v_dist - p_min;
+			let diff2 = p_max - v_dist;
+			let overlap;
+
+			// append smallest difference to overlap, negating the axis if needed
+			if (diff1 <= diff2) {
+				overlap = diff1;
+			} else {
+				overlap = diff2;
+				perp.negate();
+			}
+
+			// does this axis contain the smallest overlap so far?
+			if (overlap < smallest) {
+				smallest = overlap;
+				mtv = perp;
+			}
+		}
+
+		// return the minimum translation vector (MTV)
+		// this is the perpendicular axis with the smallest overlap, scaled to said overlap
+		return mtv.scaleToMagnitude(smallest);
+	};
+
 	// Boolean polygonVsPolygon(Polygon, Polygon);
 	Intersect.polygonVsPolygon = function(poly1, poly2) {
 		return Intersect.polygonVsPolygonSat(poly1, poly2) !== undefined;
@@ -520,7 +585,7 @@ export const Intersect = (function() {
 			return undefined;
 
 		// fine test
-		return Intersect._edgesVsEdges(poly.getVertices(), [vect]);
+		return Intersect._edgesVsVector(poly.getVertices(), vect);
 	}; // polygonVsVectorSat( )
 
 	// Boolean rectVsRect(Rect, Rect);
@@ -554,7 +619,7 @@ export const Intersect = (function() {
 			return undefined;
 
 		// fine test
-		return Intersect._edgesVsEdges(rect.getVertices(), [vect]);
+		return Intersect._edgesVsVector(rect.getVertices(), vect);
 	}; // rectVsVectorSat( )
 
 	// Boolean shapeVsShape(IShape, IShape);

@@ -20,7 +20,7 @@ export const Polygon = (function() {
 		// deep copy vertex array
 		this._vertices = [];
 		for (var i = 0; i < polygon.length; i++) {
-			this._vertices.push(new Shape2D.Vector(polygon[i]));
+			this._vertices.push(new Vector(polygon[i]));
 		} // for( i )
 	}; // class Polygon
 
@@ -59,7 +59,7 @@ export const Polygon = (function() {
 	}; // equals( )
 
 	Polygon.prototype.getBoundingCircle = function() {
-		return new Shape2D.Circle(this.getCenter(), this._getRadius());
+		return new Circle(this.getCenter(), this._getRadius());
 	};
 
 	Polygon.prototype.getCenter = function() {
@@ -72,7 +72,7 @@ export const Polygon = (function() {
 				y += this._vertices[i].y;
 			} // for( i )
 
-			this._center = new Shape2D.Vector(x / this._vertices.length, y / this._vertices.length);
+			this._center = new Vector(x / this._vertices.length, y / this._vertices.length);
 		} // if
 
 		return this._center.clone();
@@ -114,7 +114,7 @@ export const Polygon = (function() {
 	Polygon.prototype.setCenter = function(x, y) {
 		// calculate offset from old center
 		var offset = this.getCenter();
-		if (x instanceof Shape2D.Vector) {
+		if (x instanceof Vector) {
 			offset.x = x.x - offset.x;
 			offset.y = x.y - offset.y;
 			
@@ -125,7 +125,7 @@ export const Polygon = (function() {
 			offset.y = y - offset.y;
 			
 			// update cached center point
-			this._center = new Shape2D.Vector(x, y);
+			this._center = new Vector(x, y);
 		} // else
 
 		// update polygon vertices with new offset

@@ -241,6 +241,39 @@ export const Vector = (function() {
 		return ShapeId.Vector;
 	}; // getShapeID( )
 
+	function float_fuzzy_eq(l, r) {
+		if (l === r)
+			return true;
+
+		l = Math.abs(l);
+		r = Math.abs(r);
+		let delta = Math.abs(l - r);
+		const min_normal = 2**-1022;
+
+		if (l === 0 || r === 0 || l + r < min_normal) {
+			// a or b is zero or both are extremely close to it
+			// relative error is less meaningful here
+			return delta < Number.EPSILON * min_normal;
+		}
+
+		// use relative error
+		return delta / Math.min(l + r, Number.MAX_VALUE) < Number.EPSILON;
+	}
+
+	/**
+	 * isNear( )
+	 *
+	 * Determines if this vector is roughly equal to vecRH
+	 *
+	 * @public
+	 * @sig public {Boolean} isNear();
+	 * @param {Vector} vecRH
+	 * @returns {Boolean} true if this vector is roughly equal to vecRH
+	 */
+	Vector.prototype.isNear = function(vecRH) {
+		return float_fuzzy_eq(this.x, vecRH.x) && float_fuzzy_eq(this.y, vecRH.y);
+	};
+
 	/**
 	 * isZero( )
 	 *

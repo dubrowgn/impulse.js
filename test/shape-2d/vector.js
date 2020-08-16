@@ -104,6 +104,11 @@ export default t => {
 		t.ok(new Vector().getShapeID() > 0);
 	});
 
+	t.test("isNear()", t => {
+		t.ok(new Vector(3 * .1, 3 * -.1).isNear(new Vector(.3, -.3)));
+		t.ok(new Vector(2.0000000000000004, -4.000000000000001).isNear(new Vector(2, -4)));
+	});
+
 	t.test("isZero()", t => {
 		let v0 = new Vector();
 		let v10 = new Vector(1, 0);
