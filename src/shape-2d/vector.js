@@ -478,6 +478,30 @@ export const Vector = (function() {
 	}; // scaleToMagnitude( )
 
 	/**
+	 * set( )
+	 *
+	 * Sets the values of this vector using a passed vector or pair of numbers.
+	 *
+	 * @public
+	 * @sig public {Vector} set(Vector);
+	 * @sig public {Vector} set(Number, Number);
+	 * @param {Number|Vector} x
+	 * @param {Number} y
+	 * @returns {Vector} this vector after setting of values
+	 */
+	Vector.prototype.set = function(x, y) {
+		if (x instanceof Vector) {
+			this.x = x.x;
+			this.y = x.y;
+		} else {
+			this.x = x;
+			this.y = y;
+		} // else
+
+		return this;
+	};
+
+	/**
 	 * setCenter( )
 	 *
 	 * Sets the values of this vector using a passed vector or pair of numbers.
@@ -489,17 +513,7 @@ export const Vector = (function() {
 	 * @param {Number} y
 	 * @returns {Vector} this vector after setting of values
 	 */
-	Vector.prototype.setCenter = function(x, y) {
-		if (x instanceof Vector) {
-			this.x = x.x;
-			this.y = x.y;
-		} else {
-			this.x = x;
-			this.y = y;
-		} // else
-
-		return this;
-	}; // setCenter( )
+	Vector.prototype.setCenter = Vector.prototype.set;
 
 	/**
 	 * subtract( )

@@ -457,7 +457,7 @@ export const Intersect = (function() {
 	}; // _edgesVsEdges( )
 
 	/**
-	 * Performs a projections intersection between a convex polygon and a single vertex.
+	 * Performs a projection intersection between a convex polygon and a single vertex.
 	 * Results are always from the perspective of p, that is, the minimum translation
 	 * vector needed to move p out of collision with v.
 	 *
@@ -602,8 +602,33 @@ export const Intersect = (function() {
 		if (!Intersect.rectVsRect(rect1, rect2))
 			return undefined;
 
-		// fine test
-		return Intersect._edgesVsEdges(rect1.getVertices(), rect2.getVertices());
+		// top
+		let delta = (rect2.y - rect2.h) - rect1.y;
+		let smallest = -delta;
+		let mtv = new Vector(0, delta);
+
+		// right
+		delta = rect2.x - (rect1.x + rect1.w);
+		if (-delta < smallest) {
+			smallest = -delta;
+			mtv.set(delta, 0);
+		}
+
+		// bottom
+		delta = rect2.y - (rect1.y - rect1.h);
+		if (delta < smallest) {
+			smallest = delta;
+			mtv.set(0, delta);
+		}
+
+		// left
+		delta = (rect2.x + rect2.w) - rect1.x;
+		if (delta < smallest) {
+			smallest = delta;
+			mtv.set(delta, 0);
+		}
+
+		return mtv;
 	}; // rectVsRectSat( )
 
 	// Boolean rectVsVector(Rect, Vector);
@@ -618,8 +643,33 @@ export const Intersect = (function() {
 		if (!Intersect.rectVsVector(rect, vect))
 			return undefined;
 
-		// fine test
-		return Intersect._edgesVsVector(rect.getVertices(), vect);
+		// top
+		let delta = vect.y - rect.y;
+		let smallest = -delta;
+		let mtv = new Vector(0, delta);
+
+		// right
+		delta = vect.x - (rect.x + rect.w);
+		if (-delta < smallest) {
+			smallest = -delta;
+			mtv.set(delta, 0);
+		}
+
+		// bottom
+		delta = vect.y - (rect.y - rect.h);
+		if (delta < smallest) {
+			smallest = delta;
+			mtv.set(0, delta);
+		}
+
+		// left
+		delta = vect.x - rect.x;
+		if (delta < smallest) {
+			smallest = delta;
+			mtv.set(delta, 0);
+		}
+
+		return mtv;
 	}; // rectVsVectorSat( )
 
 	// Boolean shapeVsShape(IShape, IShape);

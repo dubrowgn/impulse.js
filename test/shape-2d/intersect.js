@@ -1,12 +1,30 @@
 import { Intersect, Polygon, Rect, Vector } from "../../src/Shape2D";
 
 export default t => {
+	t.test("rectVsRectSat()", t => {
+		let r = new Rect(-10, 10, 20, 20);
+
+		t.equal(Intersect.rectVsRectSat(r, new Rect(20, 0, 5, 5)), undefined);
+
+		t.equal(Intersect.rectVsRectSat(r, new Rect(0, 10, 5, 5)), new Vector(0, -5));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(5, 0, 5, 5)), new Vector(-5, 0));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(0, -5, 5, 5)), new Vector(0, 5));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(-10, 0, 5, 5)), new Vector(5, 0));
+
+		t.equal(Intersect.rectVsRectSat(r, new Rect(-5, 10, 40, 40)), new Vector(-15, 0));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(-30, -5, 40, 40)), new Vector(0, 5));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(5, 30, 40, 40)), new Vector(-5, 0));
+		t.equal(Intersect.rectVsRectSat(r, new Rect(-10, 5, 40, 40)), new Vector(0, 15));
+	});
+
 	t.test("rectVsVectorSat()", t => {
 		let r = new Rect(-10, 10, 20, 20);
 
 		t.equal(Intersect.rectVsVectorSat(r, new Vector(20, 0)), undefined);
 		t.equal(Intersect.rectVsVectorSat(r, new Vector(0, 5)), new Vector(0, -5));
 		t.equal(Intersect.rectVsVectorSat(r, new Vector(5, 0)), new Vector(-5, 0));
+		t.equal(Intersect.rectVsVectorSat(r, new Vector(0, -5)), new Vector(0, 5));
+		t.equal(Intersect.rectVsVectorSat(r, new Vector(-5, 0)), new Vector(5, 0));
 	});
 
 	t.test("polygonVsVectorSat()", t => {
