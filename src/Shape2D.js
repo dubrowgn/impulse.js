@@ -3,7 +3,7 @@ import { Intersect } from "./shape-2d/intersect";
 import { Matrix } from "./shape-2d/matrix";
 import { Polygon } from "./shape-2d/polygon";
 import { Rect } from "./shape-2d/rect";
-import { IShape } from "./shape-2d/shape";
+import { Shape2D } from "./shape-2d/shape-2d";
 import { Vector } from "./shape-2d/vector";
 
-export { IShape, Circle, Rect, Vector, Polygon, Matrix, Intersect };
+export { Circle, Intersect,Matrix, Polygon, Rect, Shape2D, Vector };

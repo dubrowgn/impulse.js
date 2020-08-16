@@ -1,4 +1,4 @@
-import { IShape, ShapeId } from "./shape";
+import { Shape2D, ShapeId } from "./shape-2d";
 
 export const Vector = (function() {
 	/**
@@ -32,7 +32,7 @@ export const Vector = (function() {
 	}; // class Vector
 
 	Vector.shapeID = ShapeId.Vector;
-	Vector.prototype = new IShape();
+	//Vector.prototype = new Shape2D();
 	Vector.prototype.x = 0;
 	Vector.prototype.y = 0;
 

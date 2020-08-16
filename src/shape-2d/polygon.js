@@ -1,5 +1,5 @@
 import { Circle } from "./circle";
-import { IShape, ShapeId } from "./shape";
+import { Shape2D, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 export const Polygon = (function() {
@@ -24,7 +24,7 @@ export const Polygon = (function() {
 		} // for( i )
 	}; // class Polygon
 
-	Polygon.prototype = new IShape();
+	//Polygon.prototype = new Shape2D();
 	Polygon.prototype._center = undefined;
 	Polygon.prototype._r = -1;
 	Polygon.prototype._vertices = undefined;

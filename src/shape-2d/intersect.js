@@ -1,4 +1,4 @@
-import { ShapeId } from "./shape";
+import { ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 export const Intersect = (function() {
@@ -652,12 +652,12 @@ export const Intersect = (function() {
 		return rectMtvFromDeltas(l, t, r, b);
 	}; // rectVsVectorSat( )
 
-	// Boolean shapeVsShape(IShape, IShape);
+	// Boolean shapeVsShape(Shape2D, Shape2D);
 	Intersect.shapeVsShape = function(shape1, shape2) {
 		return _shapeMap[shape1.getShapeID()][shape2.getShapeID()](shape1, shape2);
 	}; // shapeVsShape( )
 
-	// Boolean shapeVsShapeSat(IShape, IShape);
+	// Boolean shapeVsShapeSat(Shape2D, Shape2D);
 	Intersect.shapeVsShapeSat = function(shape1, shape2) {
 		return _shapeMapSat[shape1.getShapeID()][shape2.getShapeID()](shape1, shape2);
 	}; // shapeVsShape( )

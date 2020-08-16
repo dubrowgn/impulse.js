@@ -1,4 +1,4 @@
-import { IShape, ShapeId } from "./shape";
+import { Shape2D, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 export const Circle = (function() {
@@ -31,7 +31,7 @@ export const Circle = (function() {
 		} // else
 	}; // class Circle
 
-	Circle.prototype = new IShape();
+	//Circle.prototype = new Shape2D();
 	Circle.prototype.x = 0;
 	Circle.prototype.y = 0;
 	Circle.prototype.r = 1;

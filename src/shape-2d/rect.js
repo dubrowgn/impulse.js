@@ -1,4 +1,4 @@
-import { IShape, ShapeId } from "./shape";
+import { Shape2D, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 export const Rect = (function() {
@@ -18,7 +18,7 @@ export const Rect = (function() {
 		} // else
 	}; // class Rect
 
-	Rect.prototype = new IShape();
+	//Rect.prototype = new Shape2D();
 	Rect.prototype.h = 1;
 	Rect.prototype.w = 1;
 	Rect.prototype.x = -0.5;
