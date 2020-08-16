@@ -1,13 +1,33 @@
+import { Matrix } from "./matrix";
 import { Shape2D, ShapeId } from "./shape-2d";
 
-export const Vector = (function() {
+function float_fuzzy_eq(l: number, r: number): boolean {
+	if (l === r)
+		return true;
+
+	l = Math.abs(l);
+	r = Math.abs(r);
+	let delta = Math.abs(l - r);
+	const min_normal = 2**-1022;
+
+	if (l === 0 || r === 0 || l + r < min_normal) {
+		// a or b is zero or both are extremely close to it
+		// relative error is less meaningful here
+		return delta < Number.EPSILON * min_normal;
+	}
+
+	// use relative error
+	return delta / Math.min(l + r, Number.MAX_VALUE) < Number.EPSILON;
+}
+
+export class Vector implements Shape2D<Vector> {
+	x: number = 0;
+	y: number = 0;
+
 	/**
 	 * Vector
 	 *
-	 * @class This is a general purpose 2D vector class
-	 *
-	 * Vector uses the following form:
-	 * <x, y>
+	 * @class A general purpose 2D vector class, of the form <x, y>
 	 *
 	 * public {Vector} Vector();
 	 * public {Vector} Vector(Vector);
@@ -18,23 +38,12 @@ export const Vector = (function() {
 	 * @param {Vector|Number=0} x
 	 * @param {Number=0} y
 	 */
-	var Vector = function(x, y) {
-		if (x instanceof Vector) {
-			this.x = x.x;
-			this.y = x.y;
-		} else if (arguments.length === 0) {
-			this.x = this.y = 0;
-		} else if (arguments.length === 2) {
-			this.x = x;
-			this.y = y;
-		} else if (arguments.length > 0)
-			throw "Unexpected number of arguments for Vector()";
-	}; // class Vector
-
-	Vector.shapeID = ShapeId.Vector;
-	//Vector.prototype = new Shape2D();
-	Vector.prototype.x = 0;
-	Vector.prototype.y = 0;
+	constructor();
+	constructor(vect: Vector);
+	constructor(x: number, y: number);
+	constructor(x?: any, y?: number) {
+		this._set(x, y);
+	}
 
 	/**
 	 * add( )
@@ -44,30 +53,34 @@ export const Vector = (function() {
 	 * public {Vector} add(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Vector} this after adding
 	 */
-	Vector.prototype.add = function(vecRH) {
-		this.x += vecRH.x;
-		this.y += vecRH.y;
+	add(right: Vector): Vector {
+		this.x += right.x;
+		this.y += right.y;
+
 		return this;
-	}; // add( )
+	}
 
 	/**
 	 * angleBetween( )
 	 *
-	 * Calculates the angle between the passed vector and this vector, using <0,0> as the point of reference.
-	 * Angles returned have the range (−π, π].
+	 * Calculates the angle between the passed vector and this vector, using <0,0> as the
+	 * point of reference. Angles returned have the range (−π, π].
 	 *
 	 * public {Number} angleBetween(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Number} the angle between the two vectors in radians
 	 */
-	Vector.prototype.angleBetween = function(vecRH) {
-		return Math.atan2(this.x * vecRH.y - this.y * vecRH.x, this.x * vecRH.x + this.y * vecRH.y);
-	}; // angleBetween( )
+	angleBetween(right: Vector): number {
+		return Math.atan2(
+			this.x * right.y - this.y * right.x,
+			this.x * right.x + this.y * right.y,
+		);
+	}
 
 	/**
 	 * angleTo( )
@@ -77,30 +90,16 @@ export const Vector = (function() {
 	 * public {Number} angleTo(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Number} the angle to the passed vector in radians
 	 */
-	Vector.prototype.angleTo = function(vecRH) {
-		return Math.atan2(vecRH.y - this.y, vecRH.x - this.x);
-	};
+	angleTo(right: Vector): number {
+		return Math.atan2(right.y - this.y, right.x - this.x);
+	}
 
-	/**
-	 * applyTransform( )
-	 *
-	 * Applies the given matrix transformation onto this Vector.
-	 * Inherited from Shape2D.Shape.
-	 *
-	 * Vector applyTransform();
-	 *
-	 * @public
-	 * @returns {Vector} this vector after applying the given transformation
-	 */
-	Vector.prototype.applyTransform = function(matrix) {
-		var oldX = this.x;
-		this.x = matrix.a * oldX + matrix.c * this.y + matrix.e;
-		this.y = matrix.b * oldX + matrix.d * this.y + matrix.f;
-		return this;
-	}; // applyTransform( )
+	applyTransform(matrix: Matrix): Vector {
+		return this.transform(matrix);
+	}
 
 	/**
 	 * clone( )
@@ -112,9 +111,9 @@ export const Vector = (function() {
 	 * @public
 	 * @returns {Vector} the new vector
 	 */
-	Vector.prototype.clone = function() {
+	clone(): Vector {
 		return new Vector(this);
-	}; // clone( )
+	}
 
 	/**
 	 * distance( )
@@ -124,12 +123,12 @@ export const Vector = (function() {
 	 * public {Number} distance(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Number} the distance between the two vectors
 	 */
-	Vector.prototype.distance = function(vecRH) {
-		return Math.sqrt((vecRH.x - this.x) * (vecRH.x - this.x) + (vecRH.y - this.y) * (vecRH.y - this.y));
-	}; // distance( )
+	distance(right: Vector): number {
+		return Math.sqrt(this.distanceSq(right));
+	}
 
 	/**
 	 * distanceSq( )
@@ -140,13 +139,14 @@ export const Vector = (function() {
 	 * public {Number} distanceSq(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Number} the squared distance between the two vectors
 	 * @see Vector.distance( )
 	 */
-	Vector.prototype.distanceSq = function(vecRH) {
-		return (vecRH.x - this.x) * (vecRH.x - this.x) + (vecRH.y - this.y) * (vecRH.y - this.y);
-	}; // distanceSq( )
+	distanceSq(right: Vector): number {
+		return (right.x - this.x) * (right.x - this.x) +
+			(right.y - this.y) * (right.y - this.y);
+	}
 
 	/**
 	 * divide( )
@@ -156,14 +156,15 @@ export const Vector = (function() {
 	 * public {Vector} divide(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Vector} this vector after dividing
 	 */
-	Vector.prototype.divide = function(vecRH) {
-		this.x /= vecRH.x;
-		this.y /= vecRH.y;
+	divide(right: Vector): Vector {
+		this.x /= right.x;
+		this.y /= right.y;
+
 		return this;
-	}; // divide( )
+	}
 
 	/**
 	 * dotProduct( )
@@ -173,12 +174,12 @@ export const Vector = (function() {
 	 * public {Number} dotProduct(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Number} the resultant dot product
 	 */
-	Vector.prototype.dotProduct = function(vecRH) {
-		return this.x * vecRH.x + this.y * vecRH.y;
-	}; // dotProduct( )
+	dotProduct(right: Vector): number {
+		return this.x * right.x + this.y * right.y;
+	}
 
 	/**
 	 * equals( )
@@ -188,13 +189,14 @@ export const Vector = (function() {
 	 * public {Boolean} equals(Vector);
 	 *
 	 * @public
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Boolean} true if the vectors are equivalent
 	 */
-	Vector.prototype.equals = function(vecRH) {
-		return vecRH instanceof Vector &&
-			this.x == vecRH.x && this.y == vecRH.y;
-	}; // equals( )
+	equals(right: any): boolean {
+		return right instanceof Vector &&
+			this.x == right.x &&
+			this.y == right.y;
+	}
 
 	/**
 	 * getCenter( )
@@ -207,26 +209,28 @@ export const Vector = (function() {
 	 * @public
 	 * @returns {Vector} the center of this Shape as a 2D Vector
 	 */
-	Vector.prototype.getCenter = function() {
+	getCenter(): Vector {
 		return new Vector(this);
-	}; // getCenter( )
+	}
 
 	/**
 	 * getNormal( )
 	 *
-	 * Calculates a new right-handed normal vector for the line created by this and the passed vectors.
+	 * Calculates a new right-handed normal vector for the line created by this and the
+	 * passed vectors.
 	 *
 	 * public {Vector} getNormal([Vector]);
 	 *
 	 * @public
-	 * @param {Vector=<0,0>} [vecRH]
+	 * @param {Vector=<0,0>} [right]
 	 * @returns {Vector} the new normal vector
 	 */
-	Vector.prototype.getNormal = function(vecRH) {
-		if (vecRH === undefined)
-			return new Vector(-this.y, this.x); // assume vecRH is <0, 0>
-		return new Vector(vecRH.y - this.y, this.x - vecRH.x).normalize();
-	}; // getNormal( )
+	getNormal(right?: Vector): Vector {
+		if (right === undefined)
+			return new Vector(-this.y, this.x).normalize(); // assume right is <0, 0>
+
+		return new Vector(right.y - this.y, this.x - right.x).normalize();
+	}
 
 	/**
 	 * getShapeID( )
@@ -237,41 +241,24 @@ export const Vector = (function() {
 	 * @sig public {Number} getShapeID();
 	 * @returns {Number} the ShapeID associated with the Vector class
 	 */
-	Vector.prototype.getShapeID = function() {
+	getShapeId(): number {
 		return ShapeId.Vector;
-	}; // getShapeID( )
-
-	function float_fuzzy_eq(l, r) {
-		if (l === r)
-			return true;
-
-		l = Math.abs(l);
-		r = Math.abs(r);
-		let delta = Math.abs(l - r);
-		const min_normal = 2**-1022;
-
-		if (l === 0 || r === 0 || l + r < min_normal) {
-			// a or b is zero or both are extremely close to it
-			// relative error is less meaningful here
-			return delta < Number.EPSILON * min_normal;
-		}
-
-		// use relative error
-		return delta / Math.min(l + r, Number.MAX_VALUE) < Number.EPSILON;
 	}
+
+	getShapeID = Vector.prototype.getShapeId;
 
 	/**
 	 * isNear( )
 	 *
-	 * Determines if this vector is roughly equal to vecRH
+	 * Determines if this vector is roughly equal to right
 	 *
 	 * @public
 	 * @sig public {Boolean} isNear();
-	 * @param {Vector} vecRH
-	 * @returns {Boolean} true if this vector is roughly equal to vecRH
+	 * @param {Vector} right
+	 * @returns {Boolean} true if this vector is roughly equal to right
 	 */
-	Vector.prototype.isNear = function(vecRH) {
-		return float_fuzzy_eq(this.x, vecRH.x) && float_fuzzy_eq(this.y, vecRH.y);
+	isNear(right: Vector): boolean {
+		return float_fuzzy_eq(this.x, right.x) && float_fuzzy_eq(this.y, right.y);
 	};
 
 	/**
@@ -283,9 +270,9 @@ export const Vector = (function() {
 	 * @sig public {Boolean} isZero();
 	 * @returns {Boolean} true if this vector is equal to <0,0>
 	 */
-	Vector.prototype.isZero = function() {
+	isZero(): boolean {
 		return this.x === 0 && this.y ===0;
-	}; // isZero( )
+	}
 
 	/**
 	 * magnitude( )
@@ -297,9 +284,9 @@ export const Vector = (function() {
 	 * @sig public {Number} magnitude();
 	 * @returns {Number} the magnitude of this vector
 	 */
-	Vector.prototype.magnitude = function() {
+	magnitude(): number {
 		return Math.sqrt(this.x * this.x + this.y * this.y);
-	}; // magnitude( )
+	}
 
 	/**
 	 * magnitudeSq( )
@@ -312,9 +299,9 @@ export const Vector = (function() {
 	 * @returns {Number} the square of the magnitude of this vector
 	 * @see Vector.magnitude( )
 	 */
-	Vector.prototype.magnitudeSq = function() {
+	magnitudeSq(): number {
 		return this.x * this.x + this.y * this.y;
-	}; // magnitudeSq( )
+	}
 
 	/**
 	 * multiply( )
@@ -323,14 +310,15 @@ export const Vector = (function() {
 	 *
 	 * @public
 	 * @sig public {Vector} multiply(Vector);
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Vector} this vector after multiplying
 	 */
-	Vector.prototype.multiply = function(vecRH) {
-		this.x *= vecRH.x;
-		this.y *= vecRH.y;
+	multiply(right: Vector): Vector {
+		this.x *= right.x;
+		this.y *= right.y;
+
 		return this;
-	}; // multiply( )
+	}
 
 	/**
 	 * negate( )
@@ -341,11 +329,12 @@ export const Vector = (function() {
 	 * @sig public {Vector} negate();
 	 * @returns {Vector} this vector after negation
 	 */
-	Vector.prototype.negate = function() {
+	negate(): Vector {
 		this.x = -this.x;
 		this.y = -this.y;
+
 		return this;
-	}; // negate( )
+	}
 
 	/**
 	 * normalize( )
@@ -357,16 +346,16 @@ export const Vector = (function() {
 	 * @sig public {Vector} normalize();
 	 * @returns {Vector} this vector after normalization
 	 */
-	Vector.prototype.normalize = function() {
-		var lng = Math.sqrt(this.x * this.x + this.y * this.y);
+	normalize(): Vector {
+		if (this.isZero())
+			return this;
 
-		if (lng !== 0) {
-			this.x /= lng;
-			this.y /= lng;
-		} // else
+		let lng = this.magnitude();
+		this.x /= lng;
+		this.y /= lng;
 
 		return this;
-	}; // normalize( )
+	}
 
 	/**
 	 * perpendicular( )
@@ -377,18 +366,18 @@ export const Vector = (function() {
 	 * @sig public {Vector} perpendicular();
 	 * @returns {Vector} this vector after rotating 90°
 	 */
-	Vector.prototype.perpendicular = function() {
-		var x = this.x;
+	perpendicular(): Vector {
+		let x = this.x;
 		this.x = -this.y;
 		this.y = x;
 
 		return this;
-	}; // perpendicular( )
+	}
 
 	/**
 	 * projectOnto( )
 	 *
-	 * Projects this vector onto vecRH
+	 * Projects this vector onto right
 	 *
 	 * projection of a onto b:
 	 *
@@ -400,21 +389,21 @@ export const Vector = (function() {
 	 *
 	 * @public
 	 * @sig public {Vector} projectOnto(Vector);
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Vector} this vector after projection
 	 */
-	Vector.prototype.projectOnto = function(vecRH) {
-		if (vecRH.isZero()) {
-			this.x = this.y = 0;
+	projectOnto(right: Vector): Vector {
+		if (right.isZero()) {
+			this.x = 0;
+			this.y = 0;
 		} else {
-			let k = this.dotProduct(vecRH) / vecRH.magnitudeSq();
-
-			this.x = k * vecRH.x;
-			this.y = k * vecRH.y;
+			let k = this.dotProduct(right) / right.magnitudeSq();
+			this.x = k * right.x;
+			this.y = k * right.y;
 		}
 
 		return this;
-	}; // projectOnto( )
+	}
 
 	/**
 	 * rotate( )
@@ -426,13 +415,13 @@ export const Vector = (function() {
 	 * @param {Number} rads
 	 * @returns {Vector} this vector after rotation
 	 */
-	Vector.prototype.rotate = function(rads) {
-		var x = this.x;
+	rotate(rads: number): Vector {
+		let x = this.x;
 		this.x = x * Math.cos(rads) - this.y * Math.sin(rads);
 		this.y = x * Math.sin(rads) - this.y * Math.cos(rads);
 
 		return this;
-	}; // rotate( )
+	}
 
 	/**
 	 * scale( )
@@ -446,7 +435,7 @@ export const Vector = (function() {
 	 * @param {Number} [scalarY]
 	 * @returns {Vector} this after scaling
 	 */
-	Vector.prototype.scale = function(scalarX, scalarY) {
+	scale(scalarX: number, scalarY?: number): Vector {
 		if (scalarY === undefined)
 			scalarY = scalarX;
 
@@ -454,7 +443,7 @@ export const Vector = (function() {
 		this.y *= scalarY;
 
 		return this;
-	}; // scale( )
+	}
 
 	/**
 	 * scaleToMagnitude( )
@@ -466,7 +455,7 @@ export const Vector = (function() {
 	 * @param {Number} mag
 	 * @returns {Vector} this vector after scaling
 	 */
-	Vector.prototype.scaleToMagnitude = function(mag) {
+	scaleToMagnitude(mag: number): Vector {
 		if (this.isZero())
 			return this;
 
@@ -475,7 +464,7 @@ export const Vector = (function() {
 		this.y *= k;
 
 		return this;
-	}; // scaleToMagnitude( )
+	}
 
 	/**
 	 * set( )
@@ -489,14 +478,23 @@ export const Vector = (function() {
 	 * @param {Number} y
 	 * @returns {Vector} this vector after setting of values
 	 */
-	Vector.prototype.set = function(x, y) {
+	set(vect: Vector): Vector;
+	set(x: number, y: number): Vector;
+	set(x: any, y?: number): Vector {
+		return this._set(x, y);
+	};
+
+	private _set(x?: any, y?: number): Vector {
 		if (x instanceof Vector) {
 			this.x = x.x;
 			this.y = x.y;
-		} else {
+		} else if (typeof x === "number") {
 			this.x = x;
-			this.y = y;
-		} // else
+			this.y = y as number;
+		} else {
+			this.x = 0;
+			this.y = 0;
+		}
 
 		return this;
 	};
@@ -513,7 +511,7 @@ export const Vector = (function() {
 	 * @param {Number} y
 	 * @returns {Vector} this vector after setting of values
 	 */
-	Vector.prototype.setCenter = Vector.prototype.set;
+	setCenter = Vector.prototype.set;
 
 	/**
 	 * subtract( )
@@ -522,14 +520,15 @@ export const Vector = (function() {
 	 *
 	 * @public
 	 * @sig public {Vector} subtract(Vector);
-	 * @param {Vector} vecRH
+	 * @param {Vector} right
 	 * @returns {Vector} this vector after subtracting
 	 */
-	Vector.prototype.subtract = function(vecRH) {
-		this.x -= vecRH.x;
-		this.y -= vecRH.y;
+	subtract(right: Vector): Vector {
+		this.x -= right.x;
+		this.y -= right.y;
+
 		return this;
-	}; // subtract( )
+	}
 
 	/**
 	 * toString( )
@@ -540,9 +539,27 @@ export const Vector = (function() {
 	 * @sig public {String} toString();
 	 * @returns {String}
 	 */
-	Vector.prototype.toString = function() {
+	toString(): string {
 		return "Vector(" + this.x + ", " + this.y + ")";
-	}; // toString( )
+	}
+
+	/**
+	 * transform( )
+	 *
+	 * Applies the given matrix transformation to this Vector.
+	 *
+	 * {Vector} transform(Matrix);
+	 *
+	 * @public
+	 * @returns {Vector} this vector after applying the given transformation
+	 */
+	transform(matrix: Matrix): Vector {
+		let x = this.x;
+		this.x = matrix.a * x + matrix.c * this.y + matrix.e;
+		this.y = matrix.b * x + matrix.d * this.y + matrix.f;
+
+		return this;
+	}
 
 	/**
 	 * translate( )
@@ -556,7 +573,7 @@ export const Vector = (function() {
 	 * @param {Number} [dy]
 	 * @returns {Vector} this vector after translating
 	 */
-	Vector.prototype.translate = function(dx, dy) {
+	translate(dx: number, dy?: number): Vector {
 		if (dy === undefined)
 			dy = dx;
 
@@ -564,7 +581,7 @@ export const Vector = (function() {
 		this.y += dy;
 
 		return this;
-	}; // translate( )
+	}
 
 	/**
 	 * longest( )
@@ -578,11 +595,9 @@ export const Vector = (function() {
 	 * @param {Vector} b
 	 * @return {Vector} whichever vector is the longest. 'a' is returned if they are equal.
 	 */
-	Vector.longest = function(a, b) {
-		if (a.x * a.x + a.y * a.y >= b.x * b.x + b.y * b.y)
-			return a;
-		return b;
-	}; // longest( )
+	static longest(a: Vector, b: Vector): Vector {
+		return a.magnitudeSq() >= b.magnitudeSq() ? a : b;
+	}
 
 	/**
 	 * shortest( )
@@ -596,11 +611,9 @@ export const Vector = (function() {
 	 * @param {Vector} b
 	 * @return {Vector} whichever vector is the shortest. 'a' is returned if they are equal.
 	 */
-	Vector.shortest = function(a, b) {
-		if (a.x * a.x + a.y * a.y <= b.x * b.x + b.y * b.y)
-			return a;
-		return b;
-	}; // shortest( )
+	static shortest = function(a: Vector, b: Vector): Vector {
+		return a.magnitudeSq() > b.magnitudeSq() ? b : a;
+	}
 
 	/**
 	 * tripleProduct( )
@@ -616,11 +629,10 @@ export const Vector = (function() {
 	 * @param {Vector} c
 	 * @return {Vector} the triple product as a new vector
 	 */
-	Vector.tripleProduct = function(a, b, c) {
-		var ac = a.dotProduct(c);
-		var bc = b.dotProduct(c);
-		return new Vector(b.x * ac - a.x * bc, b.y * ac - a.y * bc);
-	};
+	static tripleProduct = function(a: Vector, b: Vector, c: Vector): Vector {
+		let ac = a.dotProduct(c);
+		let bc = b.dotProduct(c);
 
-	return Vector;
-})();
+		return new Vector(b.x * ac - a.x * bc, b.y * ac - a.y * bc);
+	}
+};

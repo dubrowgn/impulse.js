@@ -96,12 +96,13 @@ export default t => {
 		let v10 = new Vector(1, 0);
 		let v32 = new Vector(3, 2);
 
-		t.equal(v10.getNormal().equals(new Vector(0,1)), true, "<1,0>.getNormal() = <0,1>");
-		t.equal(v10.getNormal(v32).equals((new Vector(1,-1)).normalize()), true, "<1,0>.getNormal(<3,2>) = <sqrt(2)/2,-sqrt(2)/2>");
+		t.equal(v10.getNormal(), new Vector(0, 1), "<1,0>.getNormal() = <0,1>");
+		t.equal(new Vector(10, 0).getNormal(), new Vector(0, 1), "<1,0>.getNormal() = <0,1>");
+		t.equal(v10.getNormal(v32), new Vector(1, -1).normalize(), "<1,0>.getNormal(<3,2>) = <sqrt(2)/2,-sqrt(2)/2>");
 	});
 
-	t.test("getShapeID()", t => {
-		t.ok(new Vector().getShapeID() > 0);
+	t.test("getShapeId()", t => {
+		t.ok(new Vector().getShapeId() >= 0);
 	});
 
 	t.test("isNear()", t => {
