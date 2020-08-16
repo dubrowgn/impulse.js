@@ -590,86 +590,66 @@ export const Intersect = (function() {
 
 	// Boolean rectVsRect(Rect, Rect);
 	Intersect.rectVsRect = function(rect1, rect2) {
-		return (rect1.x <= rect2.x + rect2.w &&
-			rect1.x + rect1.w >= rect2.x &&
-			rect1.y >= rect2.y - rect2.h &&
-			rect1.y - rect1.h <= rect2.y)
+		return !(
+			rect1.x > rect2.x + rect2.w ||
+			rect1.x + rect1.w < rect2.x ||
+			rect1.y < rect2.y - rect2.h ||
+			rect1.y - rect1.h > rect2.y
+		);
 	}; // rectVsRect( )
+
+	function rectMtvFromDeltas(l, t, r, b) {
+		if (l > 0 || t < 0 || r < 0 || b > 0)
+			return undefined;
+
+		let smallest = -l;
+		let mtv = new Vector(-l, 0);
+
+		if (t < smallest) {
+			smallest = t;
+			mtv.set(0, -t);
+		}
+
+		if (r < smallest) {
+			smallest = r;
+			mtv.set(-r, 0);
+		}
+
+		if (-b < smallest)
+			mtv.set(0, -b);
+
+		return mtv;
+	}
 
 	// Boolean rectVsRectSat(Rect, Rect);
 	Intersect.rectVsRectSat = function(rect1, rect2) {
-		// coarse test
-		if (!Intersect.rectVsRect(rect1, rect2))
-			return undefined;
+		let l = rect1.x - (rect2.x + rect2.w);
+		let t = rect1.y - (rect2.y - rect2.h);
+		let r = (rect1.x + rect1.w) - rect2.x;
+		let b = (rect1.y - rect1.h) - rect2.y;
 
-		// top
-		let delta = (rect2.y - rect2.h) - rect1.y;
-		let smallest = -delta;
-		let mtv = new Vector(0, delta);
-
-		// right
-		delta = rect2.x - (rect1.x + rect1.w);
-		if (-delta < smallest) {
-			smallest = -delta;
-			mtv.set(delta, 0);
-		}
-
-		// bottom
-		delta = rect2.y - (rect1.y - rect1.h);
-		if (delta < smallest) {
-			smallest = delta;
-			mtv.set(0, delta);
-		}
-
-		// left
-		delta = (rect2.x + rect2.w) - rect1.x;
-		if (delta < smallest) {
-			smallest = delta;
-			mtv.set(delta, 0);
-		}
-
-		return mtv;
+		return rectMtvFromDeltas(l, t, r, b);
 	}; // rectVsRectSat( )
 
 	// Boolean rectVsVector(Rect, Vector);
 	Intersect.rectVsVector = function(rect, vect) {
-		return vect.x >= rect.x && vect.x <= rect.x + rect.w &&
-			vect.y <= rect.y && vect.y >= rect.y - rect.h;
+		return !(
+			vect.x < rect.x ||
+			vect.y > rect.y ||
+			vect.x > rect.x + rect.w ||
+			vect.y < rect.y - rect.h
+		);
 	}; // rectVsVector( )
 
 	// Boolean rectVsVectorSat(Rect, Vector);
 	Intersect.rectVsVectorSat = function(rect, vect) {
-		// coarse test
-		if (!Intersect.rectVsVector(rect, vect))
-			return undefined;
+		// reorient rect relative to vect
+		let l = rect.x - vect.x;
+		let t = rect.y - vect.y;
+		let r = rect.x + rect.w - vect.x;
+		let b = rect.y - rect.h - vect.y;
 
-		// top
-		let delta = vect.y - rect.y;
-		let smallest = -delta;
-		let mtv = new Vector(0, delta);
-
-		// right
-		delta = vect.x - (rect.x + rect.w);
-		if (-delta < smallest) {
-			smallest = -delta;
-			mtv.set(delta, 0);
-		}
-
-		// bottom
-		delta = vect.y - (rect.y - rect.h);
-		if (delta < smallest) {
-			smallest = delta;
-			mtv.set(0, delta);
-		}
-
-		// left
-		delta = vect.x - rect.x;
-		if (delta < smallest) {
-			smallest = delta;
-			mtv.set(delta, 0);
-		}
-
-		return mtv;
+		return rectMtvFromDeltas(l, t, r, b);
 	}; // rectVsVectorSat( )
 
 	// Boolean shapeVsShape(IShape, IShape);
