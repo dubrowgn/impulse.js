@@ -7,7 +7,7 @@ export interface Shape2D<ImplType> {
 	equals: (other: any) => boolean;
 	getCenter: () => Vector;
 	getShapeId: () => number;
-	setCenter: (center: Vector) => ImplType;
+	setCenter: (x: number, y: number) => ImplType;
 	toString: () => string;
 };
 
