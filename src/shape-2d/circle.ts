@@ -18,15 +18,17 @@ export class Circle implements Shape2D<Circle> {
 		this._set(x, y, r);
 	}
 
+	applyTransform = Circle.prototype.transform;
+
 	clone(): Circle {
 		return new Circle(this);
 	}
 
 	equals(other: any): boolean {
 		return other instanceof Circle &&
-			this.x == other.x &&
-			this.y == other.y &&
-			this.r == other.r;
+			this.x === other.x &&
+			this.y === other.y &&
+			this.r === other.r;
 	}
 
 	getCenter(): Vector {
@@ -83,7 +85,7 @@ export class Circle implements Shape2D<Circle> {
 	}
 
 	toString(): string {
-		return "Circle(" + this.x + ", " + this.y + ", " + this.r + ")";
+		return `Circle(${this.x}, ${this.y}, ${this.r})`;
 	}
 
 	transform(matrix: Matrix): Circle {

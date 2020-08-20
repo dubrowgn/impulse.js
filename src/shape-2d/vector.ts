@@ -540,7 +540,7 @@ export class Vector implements Shape2D<Vector> {
 	 * @returns {String}
 	 */
 	toString(): string {
-		return "Vector(" + this.x + ", " + this.y + ")";
+		return `Vector(${this.x}, ${this.y})`;
 	}
 
 	/**

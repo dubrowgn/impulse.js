@@ -1,6 +1,6 @@
 import { Vector } from "./vector";
 
-interface MatrixJson {
+interface MatrixData {
 	a: number;
 	b: number;
 	c: number;
@@ -115,7 +115,7 @@ export class Matrix {
 	 * @sig public {Object} export();
 	 * @return {Object}
 	 */
-	export(): MatrixJson {
+	export(): MatrixData {
 		return {
 			a: this.a, b: this.b, c: this.c,
 			d: this.d, e: this.e, f: this.f
@@ -443,8 +443,9 @@ export class Matrix {
 	 * @returns {String}
 	 */
 	toString(): string {
-		return "Matrix([" + this.a + ", " + this.c + ", " + this.e +
-			"] [" + this.b + ", " + this.d + ", " + this.f + "] [0, 0, 1])";
+		let { a, b, c, d, e, f } = this;
+
+		return `Matrix([${a}, ${c}, ${e}] [${b}, ${d}, ${f}] [0, 0, 1])`;
 	}
 
 	/**
@@ -488,7 +489,7 @@ export class Matrix {
 	 * @param  {Object} obj
 	 * @return {Matrix}
 	 */
-	static import(obj: MatrixJson): Matrix {
+	static import(obj: MatrixData): Matrix {
 		return new Matrix(obj.a, obj.b, obj.c, obj.d, obj.e, obj.f);
 	}
 };

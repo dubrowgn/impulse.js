@@ -184,19 +184,21 @@ var intersect = (function() {
 	};
 
 	intersect.mousePosition = function(e) {
-		return new Vector(e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
-			e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop);
+		return new Vector(
+			e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
+			e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
+		);
 	}; // mousePosition( )
 	
 	intersect.mouseDown = function(e) {
 		// back-translate mouse position into world coordinates
 		var mousePos = intersect.mousePosition(e);
-		var pos = mousePos.clone().applyTransform(_camera.getRenderMatrix().invert());
+		var pos = mousePos.clone().transform(_camera.getRenderMatrix().invert());
 
 		for (var i = _shapes.length - 1; i >= 0; i--) {
 			if (Intersect.shapeVsShape(_shapes[i], pos)) {
 				_moving = _shapes[i];
-				_mouseOffset = _moving.getCenter().applyTransform(_camera.getRenderMatrix()).add(mousePos.negate());
+				_mouseOffset = _moving.getCenter().transform(_camera.getRenderMatrix()).add(mousePos.negate());
 				break;
 			} // if
 		} // for( i )
@@ -208,7 +210,7 @@ var intersect = (function() {
 		
 		// back-translate mouse position into world coordinates
 		var pos = intersect.mousePosition(e).add(_mouseOffset);
-		pos.applyTransform(_camera.getRenderMatrix().invert());
+		pos.transform(_camera.getRenderMatrix().invert());
 		
 		// move selected object
 		_moving.setCenter(pos.x, pos.y);
