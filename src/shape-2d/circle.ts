@@ -2,7 +2,7 @@ import { Matrix } from "./matrix";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
-export class Circle implements Shape2d<Circle> {
+export class Circle implements Shape2d {
 	x: number = 0;
 	y: number = 0;
 	r: number = 1;
@@ -20,8 +20,8 @@ export class Circle implements Shape2d<Circle> {
 
 	applyTransform = Circle.prototype.transform;
 
-	clone(): Circle {
-		return new Circle(this);
+	clone(): this {
+		return <this> new Circle(this);
 	}
 
 	equals(other: any): boolean {
@@ -70,9 +70,9 @@ export class Circle implements Shape2d<Circle> {
 		return this;
 	}
 
-	setCenter(center: Vector): Circle;
-	setCenter(x: number, y: number): Circle;
-	setCenter(x: any, y?: number): Circle {
+	setCenter(center: Vector): this;
+	setCenter(x: number, y: number): this;
+	setCenter(x: any, y?: number): this {
 		if (x instanceof Vector) {
 			this.x = x.x;
 			this.y = x.y;
@@ -88,7 +88,7 @@ export class Circle implements Shape2d<Circle> {
 		return `Circle(${this.x}, ${this.y}, ${this.r})`;
 	}
 
-	transform(matrix: Matrix): Circle {
+	transform(matrix: Matrix): this {
 		let x = this.x;
 		this.x = matrix.a * x + matrix.c * this.y + matrix.e;
 		this.y = matrix.b * x + matrix.d * this.y + matrix.f;

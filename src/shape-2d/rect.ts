@@ -9,7 +9,7 @@ interface RectData {
 	h: number;
 };
 
-export class Rect implements Shape2d<Rect> {
+export class Rect implements Shape2d {
 	x: number = -0.5;
 	y: number = 0.5;
 	w: number = 1;
@@ -25,8 +25,8 @@ export class Rect implements Shape2d<Rect> {
 
 	applyTransform = Rect.prototype.transform;
 
-	clone(): Rect {
-		return new Rect(this);
+	clone(): this {
+		return <this> new Rect(this);
 	}
 
 	equals(other: any): boolean {
@@ -108,9 +108,9 @@ export class Rect implements Shape2d<Rect> {
 		return this;
 	}
 
-	setCenter(center: Vector): Rect;
-	setCenter(x: number, y: number): Rect;
-	setCenter(x: any, y?: number): Rect {
+	setCenter(center: Vector): this;
+	setCenter(x: number, y: number): this;
+	setCenter(x: any, y?: number): this {
 		if (x instanceof Vector) {
 			this.x = x.x - this.w/2;
 			this.y = x.y + this.h/2;
@@ -134,7 +134,7 @@ export class Rect implements Shape2d<Rect> {
 		return `Rect(${this.x}, ${this.y}, ${this.w}, ${this.h})`;
 	}
 
-	transform(matrix: Matrix): Rect {
+	transform(matrix: Matrix): this {
 		// transform center
 		let center = this.getCenter();
 		center.transform(matrix);

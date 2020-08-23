@@ -3,7 +3,7 @@ import { Matrix } from "./matrix";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
-export class Polygon implements Shape2d<Polygon> {
+export class Polygon implements Shape2d {
 	private _center?: Vector = undefined;
 	private _r?: number = undefined;
 	private _vertices: Vector[];
@@ -30,22 +30,10 @@ export class Polygon implements Shape2d<Polygon> {
 		}
 	}
 
-	transform(matrix: Matrix) {
-		for (let vert of this._vertices) {
-			vert.applyTransform(matrix);
-		}
-
-		// invalidate caches
-		this._center = undefined;
-		this._r = undefined;
-
-		return this;
-	}
-
 	applyTransform = Polygon.prototype.transform;
 
-	clone() {
-		return new Polygon(this);
+	clone(): this {
+		return <this> new Polygon(this);
 	}
 
 	equals(other: any): boolean {
@@ -108,9 +96,9 @@ export class Polygon implements Shape2d<Polygon> {
 		return this._vertices.slice();
 	}
 
-	setCenter(center: Vector): Polygon;
-	setCenter(x: number, y: number): Polygon;
-	setCenter(x: any, y?: number): Polygon {
+	setCenter(center: Vector): this;
+	setCenter(x: number, y: number): this;
+	setCenter(x: any, y?: number): this {
 		let center = x instanceof Vector ? x : new Vector(x, y as number);
 		let offset = center.clone().subtract(this.getCenter());
 
@@ -130,5 +118,17 @@ export class Polygon implements Shape2d<Polygon> {
 		}
 
 		return s.slice(0, -1) + ")";
+	}
+
+	transform(matrix: Matrix): this {
+		for (let vert of this._vertices) {
+			vert.applyTransform(matrix);
+		}
+
+		// invalidate caches
+		this._center = undefined;
+		this._r = undefined;
+
+		return this;
 	}
 };

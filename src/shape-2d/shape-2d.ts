@@ -1,13 +1,13 @@
 import { Matrix } from "./matrix";
 import { Vector } from "./vector";
 
-export interface Shape2d<ImplType> {
-	transform: (matrix: Matrix) => ImplType;
-	clone: () => ImplType;
+export interface Shape2d {
+	transform: (matrix: Matrix) => this;
+	clone: () => this;
 	equals: (other: any) => boolean;
 	getCenter: () => Vector;
 	getShapeId: () => number;
-	setCenter: (x: number, y: number) => ImplType;
+	setCenter: (x: number, y: number) => this;
 	toString: () => string;
 };
 

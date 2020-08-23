@@ -697,7 +697,7 @@ shapeMap[ShapeId.Vector][ShapeId.Polygon] = (v: any, p: any) => polygonVsVector(
 shapeMap[ShapeId.Vector][ShapeId.Rect] = (v: any, r: any) => rectVsVector(r, v);
 shapeMap[ShapeId.Vector][ShapeId.Vector] = vectorVsVector;
 
-function shapeVsShape(shape1: any, shape2: any): boolean {
+function shapeVsShape(shape1: Shape2d, shape2: Shape2d): boolean {
 	return shapeMap[shape1.getShapeId()][shape2.getShapeId()](shape1, shape2);
 }
 
@@ -730,7 +730,7 @@ shapeMapSat[ShapeId.Vector][ShapeId.Rect] =
 	(v: any, r: any) => rectVsVectorSat(r, v)?.negate();
 shapeMapSat[ShapeId.Vector][ShapeId.Vector] = vectorVsVectorSat;
 
-function shapeVsShapeSat(shape1: any, shape2: any): Vector | undefined {
+function shapeVsShapeSat(shape1: Shape2d, shape2: Shape2d): Vector | undefined {
 	return shapeMapSat[shape1.getShapeId()][shape2.getShapeId()](shape1, shape2);
 }
 

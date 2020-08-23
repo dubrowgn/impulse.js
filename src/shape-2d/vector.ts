@@ -20,7 +20,7 @@ function float_fuzzy_eq(l: number, r: number): boolean {
 	return delta / Math.min(l + r, Number.MAX_VALUE) < Number.EPSILON;
 }
 
-export class Vector implements Shape2d<Vector> {
+export class Vector implements Shape2d {
 	x: number = 0;
 	y: number = 0;
 
@@ -111,8 +111,8 @@ export class Vector implements Shape2d<Vector> {
 	 * @public
 	 * @returns {Vector} the new vector
 	 */
-	clone(): Vector {
-		return new Vector(this);
+	clone(): this {
+		return <this> new Vector(this);
 	}
 
 	/**
@@ -478,13 +478,13 @@ export class Vector implements Shape2d<Vector> {
 	 * @param {Number} y
 	 * @returns {Vector} this vector after setting of values
 	 */
-	set(vect: Vector): Vector;
-	set(x: number, y: number): Vector;
-	set(x: any, y?: number): Vector {
+	set(vect: Vector): this;
+	set(x: number, y: number): this;
+	set(x: any, y?: number): this {
 		return this._set(x, y);
 	};
 
-	private _set(x?: any, y?: number): Vector {
+	private _set(x?: any, y?: number): this {
 		if (x instanceof Vector) {
 			this.x = x.x;
 			this.y = x.y;
@@ -511,7 +511,11 @@ export class Vector implements Shape2d<Vector> {
 	 * @param {Number} y
 	 * @returns {Vector} this vector after setting of values
 	 */
-	setCenter = Vector.prototype.set;
+	setCenter(vect: Vector): this;
+	setCenter(x: number, y: number): this;
+	setCenter(x: any, y?: number): this {
+		return this._set(x, y);
+	}
 
 	/**
 	 * subtract( )
@@ -553,7 +557,7 @@ export class Vector implements Shape2d<Vector> {
 	 * @public
 	 * @returns {Vector} this vector after applying the given transformation
 	 */
-	transform(matrix: Matrix): Vector {
+	transform(matrix: Matrix): this {
 		let x = this.x;
 		this.x = matrix.a * x + matrix.c * this.y + matrix.e;
 		this.y = matrix.b * x + matrix.d * this.y + matrix.f;
