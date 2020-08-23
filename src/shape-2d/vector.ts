@@ -97,10 +97,6 @@ export class Vector implements Shape2d {
 		return Math.atan2(right.y - this.y, right.x - this.x);
 	}
 
-	applyTransform(matrix: Matrix): Vector {
-		return this.transform(matrix);
-	}
-
 	/**
 	 * clone( )
 	 *
@@ -233,9 +229,9 @@ export class Vector implements Shape2d {
 	}
 
 	/**
-	 * getShapeID( )
+	 * getShapeId( )
 	 *
-	 * Gets the ShapeID associated with the Vector class
+	 * Gets the ShapeId associated with the Vector class
 	 *
 	 * @public
 	 * @sig public {Number} getShapeID();
@@ -244,8 +240,6 @@ export class Vector implements Shape2d {
 	getShapeId(): number {
 		return ShapeId.Vector;
 	}
-
-	getShapeID = Vector.prototype.getShapeId;
 
 	/**
 	 * isNear( )

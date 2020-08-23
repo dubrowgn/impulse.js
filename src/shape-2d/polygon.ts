@@ -30,8 +30,6 @@ export class Polygon implements Shape2d {
 		}
 	}
 
-	applyTransform = Polygon.prototype.transform;
-
 	clone(): this {
 		return <this> new Polygon(this);
 	}
@@ -90,8 +88,6 @@ export class Polygon implements Shape2d {
 		return ShapeId.Polygon;
 	}
 
-	getShapeID = Polygon.prototype.getShapeId;
-
 	getVertices(): Vector[] {
 		return this._vertices.slice();
 	}
@@ -122,7 +118,7 @@ export class Polygon implements Shape2d {
 
 	transform(matrix: Matrix): this {
 		for (let vert of this._vertices) {
-			vert.applyTransform(matrix);
+			vert.transform(matrix);
 		}
 
 		// invalidate caches

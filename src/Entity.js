@@ -41,7 +41,7 @@ export const Entity = (function() {
 
     // Shape getCollidable();
     Entity.prototype.getCollidable = function() {
-        return this._collidable.clone().applyTransform(this._matrix);
+        return this._collidable.clone().transform(this._matrix);
     }; // getCollidable( )
 
 	// getAnimationState(number currentTimeMs)

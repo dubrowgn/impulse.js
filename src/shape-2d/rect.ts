@@ -23,8 +23,6 @@ export class Rect implements Shape2d {
 		this._set(x, y, w, h);
 	}
 
-	applyTransform = Rect.prototype.transform;
-
 	clone(): this {
 		return <this> new Rect(this);
 	}
@@ -63,8 +61,6 @@ export class Rect implements Shape2d {
 	getShapeId(): number {
 		return ShapeId.Rect;
 	}
-
-	getShapeID = Rect.prototype.getShapeId;
 
 	getVertices(): Vector[] {
 		return [

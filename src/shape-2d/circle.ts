@@ -18,8 +18,6 @@ export class Circle implements Shape2d {
 		this._set(x, y, r);
 	}
 
-	applyTransform = Circle.prototype.transform;
-
 	clone(): this {
 		return <this> new Circle(this);
 	}
@@ -38,8 +36,6 @@ export class Circle implements Shape2d {
 	getShapeId(): number {
 		return ShapeId.Circle;
 	}
-
-	getShapeID = Circle.prototype.getShapeId;
 
 	set(c: Circle): Circle;
 	set(v: Vector, r: number): Circle;

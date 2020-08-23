@@ -46,7 +46,7 @@ const { Camera, ISceneGraph, LinearSG, Scene } = (function() {
 				x = new Vector(x, y);
 			else
 				x = x.clone();
-			return x.applyTransform(this.getRenderMatrix().invert());
+			return x.transform(this.getRenderMatrix().invert());
 		}; // canvasToWorld( )
 
 		// void destroy();
@@ -84,7 +84,7 @@ const { Camera, ISceneGraph, LinearSG, Scene } = (function() {
 				new Vector(hw, -hh),
 				new Vector(-hw, -hh)
 			]);
-			return vp.applyTransform(this._cameraMatrix.clone().invert());
+			return vp.transform(this._cameraMatrix.clone().invert());
 		}; // getViewport( )
 
 		// void rotate(Number)
@@ -155,7 +155,7 @@ const { Camera, ISceneGraph, LinearSG, Scene } = (function() {
 				x = new Vector(x, y);
 			else
 				x = x.clone();
-			return x.applyTransform(this.getRenderMatrix());
+			return x.transform(this.getRenderMatrix());
 		};
 
 		// void zoom(Number)

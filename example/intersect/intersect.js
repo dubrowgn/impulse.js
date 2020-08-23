@@ -1,17 +1,10 @@
 "use strict";
 
-const { Scene2D, Shape2D } = require("impulse");
+const { Camera } = require("Scene2D");
+const { Circle, Intersect, Polygon, Rect, ShapeId, Vector } = require("Shape2D");
 
 var intersect = (function() {
 	var intersect = {};
-
-	// imports
-	var Camera = Scene2D.Camera;
-	var Circle = Shape2D.Circle;
-	var Intersect = Shape2D.Intersect;
-	var Polygon = Shape2D.Polygon;
-	var Rect = Shape2D.Rect;
-	var Vector = Shape2D.Vector;
 
 	// constants
 	var _borderColorNormal = "#ffffff";
@@ -56,11 +49,11 @@ var intersect = (function() {
 		this.clearCanvas();
 
 		for (var i = 0; i < _shapes.length; i++) {
-			switch(_shapes[i].getShapeID()) {
-				case 0: intersect.drawCircle(_shapes[i], _intersecting[i]); break;
-				case 1: intersect.drawPolygon(_shapes[i], _intersecting[i]); break;
-				case 2: intersect.drawRect(_shapes[i], _intersecting[i]); break;
-				case 3: intersect.drawVector(_shapes[i], _intersecting[i]); break;
+			switch(_shapes[i].getShapeId()) {
+				case ShapeId.Circle: intersect.drawCircle(_shapes[i], _intersecting[i]); break;
+				case ShapeId.Polygon: intersect.drawPolygon(_shapes[i], _intersecting[i]); break;
+				case ShapeId.Rect: intersect.drawRect(_shapes[i], _intersecting[i]); break;
+				case ShapeId.Vector: intersect.drawVector(_shapes[i], _intersecting[i]); break;
 			} // switch
 		} // for( i )
 		drawing = false;
