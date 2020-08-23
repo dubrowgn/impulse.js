@@ -3,6 +3,6 @@
 		"allowJs": true,
 		"sourceMap": true,
 		"strict": false,
-		"target": "es2020"
+		"target": "es2018"
 	}
 }

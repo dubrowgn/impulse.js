@@ -1,5 +1,5 @@
 import { Matrix } from "./matrix";
-import { Shape2D, ShapeId } from "./shape-2d";
+import { Shape2d, ShapeId } from "./shape-2d";
 
 function float_fuzzy_eq(l: number, r: number): boolean {
 	if (l === r)
@@ -20,7 +20,7 @@ function float_fuzzy_eq(l: number, r: number): boolean {
 	return delta / Math.min(l + r, Number.MAX_VALUE) < Number.EPSILON;
 }
 
-export class Vector implements Shape2D<Vector> {
+export class Vector implements Shape2d<Vector> {
 	x: number = 0;
 	y: number = 0;
 

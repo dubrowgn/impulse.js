@@ -1,4 +1,7 @@
-import { Intersect, Polygon, Rect, Vector } from "../../src/Shape2D";
+import { Intersect } from "../../src/shape-2d/intersect";
+import { Polygon } from "../../src/shape-2d/polygon";
+import { Rect } from "../../src/shape-2d/rect";
+import { Vector } from "../../src/shape-2d/vector";
 
 export default t => {
 	t.test("rectVsRectSat()", t => {

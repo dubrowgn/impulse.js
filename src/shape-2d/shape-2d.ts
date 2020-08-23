@@ -1,7 +1,7 @@
 import { Matrix } from "./matrix";
 import { Vector } from "./vector";
 
-export interface Shape2D<ImplType> {
+export interface Shape2d<ImplType> {
 	transform: (matrix: Matrix) => ImplType;
 	clone: () => ImplType;
 	equals: (other: any) => boolean;

@@ -1,8 +1,8 @@
 import { Matrix } from "./matrix";
-import { Shape2D, ShapeId } from "./shape-2d";
+import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
-export class Circle implements Shape2D<Circle> {
+export class Circle implements Shape2d<Circle> {
 	x: number = 0;
 	y: number = 0;
 	r: number = 1;

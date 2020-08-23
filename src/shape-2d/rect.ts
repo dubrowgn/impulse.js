@@ -1,5 +1,5 @@
 import { Matrix } from "./matrix";
-import { Shape2D, ShapeId } from "./shape-2d";
+import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 interface RectData {
@@ -9,7 +9,7 @@ interface RectData {
 	h: number;
 };
 
-export class Rect implements Shape2D<Rect> {
+export class Rect implements Shape2d<Rect> {
 	x: number = -0.5;
 	y: number = 0.5;
 	w: number = 1;

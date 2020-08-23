@@ -1,9 +1,9 @@
 import { Circle } from "./circle";
 import { Matrix } from "./matrix";
-import { Shape2D, ShapeId } from "./shape-2d";
+import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
-export class Polygon implements Shape2D<Polygon> {
+export class Polygon implements Shape2d<Polygon> {
 	private _center?: Vector = undefined;
 	private _r?: number = undefined;
 	private _vertices: Vector[];
@@ -16,7 +16,7 @@ export class Polygon implements Shape2D<Polygon> {
 				this._center = polygon._center.clone();
 			this._r = polygon._r;
 
-			this._vertices = [];
+			this._vertices = new Array(polygon._vertices.length);
 			for (let vert of polygon._vertices) {
 				this._vertices.push(vert.clone());
 			}
