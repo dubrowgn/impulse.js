@@ -1,4 +1,4 @@
-import { Entity } from "Entity";
+import { Entity } from "./entity";
 import { MouseAdapter } from "Input";
 import { Intersect, Matrix, Polygon, Vector } from "Shape2D";
 import { EventDelegate, Timing } from "Util";

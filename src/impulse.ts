@@ -1,4 +1,4 @@
-import { Entity } from "Entity"
+import { Entity } from "entity"
 import * as Input from "Input"
 import * as Model2D from "Model2D"
 import * as Networking from "Networking"
