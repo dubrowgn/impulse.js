@@ -2,7 +2,7 @@ import { Matrix } from "./matrix";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
-interface RectData {
+export interface RectData {
 	x: number;
 	y: number;
 	w: number;

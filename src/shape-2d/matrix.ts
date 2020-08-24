@@ -1,6 +1,6 @@
 import { Vector } from "./vector";
 
-interface MatrixData {
+export interface MatrixData {
 	a: number;
 	b: number;
 	c: number;
