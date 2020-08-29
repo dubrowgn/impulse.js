@@ -50,7 +50,7 @@ type MouseEventHandler = (event: MouseEvent) => void;
 type MouseWheelHandler = (event: WheelEvent) => void;
 
 export class MouseAdapter {
-	protected camera: typeof Camera;
+	protected camera: Camera;
 	protected buttons: MouseButtons;
 	protected onCameraEvent: (source: any) => void;
 	protected onClick: MouseEventHandler;
@@ -69,7 +69,7 @@ export class MouseAdapter {
 	up: EventDelegate;
 	wheel: EventDelegate;
 
-	constructor(camera: typeof Camera) {
+	constructor(camera: Camera) {
 		this.buttons = new MouseButtons();
 		this.camera = camera;
 
