@@ -1,4 +1,5 @@
-import { Matrix, Rect } from "Shape2D"
+import { Matrix } from "../shape-2d/matrix"
+import { Rect } from "../shape-2d/rect"
 
 export class AnimationState {
 	frameRect: Rect;

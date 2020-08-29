@@ -1,4 +1,4 @@
-import { Camera } from "../Scene2D";
+import { Camera } from "../scene-2d/camera";
 import { EventDelegate } from "../util/event-delegate";
 import { Vector } from "../shape-2d/vector";
 

@@ -1,11 +1,12 @@
 "use strict";
 
-const { Entity, Model2D, Scene2D, Shape2D, Util } = require("impulse");
+const { Entity } = require("entity");
+const { Model, Animation } = require("model2d");
+const { Camera, LinearSg, Scene } = require("scene2d");
+const { Circle, Matrix, Rect, Vector } = require("shape2d");
+const { Collection, EventDelegate, Timing } = require("util");
 
 window.NetAdapter = (function()  {
-	// imports
-	var EventDelegate = Util.EventDelegate;
-
 	// enumerations
 	var commandId = {
 		localConnect:0,
@@ -53,10 +54,6 @@ window.NetAdapter = (function()  {
 		try {
 			// cache local reference to 'this'
 			var this_ = this;
-
-			// fix endpoint address if needed
-			if (endpointAddress.substring(0,5) != 'ws://')
-				endpointAddress = 'ws://' + endpointAddress;
 
 			// connect web socket
 			this._ws = new WebSocket(endpointAddress);
@@ -193,20 +190,6 @@ window.NetAdapter = (function()  {
 })();
 
 window.Shooter = (function() {
-	// imports
-	var Animation = Model2D.Animation;
-	var Camera = Scene2D.Camera;
-	var Circle = Shape2D.Circle;
-	var Collection = Util.Collection;
-	var EventDelegate = Util.EventDelegate;
-	var LinearSG = Scene2D.LinearSG;
-	var Matrix = Shape2D.Matrix;
-	var Model = Model2D.Model;
-	var Rect = Shape2D.Rect;
-	var Scene = Scene2D.Scene;
-	var Timing = Util.Timing;
-	var Vector = Shape2D.Vector;
-
 	// enumerations
 	var animId = {
 		stand:1,
@@ -244,7 +227,7 @@ window.Shooter = (function() {
 		this._map = this.loadMap();
 
 		// scene
-		var sg = new LinearSG();
+		var sg = new LinearSg();
 		for (var i = 0; i < this._map.entities.grass.length; ++i) {
 			sg.addEntity(this._map.entities.grass[i]);
 		} // for( i )
@@ -338,7 +321,7 @@ window.Shooter = (function() {
 			return undefined;
 		}; // getEntityById( )
 
-		this._netAdapter = new NetAdapter('ws://impulsejs.com:1400');
+		this._netAdapter = new NetAdapter('wss://impulsejs.com/shooter/server');
 
 		this._netAdapter.closed.add(function() {
 			if (pingInterval !== undefined)

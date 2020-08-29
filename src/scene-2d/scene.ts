@@ -1,5 +1,5 @@
 import { Camera } from "./camera";
-import { MouseAdapter } from "../Input";
+import { MouseAdapter } from "../input/mouse";
 import { SceneGraph } from "./scene-graph";
 import { Timing } from "../util/timing";
 

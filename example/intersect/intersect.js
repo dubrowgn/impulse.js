@@ -1,7 +1,7 @@
 "use strict";
 
-const { Camera } = require("Scene2D");
-const { Circle, Intersect, Polygon, Rect, ShapeId, Vector } = require("Shape2D");
+const { Camera } = require("scene2d");
+const { Circle, Intersect, Polygon, Rect, ShapeId, Vector } = require("shape2d");
 
 var intersect = (function() {
 	var intersect = {};

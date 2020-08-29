@@ -1,10 +1,10 @@
 import { Entity } from "entity"
-import * as Input from "Input"
-import * as Model2D from "Model2D"
-import * as Networking from "Networking"
-import * as Scene2D from "Scene2D"
-import * as Shape2D from "Shape2D"
-import * as Util from "Util"
+import * as Input from "input"
+import * as Model2D from "model2d"
+import * as Networking from "net"
+import * as Scene2D from "scene2d"
+import * as Shape2D from "shape2d"
+import * as Util from "util"
 
 export {
 	Entity,

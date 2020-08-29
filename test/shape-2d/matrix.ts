@@ -1,4 +1,5 @@
-import { Matrix, Vector } from "../../src/Shape2D";
+import { Matrix } from "../../src/shape-2d/matrix";
+import { Vector } from "../../src/shape-2d/vector";
 
 export default t => {
 	t.test("constructor", t => {
