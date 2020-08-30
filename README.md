@@ -5,11 +5,17 @@ Drive your imagination.
 
 [![Build Status](https://travis-ci.com/dubrowgn/impulse.js.svg?branch=master)](https://travis-ci.com/dubrowgn/impulse.js)
 
-## Setup
+## Use
+
+```npm install @dubrowgn/impulse.js```
+
+## Development
+
+### Setup
 
 ```npm install --only dev```
 
-## Building
+### Building
 
 Un-minified:
 
@@ -19,6 +25,6 @@ Un-minified:
  
  ```npm run build-release```
 
-## Testing
+### Testing
 
 ```npm run test```
