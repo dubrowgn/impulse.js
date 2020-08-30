@@ -7,7 +7,7 @@
     "build-release": "npx tsc && npm run -s compress",
     "clean": "rm -rf dist",
     "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
-    "publish": "cat package.json | jq 'del(.scripts)' > dist/package.json && cd dist && npm publish --access=public",
+    "publish": "cp README.md LICENSE package.json dist/. && cd dist && npm publish --access=public",
     "shell": "npx ts-node",
     "shell-test": "npx ts-node --project test/tsconfig.json --dir .",
     "test": "npx ts-node --project test/tsconfig.json --dir . $(npx which pta) test/**/*.{j,t}s",
