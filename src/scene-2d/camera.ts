@@ -1,4 +1,4 @@
-import { Entity } from "../entity";
+import { Entity } from "./entity";
 import { EventDelegate } from "../util/event-delegate";
 import { Matrix } from "../shape-2d/matrix";
 import { Polygon } from "../shape-2d/polygon";

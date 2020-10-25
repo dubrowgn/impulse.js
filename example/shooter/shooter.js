@@ -1,9 +1,10 @@
 "use strict";
 
-const { Entity } = require("entity");
-const { Model, Animation } = require("model2d");
-const { Camera, LinearSg, Scene } = require("scene2d");
-const { Circle, Matrix, Rect, Vector } = require("shape2d");
+(function() {
+
+const { Animation, Frame, Image, Model } = require("model2d");
+const { Camera, Entity, LinearSg, Scene } = require("scene2d");
+const { Circle, Intersect, Matrix, Rect, Vector } = require("shape2d");
 const { Collection, EventDelegate, Timing } = require("util");
 
 window.NetAdapter = (function()  {
@@ -191,11 +192,6 @@ window.NetAdapter = (function()  {
 
 window.Shooter = (function() {
 	// enumerations
-	var animId = {
-		stand:1,
-		walk:2,
-		shoot:3
-	};
 	var entityFlag = {
 		none:0,
 		player:1,
@@ -277,7 +273,7 @@ window.Shooter = (function() {
 		];
 
 		var player = new Entity(models[clientId % 4], new Vector(x, y), new Circle(0, 0, 70), undefined, entityFlag.player | entityFlag.collidable);
-		player.modelState.playAnimation(animId.stand);
+		player.modelState.playAnimation("stand");
 		player.eid = eid;
 		player.dx = dx;
 		player.dy = dy;
@@ -295,7 +291,7 @@ window.Shooter = (function() {
 		];
 
 		var shot = new Entity(models[cid % 4], new Vector(x, y), new Circle(0, 0, 25), undefined, entityFlag.projectile);
-		shot.modelState.playAnimation(animId.stand);
+		shot.modelState.playAnimation("stand");
 		shot.cid = cid;
 		shot.eid = eid;
 		shot.dx = dx;
@@ -407,15 +403,15 @@ window.Shooter = (function() {
 	Shooter.prototype._draw = function() {
 		// calculate time differential
 		var time = Timing.now();
-		var dt = (time - this._lastDrawTime) / 1000;
+		var dtMs = time - this._lastDrawTime;
 		this._lastDrawTime = time;
 
 		// draw scene
 		this._scene.blank("#000");
-		this._scene.render();
+		this._scene.advance(dtMs);
 
 		// dispatch fps changed event
-		this.fpsChanged.dispatch(1/dt);
+		this.fpsChanged.dispatch(1000/dtMs);
 	}; // _draw( )
 
 	Shooter.prototype._fire = function() {
@@ -426,6 +422,8 @@ window.Shooter = (function() {
 
 		var shot = this._createProjectile(this._clientId, eid, pos.x, pos.y, dir.x, dir.y);
 		this._netAdapter.sendAddEntity(this._clientId, eid, entityType.projectile, pos.x, pos.y, dir.x, dir.y);
+
+		new Audio("assets/audio/laser.ogg").play();
 	}; // _fire( )
 
 	Shooter.prototype._gameLoop = function() {
@@ -462,7 +460,7 @@ window.Shooter = (function() {
 
 				// collision detection and response
 				if (shots[i].cid !== this._clientId) {
-					if (Shape2D.Intersect.shapeVsShape(shots[i].getCollidable().getCenter(), this._player.getCollidable())) {
+					if (Intersect.shapeVsShape(shots[i].getCollidable().getCenter(), this._player.getCollidable())) {
 						this._health -= 7;
 						if (this._health < 0)
 							this._health = 0;
@@ -529,9 +527,7 @@ window.Shooter = (function() {
 			this._camera.setPosition(this._player);
 
 			// update player orientation
-			var mousePos = this._mouse.getPosition();
-			if (mousePos !== undefined)
-				this._player.face(this._mouse.getPosition());
+			this._player.face(this._mouse.getPosition());
 		} // if
 
 		// release loop lock
@@ -541,85 +537,130 @@ window.Shooter = (function() {
 	Shooter.prototype.loadMap = function() {
 		var map = {};
 
-		// images
-		var images = {};
-		images.bush = new Image();
-		images.bush.src = "assets/image/bush.png";
-		images.dirt = new Image();
-		images.dirt.src = "assets/image/dirt_splat.png";
-		images.grass = new Image();
-		images.grass.src = "assets/image/grass.jpg";
-		images.innerWallH = new Image();
-		images.innerWallH.src = "assets/image/inner_wall_h.png";
-		images.innerWallV = new Image();
-		images.innerWallV.src = "assets/image/inner_wall_v.png";
-		images.playerBrown = new Image();
-		images.playerBrown.src = "assets/image/player_brown.png";
-		images.playerBlue = new Image();
-		images.playerBlue.src = "assets/image/player_blue.png";
-		images.playerGreen = new Image();
-		images.playerGreen.src = "assets/image/player_green.png";
-		images.playerPurple = new Image();
-		images.playerPurple.src = "assets/image/player_purple.png";
-		images.outerWallL = new Image();
-		images.outerWallL.src = "assets/image/outer_wall_l.png";
-		images.outerWallT = new Image();
-		images.outerWallT.src = "assets/image/outer_wall_t.png";
-		images.outerWallR = new Image();
-		images.outerWallR.src = "assets/image/outer_wall_r.png";
-		images.outerWallB = new Image();
-		images.outerWallB.src = "assets/image/outer_wall_b.png";
-		images.shotBlue = new Image();
-		images.shotBlue.src = "assets/image/shot_blue.png";
-		images.shotGreen = new Image();
-		images.shotGreen.src = "assets/image/shot_green.png";
-		images.shotPurple = new Image();
-		images.shotPurple.src = "assets/image/shot_purple.png";
-		images.shotRed = new Image();
-		images.shotRed.src = "assets/image/shot_red.png";
-
-		map.images = images;
-
 		// models
-		var models = {};
-		models.bush = new Model(map.images.bush);
-		models.bush.animations[animId.stand] = new Animation(new Rect(0, 0, 256, 256), 1, 100, new Matrix().translate(-128, 128));
-		models.dirt = new Model(map.images.dirt);
-		models.dirt.animations[animId.stand] = new Animation(new Rect(0, 0, 640, 640), 1, 100, new Matrix().translate(-320, 320));
-		models.grass = new Model(map.images.grass);
-		models.grass.animations[animId.stand] = new Animation(new Rect(0, 0, 640, 640), 1, 100, new Matrix().translate(-320, 320));
-		models.innerWallH = new Model(map.images.innerWallH);
-		models.innerWallH.animations[animId.stand] = new Animation(new Rect(0, 0, 1066, 299), 1, 100, new Matrix().translate(-533, 149.5));
-		models.innerWallV = new Model(map.images.innerWallV);
-		models.innerWallV.animations[animId.stand] = new Animation(new Rect(0, 0, 296, 2465), 1, 100, new Matrix().translate(-148, 1232.5));
-		models.playerBrown = new Model(map.images.playerBrown);
-		models.playerBrown.animations[animId.stand] = new Animation(new Rect(0, 0, 1200, 1200), 1, 100, new Matrix().translate(-600, 600).scale(1 / 6));
-		models.playerBrown.animations[animId.walk] = models.playerBrown.animations[animId.stand];
-		models.playerBrown.animations[animId.shoot] = models.playerBrown.animations[animId.stand];
-		models.playerBlue = new Model(map.images.playerBlue);
-		models.playerBlue.animations = models.playerBrown.animations;
-		models.playerGreen = new Model(map.images.playerGreen);
-		models.playerGreen.animations = models.playerBrown.animations;
-		models.playerPurple = new Model(map.images.playerPurple);
-		models.playerPurple.animations = models.playerBrown.animations;
-		models.outerWallL = new Model(map.images.outerWallL);
-		models.outerWallL.animations[animId.stand] = new Animation(new Rect(0, 0, 192, 3840), 1, 100, new Matrix().translate(-96, 1920));
-		models.outerWallT = new Model(map.images.outerWallT);
-		models.outerWallT.animations[animId.stand] = new Animation(new Rect(0, 0, 2176, 192), 1, 100, new Matrix().translate(-1088, 96));
-		models.outerWallR = new Model(map.images.outerWallR);
-		models.outerWallR.animations[animId.stand] = new Animation(new Rect(0, 0, 192, 3840), 1, 100, new Matrix().translate(-96, 1920));
-		models.outerWallB = new Model(map.images.outerWallB);
-		models.outerWallB.animations[animId.stand] = new Animation(new Rect(0, 0, 2176, 192), 1, 100, new Matrix().translate(-1088, 96));
-		models.shotBlue = new Model(map.images.shotBlue);
-		models.shotBlue.animations[animId.stand] = new Animation(new Rect(0, 0, 640, 640), 1, 100, new Matrix().translate(-320, 320).scale(.20));
-		models.shotGreen = new Model(map.images.shotGreen);
-		models.shotGreen.animations = models.shotBlue.animations;
-		models.shotPurple = new Model(map.images.shotPurple);
-		models.shotPurple.animations = models.shotBlue.animations;
-		models.shotRed = new Model(map.images.shotRed);
-		models.shotRed.animations = models.shotBlue.animations;
+		let models = {
+			bush: new Model(
+				"bush",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-128, -128), "assets/image/bush.png", 256, 256) },
+				{},
+			),
+			dirt: new Model(
+				"dirt",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320), "assets/image/dirt_splat.png", 640, 640) },
+				{},
+			),
+			grass: new Model(
+				"grass",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320), "assets/image/grass.jpg", 640, 640) },
+				{},
+			),
+			innerWallH: new Model(
+				"innerWallH",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-533, -149.5), "assets/image/inner_wall_h.png", 1066, 299) },
+				{},
+			),
+			innerWallV: new Model(
+				"innerWallV",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-148, -1232.5), "assets/image/inner_wall_v.png", 296, 2465) },
+				{},
+			),
+			playerBrown: new Model(
+				"playerBrown",
+				{
+					stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+				},
+				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_brown.png", 1200, 1200) },
+				{},
+			),
+			playerBlue: new Model(
+				"playerBlue",
+				{
+					stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+				},
+				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_blue.png", 1200, 1200) },
+				{},
+			),
+			playerGreen: new Model(
+				"playerGreen",
+				{
+					stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+				},
+				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_green.png", 1200, 1200) },
+				{},
+			),
+			playerPurple: new Model(
+				"playerPurple",
+				{
+					stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
+				},
+				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_purple.png", 1200, 1200) },
+				{},
+			),
+			outerWallL: new Model(
+				"outerWallL",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-96, -1920), "assets/image/outer_wall_l.png", 192, 3840) },
+				{},
+			),
+			outerWallT: new Model(
+				"outerWallT",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-1088, -96), "assets/image/outer_wall_t.png", 2176, 192) },
+				{},
+			),
+			outerWallR: new Model(
+				"outerWallR",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-96, -1920), "assets/image/outer_wall_r.png", 192, 3840) },
+				{},
+			),
+			outerWallB: new Model(
+				"outerWallB",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-1088, -96), "assets/image/outer_wall_b.png", 2176, 192) },
+				{},
+			),
+			shotBlue: new Model(
+				"shotBlue",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_blue.png", 640, 640) },
+				{},
+			),
+			shotGreen: new Model(
+				"shotGreen",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_green.png", 640, 640) },
+				{},
+			),
+			shotPurple: new Model(
+				"shotPurple",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_purple.png", 640, 640) },
+				{},
+			),
+			shotRed: new Model(
+				"shotRed",
+				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
+				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_red.png", 640, 640) },
+				{},
+			),
+		};
 
 		map.models = models;
+		console.log(JSON.stringify(models, null, "\t"))
 
 		// entities
 		var entities = {};
@@ -632,7 +673,7 @@ window.Shooter = (function() {
 			new Entity(map.models.bush, new Vector(832, -1460), new Circle(0, 0, 128), undefined, entityFlag.collidable | entityFlag.wall)
 		];
 		for (var i = 0; i < entities.bushes.length; ++i) {
-			entities.bushes[i].modelState.playAnimation(animId.stand);
+			entities.bushes[i].modelState.playAnimation("stand");
 		} // for( i )
 		entities.grass = [
 			new Entity(map.models.grass, new Vector(-960, 1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
@@ -666,10 +707,10 @@ window.Shooter = (function() {
 			new Entity(map.models.grass, new Vector(960, -1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none)
 		];
 		for (var i = 0; i < entities.grass.length; ++i) {
-			entities.grass[i].modelState.playAnimation(animId.stand);
+			entities.grass[i].modelState.playAnimation("stand");
 		} // for( i )
 		entities.dirt = new Entity(map.models.dirt, new Vector(-260, 240), new Rect(-320, 320, 640, 640), undefined, entityFlag.none);
-		entities.dirt.modelState.playAnimation(animId.stand);
+		entities.dirt.modelState.playAnimation("stand");
 		entities.walls = [
 			new Entity(map.models.innerWallH, new Vector(-196, -1149.5), new Rect(-533, 149.5, 1066, 299), undefined, entityFlag.collidable | entityFlag.wall),
 			new Entity(map.models.innerWallV, new Vector(702, 288.5), new Rect(-148, 1232.5, 296, 2465), undefined, entityFlag.collidable | entityFlag.wall),
@@ -679,7 +720,7 @@ window.Shooter = (function() {
 			new Entity(map.models.outerWallB, new Vector(0, -1824), new Rect(-1148, 60, 2296, 120), undefined, entityFlag.collidable | entityFlag.wall)
 		];
 		for (var i = 0; i < entities.walls.length; ++i) {
-			entities.walls[i].modelState.playAnimation(animId.stand);
+			entities.walls[i].modelState.playAnimation("stand");
 		} // for( i )
 
 		map.entities = entities;
@@ -779,4 +820,6 @@ window.Shooter = (function() {
 	}; // run( )
 
 	return Shooter;
+})();
+
 })();

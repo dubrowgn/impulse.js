@@ -1,6 +1,8 @@
 import { Animation } from "./model-2d/animation";
-import { AnimationState } from "./model-2d/animation-state";
+import { Frame } from "./model-2d/frame";
+import { Image } from "./model-2d/image";
 import { Model } from "./model-2d/model";
-import { ModelState } from "./model-2d/model-state";
+import { ModelState, ModelUpdate } from "./model-2d/model-state";
+import { Sound } from "./model-2d/sound";
 
-export { Animation, AnimationState, Model, ModelState };
+export { Animation, Frame, Image, Model, ModelState, ModelUpdate, Sound };

@@ -91,7 +91,7 @@ export default t => {
 
 	t.test("toString()", t => {
 		t.equal((new Matrix()).toString(),
-			"Matrix([1, 0, 0] [0, 1, 0] [0, 0, 1])", "(new Matrix()).toString()");
+			"Matrix { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }", "(new Matrix()).toString()");
 	});
 
 	t.test("translate()", t => {

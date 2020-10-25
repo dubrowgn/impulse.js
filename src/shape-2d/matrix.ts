@@ -1,6 +1,7 @@
+import { Clone, ToJson, toString, ToString } from "../lib"
 import { Vector } from "./vector";
 
-export interface MatrixData {
+export interface MatrixJson {
 	a: number;
 	b: number;
 	c: number;
@@ -9,7 +10,7 @@ export interface MatrixData {
 	f: number;
 };
 
-export class Matrix {
+export class Matrix implements Clone, ToJson, ToString {
 	a: number = 1;
 	b: number = 0;
 	c: number = 0;
@@ -105,21 +106,9 @@ export class Matrix {
 			this.d == right.d && this.e == right.e && this.f == right.f;
 	}
 
-	/**
-	 * export( )
-	 *
-	 * Returns a generic object containing the current state of this matrix.
-	 * This is useful for storing state via JSON for example.
-	 *
-	 * @public
-	 * @sig public {Object} export();
-	 * @return {Object}
-	 */
-	export(): MatrixData {
-		return {
-			a: this.a, b: this.b, c: this.c,
-			d: this.d, e: this.e, f: this.f
-		};
+	static fromJson(data: MatrixJson): Matrix {
+		let { a, b, c, d, e, f } = data;
+		return new Matrix(a, b, c, d, e, f);
 	}
 
 	/**
@@ -425,28 +414,13 @@ export class Matrix {
 		return this;
 	}
 
-	/**
-	 * toJSON( )
-	 *
-	 * Returns a JSON ready copy of this object's current state.
-	 * @return {Object}
-	 */
-	toJSON = Matrix.prototype.export;
-
-	/**
-	 * toString( )
-	 *
-	 * Returns the string representation of this matrix.
-	 *
-	 * @public
-	 * @sig public {String} toString();
-	 * @returns {String}
-	 */
-	toString(): string {
+	toJson(): MatrixJson {
 		let { a, b, c, d, e, f } = this;
-
-		return `Matrix([${a}, ${c}, ${e}] [${b}, ${d}, ${f}] [0, 0, 1])`;
+		return { a, b, c, d, e, f };
 	}
+
+	toJSON(): MatrixJson { return this.toJson(); };
+	toString(): string { return toString.call(this); }
 
 	/**
 	 * translate( )
@@ -474,22 +448,5 @@ export class Matrix {
 		this.f += this.b * dx + this.d * (dy as number);
 
 		return this;
-	}
-
-	/**
-	 * import( )
-	 *
-	 * Creates a new matrix with an internal state equal to the values of
-	 * the passed generic object. This is useful for restoring state from
-	 * JSON for example.
-	 *
-	 * @public
-	 * @static
-	 * @sig public {Matrix} import({Object});
-	 * @param  {Object} obj
-	 * @return {Matrix}
-	 */
-	static import(obj: MatrixData): Matrix {
-		return new Matrix(obj.a, obj.b, obj.c, obj.d, obj.e, obj.f);
 	}
 };

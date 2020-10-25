@@ -1,4 +1,3 @@
-import { Entity } from "entity"
 import * as Input from "input"
 import * as Model2D from "model2d"
 import * as Networking from "net"
@@ -7,7 +6,6 @@ import * as Shape2D from "shape2d"
 import * as Util from "util"
 
 export {
-	Entity,
 	Input,
 	Model2D,
 	Networking,

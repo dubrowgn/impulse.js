@@ -7,7 +7,7 @@
 		"outFile": "dist/impulse.js",
 		"sourceMap": true,
 		"strict": true,
-		"target": "es6"
+		"target": "es2017"
 	},
 	"include": [
 		"src/impulse.ts"

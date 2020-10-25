@@ -1,4 +1,4 @@
-import { Entity } from "../entity";
+import { Entity } from "./entity";
 import { SceneGraph } from "./scene-graph";
 import { Intersect } from "../shape-2d/intersect";
 import { Shape2d } from "../shape-2d/shape-2d";

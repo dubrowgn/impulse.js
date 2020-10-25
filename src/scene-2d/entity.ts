@@ -1,11 +1,10 @@
-import { AnimationState } from "./model-2d/animation-state";
-import { EventDelegate } from "./util/event-delegate";
-import { EventedCollection } from "./util/evented-collection";
-import { Matrix } from "./shape-2d/matrix";
-import { Model } from "./model-2d/model";
-import { ModelState } from "./model-2d/model-state";
-import { Shape2d } from "./shape-2d/shape-2d";
-import { Vector } from "./shape-2d/vector";
+import { EventDelegate } from "../util/event-delegate";
+import { EventedCollection } from "../util/evented-collection";
+import { Matrix } from "../shape-2d/matrix";
+import { Model } from "../model-2d/model";
+import { ModelState, ModelUpdate } from "../model-2d/model-state";
+import { Shape2d } from "../shape-2d/shape-2d";
+import { Vector } from "../shape-2d/vector";
 
 export class Entity {
 	protected collidable: Shape2d;
@@ -31,6 +30,13 @@ export class Entity {
 		this.rotated = new EventDelegate();
 	}
 
+	advance(deltaMs: number): ModelUpdate {
+		let update = this.modelState.advance(deltaMs);
+		update.matrix.combine(this.getMatrix());
+
+		return update;
+	}
+
 	face(ent: Entity): this;
 	face(vec: Vector): this;
 	face(vec: any) {
@@ -47,15 +53,6 @@ export class Entity {
 	getCollidable(): Shape2d {
 		return this.collidable.clone().transform(this.matrix);
 	}
-
-	getAnimationState(currentTimeMs: number): AnimationState | undefined {
-		let animState = this.modelState.getAnimationState(currentTimeMs);
-		if (animState === undefined)
-			return undefined;
-
-		animState.matrix.combine(this.getMatrix());
-		return animState;
-	};
 
 	getMatrix(): Matrix {
 		if (this.parent !== undefined)

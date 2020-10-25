@@ -1,4 +1,4 @@
-import { Entity } from "../entity";
+import { Entity } from "./entity";
 import { Shape2d } from "../shape-2d/shape-2d";
 import { Vector } from "../shape-2d/vector";
 

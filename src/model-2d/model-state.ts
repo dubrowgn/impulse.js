@@ -1,105 +1,103 @@
 import { Animation } from "./animation"
-import { AnimationState } from "./animation-state"
+import { Frame } from "./frame"
+import { Image } from "./image"
+import { Matrix } from "../shape-2d/matrix"
 import { Model } from "./model"
+import { Sound } from "./sound"
+import { Rect } from "../shape-2d/rect"
+
+const missingPath = "data:image/png;base64," +
+	"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEVmZmaZmZ" +
+	"moZ+Z2AAAAEElEQVQI12Ng+M+AFeEQBgB+vw/xWs16mgAAAABJRU5ErkJggg==";
+const missingImage = new Image(1, new Matrix().translate(-8, 8), missingPath, 16, 16);
+const missingAnimation = new Animation([new Frame(false, "missing", 1, undefined, 0, 0)]);
+
+export interface ModelUpdate {
+	attack: boolean;
+	soundPaths: string[];
+	frameRect: Rect;
+	imagePath: string;
+	matrix: Matrix;
+}
 
 export class ModelState {
+	public paused: boolean = false;
+
+	protected anim: Animation = missingAnimation;
+	protected frameIdx: number = 0;
 	protected model: Model;
-	protected animation?: Animation = undefined;
-	protected animationPaused: boolean = false;
-	protected animationTime = 0;
+	protected timeSec: number = 0;
 
 	constructor(model: Model) {
 		this.model = model;
 	}
 
-	getAnimationState(currentTimeMs: number): AnimationState | undefined {
-		// make sure we have an animation assigned
-		if (this.animation === undefined)
-			return undefined;
+	advance(deltaMs: number): ModelUpdate {
+		let deltaSec = this.paused ? 0 : deltaMs / 1000;
 
-		// only advance animation time if the animation isn't paused
-		if (!this.animationPaused)
-			this.animationTime += currentTimeMs - this.animationTime;
+		let frame = this.anim.frames[this.frameIdx];
+		let img = this.lookupImage(frame.image);
+		let frameSec = frame.length / img.fps;
 
-		// return the current animation state
-		return new AnimationState(
-			this.animation.getFrameRect(this.animationTime),
-			this.model.image,
-			this.animation.matrix.clone()
-		);
+		let attack = false;
+		let soundPaths = [];
+
+		this.timeSec += deltaSec;
+		while (this.timeSec > frameSec) {
+			this.timeSec -= frameSec;
+			this.frameIdx = (this.frameIdx + 1) % this.anim.frames.length;
+
+			frame = this.anim.frames[this.frameIdx];
+			img = this.lookupImage(frame.image);
+			frameSec = frame.length / img.fps;
+
+			attack ||= frame.attack;
+			if (frame.sound)
+				soundPaths.push(this.lookupSoundPath(frame.sound))
+		}
+
+		return {
+			attack,
+			soundPaths,
+			frameRect: new Rect(
+				frame.x * img.tileW,
+				frame.y * img.tileH,
+				img.tileW,
+				img.tileH
+			),
+			imagePath: img.path,
+			matrix: img.matrix.clone().scale(1, -1),
+		};
 	}
 
-	playAnimation(animationID: number) {
-		this.animation = this.model.animations[animationID];
-		this.animationTime = 0;
+	protected lookupAnimation(name: string): Animation {
+		return this.model.animations[name] ?? missingAnimation;
+	}
+
+	protected lookupImage(name: string): Image {
+		return this.model.images[name] ?? missingImage;
+	}
+
+	protected lookupSoundPath(name: string): string {
+		let paths = this.model.sounds[name].paths;
+		return paths[Math.random() * paths.length | 0];
+	}
+
+	playAnimation(name: string): this {
+		this.anim = this.lookupAnimation(name);
+		return this.resetAnimation();
+	}
+
+	resetAnimation(): this {
+		// set animation state to the end of the last frame so
+		// advance() can pick up attack/sound in the first frame
+
+		this.frameIdx = this.anim.frames.length - 1;
+
+		let frame = this.anim.frames[this.frameIdx];
+		let image = this.lookupImage(frame.image);
+		this.timeSec = frame.length * image.fps;
+
 		return this;
-	}
-
-	pauseAnimation(): this {
-		this.animationPaused = true;
-		return this;
-	}
-
-	resumeAnimation(): this {
-		this.animationPaused = false;
-		return this;
-	}
-
-	stopAnimation(): this {
-		this.animationPaused = true;
-		this.animationTime = 0;
-		return this;
-	}
-
-	isAnimationPaused(): boolean {
-		return this.animationPaused;
-	}
-
-	isAnimationStopped(): boolean {
-		return this.animationPaused && this.animationTime == 0;
-	}
-
-	playSound(soundID: number): this {
-		throw "not implemented";
-	}
-
-	pauseSound(soundID: number): this {
-		throw "not implemented";
-	}
-
-	pauseSounds(): this {
-		throw "not implemented";
-	}
-
-	resumeSound(soundID: number): this {
-		throw "not implemented";
-	}
-
-	resumeSounds(): this {
-		throw "not implemented";
-	}
-
-	stopSound(soundID: number): this {
-		throw "not implemented";
-	}
-
-	stopSounds(): this {
-		throw "not implemented";
-	}
-
-	isSoundPaused(soundID: number) {
-		throw "not implemented";
-	}
-
-	isSoundStopped(soundID: number) {
-		throw "not implemented";
-	}
-
-	areSoundsPaused(): boolean {
-		throw "not implemented";
-	}
-
-	areSoundsStopped(): boolean {
-		throw "not implemented";
 	}
 };
