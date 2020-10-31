@@ -6,10 +6,13 @@ import { ModelState, ModelUpdate } from "../model-2d/model-state";
 import { Shape2d } from "../shape-2d/shape-2d";
 import { Vector } from "../shape-2d/vector";
 
+const twoPi = 2 * Math.PI;
+
 export class Entity {
 	protected collidable: Shape2d;
 	protected matrix: Matrix;
-	protected scale: number = 1; // FIXME???
+	protected rotation: number = 0;
+	protected scale: number = 1;
 
 	children: EventedCollection;
 	flags: number;
@@ -43,11 +46,7 @@ export class Entity {
 		if (vec instanceof Entity)
 			vec = vec.getPosition();
 
-		let dRads = this.getPosition().angleTo(vec) - this.matrix.getRotation();
-		this.matrix.preRotate(dRads);
-		this.rotated.dispatch(this, dRads);
-
-		return this;
+		return this.setRotation(this.getPosition().angleTo(vec));
 	}
 
 	getCollidable(): Shape2d {
@@ -66,7 +65,7 @@ export class Entity {
 	}
 
 	getRotation(): number {
-		return this.matrix.getRotation();
+		return this.rotation;
 	}
 
 	MoveForward(dist: number): this {
@@ -84,6 +83,10 @@ export class Entity {
 	}
 
 	rotate(rads: number): this {
+		this.rotation = (this.rotation + rads) % twoPi;
+		if (this.rotation < 0)
+			this.rotation += twoPi;
+
 		this.matrix.preRotate(rads);
 		this.rotated.dispatch(this, rads);
 
@@ -114,11 +117,7 @@ export class Entity {
 	}
 
 	setRotation(rads: number): this {
-		let dRads = rads - this.matrix.getRotation();
-		this.matrix.preRotate(dRads);
-		this.rotated.dispatch(this, dRads);
-
-		return this;
+		return this.rotate(rads - this.rotation);
 	}
 
 	SetScale(scale: number): this {
