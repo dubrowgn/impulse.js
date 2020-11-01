@@ -36,5 +36,7 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "main": "dist/impulse.js",
+  "types": "dist/impulse.d.ts"
 }
