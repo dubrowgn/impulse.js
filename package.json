@@ -4,7 +4,7 @@
   "description": "Impulse.js is a high performance HTML5 game engine for JavaScript.",
   "scripts": {
     "build": "npx tsc && cat LICENSE dist/impulse.js > dist/impulse.js.lic && mv dist/impulse.js.lic dist/impulse.js",
-    "build-release": "npx tsc && npm run -s compress",
+    "build-release": "npm run -s build && npm run -s compress",
     "clean": "rm -rf dist",
     "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
     "publish": "cp README.md LICENSE package.json dist/. && cd dist && npm publish --access=public",
