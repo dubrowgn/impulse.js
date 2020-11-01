@@ -3,7 +3,7 @@
 (function() {
 
 const { Animation, Frame, Image, Model } = require("model2d");
-const { Camera, Entity, LinearSg, Scene } = require("scene2d");
+const { Camera, Entity, LinearSg, SceneTopDown } = require("scene2d");
 const { Circle, Intersect, Matrix, Rect, Vector } = require("shape2d");
 const { Collection, EventDelegate, Timing } = require("util");
 
@@ -235,7 +235,7 @@ window.Shooter = (function() {
 			sg.addEntity(this._map.entities.walls[i]);
 		} // for( i )
 
-		this._scene = new Scene(new Camera(canvas, 0, 0, 1920, 1080, 32), sg);
+		this._scene = new SceneTopDown(new Camera(canvas, 0, 0, 1920, 1080, 32), sg);
 		this._camera = this._scene.getCamera();
 		this._mouse = this._scene.getMouse();
 		this._sceneGraph = this._scene.getSceneGraph();
@@ -660,7 +660,6 @@ window.Shooter = (function() {
 		};
 
 		map.models = models;
-		console.log(JSON.stringify(models, null, "\t"))
 
 		// entities
 		var entities = {};

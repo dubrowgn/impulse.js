@@ -2,7 +2,7 @@ import { Camera } from "./camera";
 import { MouseAdapter } from "../input/mouse";
 import { SceneGraph } from "./scene-graph";
 
-export class Scene {
+export abstract class Scene {
 	protected camera: Camera;
 	protected canvas: HTMLCanvasElement;
 	protected context: CanvasRenderingContext2D;
@@ -49,34 +49,5 @@ export class Scene {
 		return this.sceneGraph;
 	}
 
-	advance(deltaMs: number): this {
-		let ents = this.sceneGraph.queryIntersectWith(this.camera.getViewport(true));
-		let camMatrix = this.camera.getRenderMatrix();
-
-		this.context.save();
-		for(let ent of ents) {
-			let update = ent.advance(deltaMs);
-
-			let m = update.matrix;
-			let r = update.frameRect;
-
-			// combine camera transformations
-			m.combine(camMatrix);
-
-			// init canvas transformation
-			this.context.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-
-			// draw the image sprite to the canvas
-			let img = new Image();
-			img.src = update.imagePath;
-			this.context.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
-
-			for (let path of update.soundPaths) {
-				new Audio(path).play();
-			}
-		}
-		this.context.restore();
-
-		return this;
-	}
+	abstract advance(deltaMs: number): this;
 };
