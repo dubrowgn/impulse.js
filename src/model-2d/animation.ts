@@ -1,5 +1,5 @@
-import { Clone, ToJson, toString, ToString } from "../lib"
-import { Frame, FrameJson } from "./frame"
+import { Clone, ToJson, toString, ToString } from "../lib";
+import { Frame, FrameJson } from "./frame";
 
 export interface AnimationJson {
 	frames: FrameJson[];

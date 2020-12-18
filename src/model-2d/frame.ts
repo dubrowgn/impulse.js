@@ -1,4 +1,4 @@
-import { Clone, ToJson, toString, ToString } from "../lib"
+import { Clone, ToJson, toString, ToString } from "../lib";
 
 export interface FrameJson {
 	attack: boolean;

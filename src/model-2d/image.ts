@@ -1,5 +1,5 @@
-import { Clone, ToJson, toString, ToString } from "../lib"
-import { Matrix, MatrixJson } from "../shape-2d/matrix"
+import { Clone, ToJson, toString, ToString } from "../lib";
+import { Matrix, MatrixJson } from "../shape-2d/matrix";
 
 export interface ImageJson {
 	fps: number;

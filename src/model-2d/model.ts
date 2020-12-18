@@ -1,8 +1,8 @@
-import { Animation, AnimationJson } from "./animation"
-import { Clone, mostCommon, objDiff, objEmpty, objMap, ToJson, toString, ToString } from "../lib"
-import { Image, ImageJson } from "./image"
-import { Matrix } from "../shape-2d/matrix"
-import { Sound, SoundJson } from "./sound"
+import { Animation, AnimationJson } from "./animation";
+import { Clone, mostCommon, objDiff, objEmpty, objMap, ToJson, toString, ToString } from "../lib";
+import { Image, ImageJson } from "./image";
+import { Matrix } from "../shape-2d/matrix";
+import { Sound, SoundJson } from "./sound";
 
 type AnimationMap = Record<string, Animation>;
 type ImageMap = Record<string, Image>;

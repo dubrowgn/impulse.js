@@ -1,4 +1,4 @@
-import { Clone, ToJson, toString, ToString } from "../lib"
+import { Clone, ToJson, toString, ToString } from "../lib";
 import { Vector } from "./vector";
 
 export interface MatrixJson {

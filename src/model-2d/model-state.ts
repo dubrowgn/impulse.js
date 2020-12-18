@@ -1,10 +1,10 @@
-import { Animation } from "./animation"
-import { Frame } from "./frame"
-import { Image } from "./image"
-import { Matrix } from "../shape-2d/matrix"
-import { Model } from "./model"
-import { Sound } from "./sound"
-import { Rect } from "../shape-2d/rect"
+import { Animation } from "./animation";
+import { Frame } from "./frame";
+import { Image } from "./image";
+import { Matrix } from "../shape-2d/matrix";
+import { Model } from "./model";
+import { Sound } from "./sound";
+import { Rect } from "../shape-2d/rect";
 
 const missingPath = "data:image/png;base64," +
 	"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEVmZmaZmZ" +
