@@ -3,7 +3,7 @@ Impulse.js is a high performance HTML5 game engine for JavaScript. It aims to be
 
 Drive your imagination.
 
-[![Build Status](https://travis-ci.com/dubrowgn/impulse.js.svg?branch=master)](https://travis-ci.com/dubrowgn/impulse.js)
+[![Build Status](https://app.travis-ci.com/dubrowgn/impulse.js.svg?branch=master)](https://app.travis-ci.com/dubrowgn/impulse.js)
 
 ## Use
 
