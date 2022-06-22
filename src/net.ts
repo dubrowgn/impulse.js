@@ -1,4 +1,2 @@
-import { BinarySerializer, Types } from "./net/bin-serializer";
-import { Sanitizer } from "./net/sanitizer";
-
-export { BinarySerializer, Sanitizer, Types };
+export { BinarySerializer, Types } from "./net/bin-serializer";
+export { Sanitizer } from "./net/sanitizer";

@@ -1,6 +1,4 @@
-import { Collection } from "./util/collection";
-import { EventDelegate } from "./util/event-delegate";
-import { EventedCollection } from "./util/evented-collection";
-import { Timing } from "./util/timing";
-
-export { Collection, EventDelegate, EventedCollection, Timing };
+export { Collection } from "./util/collection";
+export { EventDelegate } from "./util/event-delegate";
+export { EventedCollection } from "./util/evented-collection";
+export { Timing } from "./util/timing";
