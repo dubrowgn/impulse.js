@@ -6,7 +6,7 @@
     "build": "npx tsc && cat LICENSE dist/impulse.js > dist/impulse.js.lic && mv dist/impulse.js.lic dist/impulse.js",
     "build-release": "npm run -s build && npm run -s compress",
     "clean": "rm -rf dist",
-    "compress": "npx uglify-es dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
+    "compress": "npx uglify-js dist/impulse.js -o dist/impulse.min.js -cm --source-map 'content=dist/impulse.js.map' --comments",
     "publish": "cp README.md LICENSE package.json dist/. && cd dist && npm publish --access=public",
     "shell": "npx ts-node",
     "shell-test": "npx ts-node --project test/tsconfig.json --dir .",
@@ -29,10 +29,10 @@
   },
   "homepage": "https://impulsejs.com",
   "devDependencies": {
-    "pta": "^0.1.3",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.3",
-    "uglify-es": "^3.3.9"
+    "pta": "0.1.x",
+    "ts-node": "10.x",
+    "typescript": "4.x",
+    "uglify-js": "3.x"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
