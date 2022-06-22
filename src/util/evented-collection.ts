@@ -1,14 +1,16 @@
 import { Collection } from "./collection";
-import { EventDelegate } from "./event-delegate";
+import { Event } from "./event";
+
+type EventHandler = (collection: EventedCollection, item: any) => void;
 
 export class EventedCollection extends Collection {
-	added: EventDelegate;
-	removed: EventDelegate;
+	added: Event<EventHandler>;
+	removed: Event<EventHandler>;
 
 	constructor(...args: any) {
 		super(args);
-		this.added = new EventDelegate();
-		this.removed = new EventDelegate();
+		this.added = new Event();
+		this.removed = new Event();
 	};
 
 	add(item: any): this {

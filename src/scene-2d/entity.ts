@@ -1,4 +1,4 @@
-import { EventDelegate } from "../util/event-delegate";
+import { Event } from "../util/event";
 import { EventedCollection } from "../util/evented-collection";
 import { Matrix } from "../shape-2d/matrix";
 import { Model } from "../model-2d/model";
@@ -17,9 +17,9 @@ export class Entity {
 	children: EventedCollection;
 	flags: number;
 	modelState: ModelState;
-	moved: EventDelegate; // event(Entity2D, {dx, dy})
+	moved: Event<(entity: Entity, delta: {dx: number, dy: number}) => void>;
 	parent?: Entity;
-	rotated: EventDelegate; // event(Entity2D, dRads)
+	rotated: Event<(entity: Entity, dRads: number) => void>;
 
 	constructor(model: Model, position: Vector, collidable: Shape2d, parent?: Entity, flags: number = 0) {
 		this.children = new EventedCollection();
@@ -28,9 +28,9 @@ export class Entity {
 
 		this.matrix = new Matrix(1, 0, 0, 1, position.x, position.y);
 		this.modelState = new ModelState(model);
-		this.moved = new EventDelegate();
+		this.moved = new Event();
 		this.parent = parent;
-		this.rotated = new EventDelegate();
+		this.rotated = new Event();
 	}
 
 	advance(deltaMs: number): ModelUpdate {

@@ -1,8 +1,10 @@
 import { Entity } from "./entity";
-import { EventDelegate } from "../util/event-delegate";
+import { Event } from "../util/event";
 import { Matrix } from "../shape-2d/matrix";
 import { Polygon } from "../shape-2d/polygon";
 import { Vector } from "../shape-2d/vector";
+
+type CameraHandler = (camera: Camera) => void;
 
 export class Camera {
 	protected cameraMatrix: Matrix;
@@ -15,9 +17,9 @@ export class Camera {
 	protected viewportMargin: number;
 	protected w!: number;
 
-	moved: EventDelegate;
-	rotated: EventDelegate;
-	zoomed: EventDelegate;
+	moved: Event<CameraHandler>;
+	rotated: Event<CameraHandler>;
+	zoomed: Event<CameraHandler>;
 
 	constructor(
 		canvas: HTMLCanvasElement, x: number, y: number,
@@ -25,12 +27,12 @@ export class Camera {
 	) {
 		this.cameraMatrix = new Matrix(1, 0, 0, 1, -x, -y);
 		this.canvas = canvas;
-		this.moved = new EventDelegate();
-		this.rotated = new EventDelegate();
+		this.moved = new Event();
+		this.rotated = new Event();
 		this.targetH = h;
 		this.targetW = w;
 		this.viewportMargin = viewportMargin;
-		this.zoomed = new EventDelegate();
+		this.zoomed = new Event();
 
 		// hook into the window resize event handler
 		this.resizeHandler = () => this.updateCanvasValues();

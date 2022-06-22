@@ -1,4 +1,4 @@
 export { Collection } from "./util/collection";
-export { EventDelegate } from "./util/event-delegate";
+export { Event } from "./util/event";
 export { EventedCollection } from "./util/evented-collection";
 export { Timing } from "./util/timing";

@@ -1,5 +1,5 @@
 import { Camera } from "../scene-2d/camera";
-import { EventDelegate } from "../util/event-delegate";
+import { Event } from "../util/event";
 import { Vector } from "../shape-2d/vector";
 
 export class MouseButtons {
@@ -49,6 +49,8 @@ export class MouseState {
 type MouseEventHandler = (event: MouseEvent) => void;
 type MouseWheelHandler = (event: WheelEvent) => void;
 
+type MouseStateHandler = (state: MouseState) => void;
+
 export class MouseAdapter {
 	protected camera: Camera;
 	protected buttons: MouseButtons;
@@ -62,24 +64,24 @@ export class MouseAdapter {
 	protected position: Vector = new Vector();
 	protected rawPosition: Vector = new Vector();
 
-	click: EventDelegate;
-	doubleClick: EventDelegate;
-	down: EventDelegate;
-	move: EventDelegate;
-	up: EventDelegate;
-	wheel: EventDelegate;
+	click: Event<MouseStateHandler>;
+	doubleClick: Event<MouseStateHandler>;
+	down: Event<MouseStateHandler>;
+	move: Event<MouseStateHandler>;
+	up: Event<MouseStateHandler>;
+	wheel: Event<MouseStateHandler>;
 
 	constructor(camera: Camera) {
 		this.buttons = new MouseButtons();
 		this.camera = camera;
 
 		// initialize mouse delegates
-		this.click = new EventDelegate();
-		this.doubleClick = new EventDelegate();
-		this.down = new EventDelegate();
-		this.move = new EventDelegate();
-		this.up = new EventDelegate();
-		this.wheel = new EventDelegate();
+		this.click = new Event();
+		this.doubleClick = new Event();
+		this.down = new Event();
+		this.move = new Event();
+		this.up = new Event();
+		this.wheel = new Event();
 
 		// initialize custom event handlers for this instance
 
@@ -133,9 +135,9 @@ export class MouseAdapter {
 				this.position = this.camera.canvasToWorld(this.rawPosition);
 		};
 
-		camera.moved.add(this.onCameraEvent);
-		camera.rotated.add(this.onCameraEvent);
-		camera.zoomed.add(this.onCameraEvent);
+		camera.moved.register(this.onCameraEvent);
+		camera.rotated.register(this.onCameraEvent);
+		camera.zoomed.register(this.onCameraEvent);
 
 		// attach mouse delegates to the canvas object
 		let canvas = this.camera.getCanvas();
@@ -160,9 +162,9 @@ export class MouseAdapter {
 		canvas.removeEventListener('wheel', this.onWheel, false);
 
 		// detach camera delegates
-		this.camera.moved.remove(this.onCameraEvent);
-		this.camera.rotated.remove(this.onCameraEvent);
-		this.camera.zoomed.remove(this.onCameraEvent);
+		this.camera.moved.unregister(this.onCameraEvent);
+		this.camera.rotated.unregister(this.onCameraEvent);
+		this.camera.zoomed.unregister(this.onCameraEvent);
 	}
 
 	getButtons(): MouseButtons {
