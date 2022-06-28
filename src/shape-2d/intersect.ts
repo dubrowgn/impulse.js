@@ -246,8 +246,8 @@ function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 
 function circleVsRect(cir: Circle, rect: Rect): boolean {
 	// reorient rect with respect to cir, thus cir is the new origin
-	let l = rect.x - cir.x;
-	let t = rect.y - cir.y;
+	let l = rect.l - cir.x;
+	let t = rect.t - cir.y;
 	let r = l + rect.w;
 	let b = t - rect.h;
 
@@ -577,10 +577,10 @@ function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 
 function rectVsRect(rect1: Rect, rect2: Rect): boolean {
 	return !(
-		rect1.x > rect2.x + rect2.w ||
-		rect1.x + rect1.w < rect2.x ||
-		rect1.y < rect2.y - rect2.h ||
-		rect1.y - rect1.h > rect2.y
+		rect1.l > rect2.r ||
+		rect1.r < rect2.l ||
+		rect1.t < rect2.b ||
+		rect1.b > rect2.r
 	);
 }
 
@@ -608,29 +608,29 @@ function rectMtvFromDeltas(l: number, t: number, r: number, b: number): Vector |
 }
 
 function rectVsRectSat(rect1: Rect, rect2: Rect): Vector | undefined {
-	let l = rect1.x - (rect2.x + rect2.w);
-	let t = rect1.y - (rect2.y - rect2.h);
-	let r = (rect1.x + rect1.w) - rect2.x;
-	let b = (rect1.y - rect1.h) - rect2.y;
+	let dl = rect1.l - rect2.r;
+	let dt = rect1.t - rect2.b;
+	let dr = rect1.r - rect2.l;
+	let db = rect1.b - rect2.t;
 
-	return rectMtvFromDeltas(l, t, r, b);
+	return rectMtvFromDeltas(dl, dt, dr, db);
 }
 
 function rectVsVector(rect: Rect, vect: Vector): boolean {
 	return !(
-		vect.x < rect.x ||
-		vect.y > rect.y ||
-		vect.x > rect.x + rect.w ||
-		vect.y < rect.y - rect.h
+		vect.x < rect.l ||
+		vect.x > rect.r ||
+		vect.y < rect.b ||
+		vect.y > rect.t
 	);
 }
 
 function rectVsVectorSat(rect: Rect, vect: Vector): Vector | undefined {
 	// re-orient rect relative to vect
-	let l = rect.x - vect.x;
-	let t = rect.y - vect.y;
-	let r = rect.x + rect.w - vect.x;
-	let b = rect.y - rect.h - vect.y;
+	let l = rect.l - vect.x;
+	let b = rect.b - vect.y;
+	let r = l + rect.w;
+	let t = b + rect.h;
 
 	return rectMtvFromDeltas(l, t, r, b);
 }

@@ -3,24 +3,32 @@ import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
 export interface RectData {
-	x: number;
-	y: number;
+	l: number;
+	b: number;
 	w: number;
 	h: number;
 };
 
 export class Rect implements Shape2d {
-	x: number = -0.5;
-	y: number = 0.5;
+	l: number = -0.5;
+	b: number = 0.5;
 	w: number = 1;
 	h: number = 1;
 
+	get r() {
+		return this.l + this.w;
+	}
+
+	get t() {
+		return this.b + this.h;
+	}
+
 	constructor();
 	constructor(rect: Rect);
-	constructor(pos: Vector, size: Vector);
-	constructor(x: number, y: number, w: number, h: number);
-	constructor(x?: any, y?: any, w?: number, h?: number) {
-		this._set(x, y, w, h);
+	constructor(lb: Vector, wh: Vector);
+	constructor(l: number, b: number, w: number, h: number);
+	constructor(l?: any, b?: any, w?: number, h?: number) {
+		this._set(l, b, w, h);
 	}
 
 	clone(): this {
@@ -29,8 +37,8 @@ export class Rect implements Shape2d {
 
 	equals(other: any): boolean {
 		return other instanceof Rect &&
-			this.x === other.x &&
-			this.y === other.y &&
+			this.l === other.l &&
+			this.b === other.b &&
 			this.w === other.w &&
 			this.h === other.h;
 	}
@@ -47,15 +55,15 @@ export class Rect implements Shape2d {
 	 */
 	export(): RectData {
 		return {
-			x: this.x,
-			y: this.y,
+			l: this.l,
+			b: this.b,
 			w: this.w,
 			h: this.h
 		};
 	}
 
 	getCenter(): Vector {
-		return new Vector(this.x + this.w/2, this.y - this.h/2);
+		return new Vector(this.l + this.w/2, this.b + this.h/2);
 	}
 
 	getShapeId(): number {
@@ -64,41 +72,41 @@ export class Rect implements Shape2d {
 
 	getVertices(): Vector[] {
 		return [
-			new Vector(this.x, this.y),
-			new Vector(this.x + this.w, this.y),
-			new Vector(this.x + this.w, this.y - this.h),
-			new Vector(this.x, this.y - this.h)
+			new Vector(this.l, this.b),
+			new Vector(this.l, this.t),
+			new Vector(this.r, this.t),
+			new Vector(this.r, this.b),
 		];
 	}
 
 	set(rect: Rect): Rect;
-	set(pos: Vector, size: Vector): Rect;
-	set(x: number, y: number, w: number, h: number): Rect;
-	set(x?: any, y?: any, w?: number, h?: number): Rect {
-		return this._set(x, y, w, h);
+	set(lb: Vector, wh: Vector): Rect;
+	set(l: number, b: number, w: number, h: number): Rect;
+	set(l?: any, b?: any, w?: number, h?: number): Rect {
+		return this._set(l, b, w, h);
 	}
 
-	private _set(x?: any, y?: any, w?: number, h?: number): Rect {
-		if (x instanceof Rect) {
-			this.x = x.x;
-			this.y = x.y;
-			this.w = x.w;
-			this.h = x.h;
-		} else if (x instanceof Vector) {
-			this.x = x.x;
-			this.y = x.y;
-			this.w = (y as Vector).x;
-			this.h = (y as Vector).y;
-		} else if (typeof x === "number") {
-			this.x = x;
-			this.y = y as number;
+	private _set(l?: any, b?: any, w?: number, h?: number): Rect {
+		if (l instanceof Rect) {
+			this.l = l.l;
+			this.b = l.b;
+			this.w = l.w;
+			this.h = l.h;
+		} else if (l instanceof Vector) {
+			this.l = l.x;
+			this.b = l.y;
+			this.w = (b as Vector).x;
+			this.h = (b as Vector).y;
+		} else if (typeof l === "number") {
+			this.l = l;
+			this.b = b as number;
 			this.w = w as number;
 			this.h = h as number;
 		} else {
 			this.h = 1;
 			this.w = 1;
-			this.x = -0.5;
-			this.y = 0.5;
+			this.l = -0.5;
+			this.b = 0.5;
 		}
 
 		return this;
@@ -108,11 +116,11 @@ export class Rect implements Shape2d {
 	setCenter(x: number, y: number): this;
 	setCenter(x: any, y?: number): this {
 		if (x instanceof Vector) {
-			this.x = x.x - this.w/2;
-			this.y = x.y + this.h/2;
+			this.l = x.x - this.w/2;
+			this.b = x.y - this.h/2;
 		} else {
-			this.x = x - this.w/2;
-			this.y = y as number + this.h/2;
+			this.l = x - this.w/2;
+			this.b = y as number - this.h/2;
 		}
 
 		return this;
@@ -127,7 +135,7 @@ export class Rect implements Shape2d {
 	toJSON = Rect.prototype.export;
 
 	toString(): string {
-		return `Rect(${this.x}, ${this.y}, ${this.w}, ${this.h})`;
+		return `Rect(${this.l}, ${this.b}, ${this.w}, ${this.h})`;
 	}
 
 	transform(matrix: Matrix): this {
@@ -158,6 +166,6 @@ export class Rect implements Shape2d {
 	 * @return {Rect}
 	 */
 	static import(obj: RectData): Rect {
-		return new Rect(obj.x, obj.y, obj.w, obj.h);
+		return new Rect(obj.l, obj.b, obj.w, obj.h);
 	}
 };

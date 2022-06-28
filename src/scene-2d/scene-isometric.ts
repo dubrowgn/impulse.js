@@ -50,8 +50,8 @@ export class SceneIsometric extends Scene {
 			if (step.flipX)
 				m.scale(-1, 0);
 
-			r.x += step.dx;
-			r.y += step.dx;
+			r.l += step.dx;
+			r.b += step.dx;
 
 			// combine camera transformations
 			m.combine(camMatrix);
@@ -62,7 +62,7 @@ export class SceneIsometric extends Scene {
 			// draw the image sprite to the canvas
 			let img = new Image();
 			img.src = update.imagePath;
-			this.context.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+			this.context.drawImage(img, r.l, r.t, r.w, r.h, 0, 0, r.w, r.h);
 
 			for (let path of update.soundPaths) {
 				new Audio(path).play();
