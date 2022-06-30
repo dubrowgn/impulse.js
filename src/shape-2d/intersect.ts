@@ -171,7 +171,7 @@ function _circleVsEdges(cir: Circle, v1: Vector[]): Vector | undefined {
 
 function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 	// quick rejection
-	if (!circleVsCircle(cir, poly.getBoundingCircle()))
+	if (!circleVsRect(cir, poly.aabb))
 		return false;
 
 	// see http://www.metanetsoftware.com/technique/tutorialA.html#section2
@@ -237,7 +237,7 @@ function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 
 function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 	// coarse test
-	if (!circleVsCircle(cir, poly.getBoundingCircle()))
+	if (!circleVsRect(cir, poly.aabb))
 		return undefined;
 
 	// fine test
@@ -520,7 +520,7 @@ function polygonVsPolygon(poly1: Polygon, poly2: Polygon): boolean {
 
 function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined {
 	// coarse test
-	if (!circleVsCircle(poly1.getBoundingCircle(), poly2.getBoundingCircle()))
+	if (!rectVsRect(poly1.aabb, poly2.aabb))
 		return undefined;
 
 	// fine test
@@ -529,7 +529,7 @@ function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined
 
 function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 	// quick rejection
-	if (!circleVsRect(poly.getBoundingCircle(), rect))
+	if (!rectVsRect(poly.aabb, rect))
 		return false;
 
 	let v1 = poly.getVertices();
@@ -542,7 +542,7 @@ function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 
 function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 	// coarse test
-	if (!circleVsRect(poly.getBoundingCircle(), rect))
+	if (!rectVsRect(poly.aabb, rect))
 		return undefined;
 
 	// fine test
@@ -551,7 +551,7 @@ function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 
 function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 	// quick rejection
-	if (!circleVsVector(poly.getBoundingCircle(), vect))
+	if (!rectVsVector(poly.aabb, vect))
 		return false;
 
 	// using Point Inclusion in Polygon test (aka Crossing test)
@@ -577,7 +577,7 @@ function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 
 function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 	// coarse test
-	if (!circleVsVector(poly.getBoundingCircle(), vect))
+	if (!rectVsVector(poly.aabb, vect))
 		return undefined;
 
 	// fine test

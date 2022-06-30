@@ -1,26 +1,21 @@
-import { Circle } from "./circle";
 import { sign, twoPi } from "../math"
 import { Matrix } from "./matrix";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
+import { Rect } from "./rect";
 
 export class Polygon implements Shape2d {
-	private _center?: Vector = undefined;
-	private _r?: number = undefined;
+	protected _aabb?: Rect = undefined;
 	private _vertices: Vector[];
 
 	constructor(polygon: Polygon);
 	constructor(vertices: Vector[]);
 	constructor(polygon: any) {
 		if (polygon instanceof Polygon) {
-			if (polygon._center !== undefined)
-				this._center = polygon._center.clone();
-			this._r = polygon._r;
+			if (polygon._aabb !== undefined)
+				this._aabb = polygon._aabb.clone();
 
-			this._vertices = new Array(polygon._vertices.length);
-			for (let vert of polygon._vertices) {
-				this._vertices.push(vert.clone());
-			}
+			this._vertices = polygon._vertices.slice();
 		} else {
 			let vertices = polygon as Vector[];
 
@@ -36,7 +31,10 @@ export class Polygon implements Shape2d {
 	}
 
 	equals(other: any): boolean {
-		if (!(other instanceof Polygon) || this._vertices.length !== other._vertices.length)
+		if (!(other instanceof Polygon))
+			return false;
+
+		if (this._vertices.length !== other._vertices.length)
 			return false;
 
 		for (let i = 0; i < this._vertices.length; i++) {
@@ -47,42 +45,29 @@ export class Polygon implements Shape2d {
 		return true;
 	}
 
-	getBoundingCircle(): Circle {
-		return new Circle(this.getCenter(), this._getRadius());
-	};
+	// Axis-Aligned Bounding Box
+	get aabb(): Rect {
+		if (this._aabb !== undefined)
+			return this._aabb;
 
-	getCenter(): Vector {
-		if (this._center === undefined) {
-			let x = 0;
-			let y = 0;
-
-			for (let vert of this._vertices) {
-				x += vert.x;
-				y += vert.y;
-			}
-
-			let length = this._vertices.length;
-			this._center = new Vector(x / length, y / length);
+		let l = Number.NEGATIVE_INFINITY;
+		let b = Number.NEGATIVE_INFINITY;
+		let r = Number.POSITIVE_INFINITY;
+		let t = Number.POSITIVE_INFINITY;
+		for (let v of this._vertices) {
+			l = Math.min(l, v.x);
+			r = Math.max(r, v.x);
+			b = Math.min(b, v.y);
+			t = Math.max(t, v.y);
 		}
 
-		return this._center.clone();
+		this._aabb = new Rect(l, b, r - l, t - b);
+
+		return this._aabb;
 	}
 
-	_getRadius(): number {
-		if (this._r === undefined) {
-			let c = this.getCenter();
-			let r = 0;
-			for (let i = 0; i < this._vertices.length; i++) {
-				let v = this._vertices[i];
-				let tmp_r = (v.x - c.x) * (v.x - c.x) + (v.y - c.y) * (v.y - c.y);
-				if (tmp_r > r)
-					r = tmp_r;
-			}
-
-			this._r = Math.sqrt(r);
-		}
-
-		return this._r;
+	getCenter(): Vector {
+		return this.aabb.getCenter();
 	}
 
 	getShapeId(): number {
@@ -143,10 +128,12 @@ export class Polygon implements Shape2d {
 		let center = x instanceof Vector ? x : new Vector(x, y as number);
 		let offset = center.clone().subtract(this.getCenter());
 
-		this._center = center;
-		for (let vert of this._vertices) {
-			vert.add(offset);
+		for (let v of this._vertices) {
+			v.add(offset);
 		}
+
+		if (this._aabb !== undefined)
+			this._aabb.setCenter(center);
 
 		return this;
 	}
@@ -154,21 +141,20 @@ export class Polygon implements Shape2d {
 	toString(): string {
 		let s = "Polygon(";
 
-		for (let vert of this._vertices) {
-			s += `<${vert.x},${vert.y}>,`;
+		for (let v of this._vertices) {
+			s += `<${v.x},${v.y}>,`;
 		}
 
 		return s.slice(0, -1) + ")";
 	}
 
 	transform(matrix: Matrix): this {
-		for (let vert of this._vertices) {
-			vert.transform(matrix);
+		for (let v of this._vertices) {
+			v.transform(matrix);
 		}
 
 		// invalidate caches
-		this._center = undefined;
-		this._r = undefined;
+		this._aabb = undefined;
 
 		return this;
 	}
