@@ -27,6 +27,7 @@ export default t => {
 		]);
 		t.notOk(complex.isConvex());
 
+		// counter-clockwise winding
 		complex = new Polygon([
 			new Vector(-1.784, 3.866),
 			new Vector(-2.306, 3.540),
@@ -36,5 +37,24 @@ export default t => {
 			new Vector(-3.458, 2.773),
 		]);
 		t.notOk(complex.isConvex());
+
+		// clockwise winding
+		complex = new Polygon([
+			new Vector(-3.458, 2.773),
+			new Vector(-2.933, 3.298),
+			new Vector(-1.946, 2.114),
+			new Vector(-2.530, 1.592),
+			new Vector(-2.306, 3.540),
+			new Vector(-1.784, 3.866),
+		]);
+		t.notOk(complex.isConvex());
+
+		let collinear = new Polygon([
+			new Vector(3, -3),
+			new Vector(3, -4),
+			new Vector(3, -5),
+			new Vector(4.5, -3.5),
+		]);
+		t.ok(collinear.isConvex());
 	});
 };

@@ -101,7 +101,7 @@ export class Polygon implements Shape2d {
 		let p1 = vs[vs.length - 2];
 		let p2 = vs[vs.length - 1];
 		let d1 = p1.angleTo(p2);
-		let totalAngle = 0;
+		let totalRads = 0;
 		let orien;
 
 		for (let i = 0; i < vs.length; i++) {
@@ -129,8 +129,8 @@ export class Polygon implements Shape2d {
 				return false;
 
 			// ensure we haven't made more than one complete revolution
-			totalAngle += angle;
-			if (totalAngle > twoPi)
+			totalRads += angle;
+			if (Math.abs(totalRads) > twoPi)
 				return false;
 		}
 
