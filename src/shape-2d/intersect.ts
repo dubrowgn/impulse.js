@@ -555,15 +555,24 @@ function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 		return false;
 
 	// using Point Inclusion in Polygon test (aka Crossing test)
-	let c = false;
-	let v = poly.getVertices();
-	for (let i = 0, j = v.length - 1; i < v.length; j = i++) {
-		if (((v[i].y > vect.y) != (v[j].y > vect.y)) &&
-			(vect.x < (v[j].x - v[i].x) * (vect.y - v[i].y) / (v[j].y - v[i].y) + v[i].x))
-			c = !c;
-	} // for( i )
+	let intersects = false;
+	let vs = poly.getVertices();
+	for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+		let v1 = vs[i];
+		let v2 = vs[j];
 
-	return c;
+		// check if vect.y falls between the y values of v1 and v2
+		let segSpansVecY = v1.y > vect.y != v2.y > vect.y;
+		if (!segSpansVecY)
+			continue;
+
+		// given vect.y, find x such that (x, vect.y) falls on the line v1,v2
+		let segX = (v2.x - v1.x) * (vect.y - v1.y) / (v2.y - v1.y) + v1.x;
+		if (vect.x < segX)
+			intersects = !intersects;
+	}
+
+	return intersects;
 }
 
 function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
