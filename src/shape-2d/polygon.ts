@@ -1,4 +1,5 @@
 import { Circle } from "./circle";
+import { sign, twoPi } from "../math"
 import { Matrix } from "./matrix";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
@@ -90,6 +91,50 @@ export class Polygon implements Shape2d {
 
 	getVertices(): Vector[] {
 		return this._vertices.slice();
+	}
+
+	isConvex(): Boolean {
+		let vs = this._vertices;
+		if (vs.length < 3)
+			throw "Polygon must have 3 or more vertices!";
+
+		let p1 = vs[vs.length - 2];
+		let p2 = vs[vs.length - 1];
+		let d1 = p1.angleTo(p2);
+		let totalAngle = 0;
+		let orien;
+
+		for (let i = 0; i < vs.length; i++) {
+			p1 = p2;
+			p2 = vs[i];
+
+			let d2 = p1.angleTo(p2);
+			let angle = d2 - d1;
+			d1 = d2;
+
+			// ignore this segment if it is collinear with the last
+			if (angle === 0)
+				continue;
+
+			// wrap angle to (-pi, pi]
+			if (angle <= -Math.PI)
+				angle += twoPi;
+			else if (angle > Math.PI)
+				angle -= twoPi;
+
+			// ensure orientation does not change
+			if (orien === undefined)
+				orien = sign(angle);
+			else if (orien < 0 != angle < 0)
+				return false;
+
+			// ensure we haven't made more than one complete revolution
+			totalAngle += angle;
+			if (totalAngle > twoPi)
+				return false;
+		}
+
+		return true;
 	}
 
 	setCenter(center: Vector): this;
