@@ -27,7 +27,7 @@ function circleVsCircleSat(cir1: Circle, cir2: Circle): Vector | undefined {
 
 	// circles intersect
 	// scale dc to magnitude of overlap
-	dc.scale((rs - l) / l);
+	dc.scaleToMagnitude(rs - l);
 
 	// return dc as projection, and negative, normalized dc as surface normal
 	return dc;

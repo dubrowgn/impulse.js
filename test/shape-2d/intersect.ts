@@ -1,3 +1,4 @@
+import { Circle } from "../../src/shape-2d/circle";
 import { Intersect } from "../../src/shape-2d/intersect";
 import { Polygon } from "../../src/shape-2d/polygon";
 import { Rect } from "../../src/shape-2d/rect";
@@ -14,6 +15,11 @@ function ensureHit(t, s1, s2) {
 }
 
 export default t => {
+	t.test("circle-vs-self", t => {
+		let c = new Circle(2.955, 1.490, 0.941);
+		ensureHit(t, c, c);
+	});
+
 	t.test("rect-vs-self", t => {
 		let r = new Rect(-1.094, 1.427, 1.723, 1.966);
 		ensureHit(t, r, r);
