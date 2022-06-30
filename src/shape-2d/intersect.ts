@@ -4,6 +4,64 @@ import { Rect } from "./rect";
 import { Shape2d, ShapeId } from "./shape-2d";
 import { Vector } from "./vector";
 
+function calcPerp(p1: Vector, p2: Vector) {
+	return new Vector(-p2.y + p1.y, p2.x - p1.x).normalize();
+}
+
+function distSqrXy(x1: number, y1: number, x2: number, y2: number): number {
+	let dx = x1 - x2;
+	let dy = y1 - y2;
+	return dx * dx + dy * dy;
+}
+
+function distSqr(v1: Vector, v2: Vector): number {
+	return distSqrXy(v1.x, v1.y, v2.x, v2.y);
+}
+
+function closestVertex(vs: Vector[], vert: Vector): Vector {
+	let closest = vs[0];
+	let minD2 = distSqr(closest, vert);
+
+	for (let i = 1; i < vs.length; i++) {
+		let v = vs[i];
+		let d2 = distSqr(v, vert);
+		if (d2 < minD2) {
+			closest = v;
+			minD2 = d2;
+		}
+	}
+
+	return closest;
+}
+
+function* edges(vs: Vector[]): IterableIterator<[Vector, Vector]> {
+	for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+		yield [vs[j], vs[i]];
+	}
+}
+
+function projectCircle(c: Circle, axis: Vector): [number, number] {
+	let center = c.getCenter().dotProduct(axis);
+	return [center - c.r, center + c.r];
+}
+
+function projectEdges(vs: Vector[], axis: Vector): [number, number] {
+	let min = Number.MAX_VALUE;
+	let max = Number.MIN_VALUE;
+
+	for (let v of vs) {
+		let dist = v.dotProduct(axis);
+		min = Math.min(min, dist);
+		max = Math.max(max, dist);
+	}
+
+	return [min, max];
+}
+
+function projectVector(v: Vector, axis: Vector): number {
+	return v.dotProduct(axis);
+}
+
 function circleVsCircle(cir1: Circle, cir2: Circle): boolean {
 	// compare the squared distance between circle centers to the squared combined radii
 	let dx = cir2.x - cir1.x;
@@ -44,28 +102,19 @@ function circleVsCircleSat(cir1: Circle, cir2: Circle): Vector | undefined {
  * undefined otherwise
  * @private
  */
-function _circleVsEdges(cir: Circle, v1: Vector[]): Vector | undefined {
-	let perp, min1, min2, max1, max2, dp, i, j, k, overlap, diff1, diff2;
+function _circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
+	let overlap, diff1, diff2;
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
 	// test edges stored in v1 against cir
-	for (i = 0, j = v1.length - 1; i < v1.length; j = i++) {
+	for (let [p1, p2] of edges(vs)) {
 		// calculate normalized vector perpendicular to each line segment of the polygon
-		perp = new Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x).normalize();
+		let perp = calcPerp(p1, p2);
 
-		// assume the polygon has at least one vertex (see Shape2D.Polygon constructor)
-		// project the polygon onto the new axis (the perpendicular vector)
-		min1 = max1 = v1[0].dotProduct(perp);
-		for (k = 1; k < v1.length; k++) {
-			dp = v1[k].dotProduct(perp);
-			min1 = Math.min(min1, dp);
-			max1 = Math.max(max1, dp);
-		} // for( k )
-
-		// project the circle onto the new axis (the perpendicular vector)
-		min2 = cir.getCenter().dotProduct(perp) - cir.r;
-		max2 = min2 + 2 * cir.r;
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(vs, perp);
+		let [min2, max2] = projectCircle(cir, perp);
 
 		// break early if projections don't overlap, no intersection exists
 		if (max1 < min2 || min1 > max2)
@@ -101,33 +150,18 @@ function _circleVsEdges(cir: Circle, v1: Vector[]): Vector | undefined {
 			smallest = overlap;
 			mtv = perp;
 		} // if
-	} // for( i )
+	}
 
 	// find closest vertex to cir
-	let v = v1[0];
-	let distSqr = Number.MAX_VALUE;
-	for (i = 0; i < v1.length; i++) {
-		let d = (cir.x - v1[i].x) * (cir.x - v1[i].x) + (cir.y - v1[i].y) * (cir.y - v1[i].y);
-		if (d < distSqr) {
-			v = v1[i];
-			distSqr = d;
-		} // if
-	} // for( i )
+	let c = cir.getCenter();
+	let v = closestVertex(vs, c);
 
 	// test closest vertex against cir
-	perp = new Vector(cir.x - v.x, cir.y - v.y).normalize();
+	let perp = calcPerp(c, v);
 
-	// project the polygon onto the new axis (the perpendicular vector)
-	min1 = max1 = v1[0].dotProduct(perp);
-	for (k = 1; k < v1.length; k++) {
-		dp = v1[k].dotProduct(perp);
-		min1 = Math.min(min1, dp);
-		max1 = Math.max(max1, dp);
-	} // for( k )
-
-	// project the circle onto the new axis (the perpendicular vector)
-	min2 = cir.getCenter().dotProduct(perp) - cir.r;
-	max2 = min2 + 2 * cir.r;
+	// project the shapes onto the new axis
+	let [min1, max1] = projectEdges(vs, perp);
+	let [min2, max2] = projectCircle(cir, perp);
 
 	// break early if projections don't overlap, no intersection exists
 	if (max1 < min2 || min1 > max2)
@@ -175,58 +209,29 @@ function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 		return false;
 
 	// see http://www.metanetsoftware.com/technique/tutorialA.html#section2
-	let v = poly.vertices;
-	let min1, min2, max1, max2, dp, perp;
 
 	// test edges stored in v against cir
-	for (let i = 0, j = v.length - 1; i < v.length; j = i++) {
-		perp = new Vector(-v[i].y + v[j].y, v[i].x - v[j].x);
-		perp.normalize();
+	for (let [p1, p2] of edges(poly.vertices)) {
+		let perp = calcPerp(p1, p2);
 
-		// project vertices of poly onto perp
-		min1 = max1 = v[0].dotProduct(perp);
-		for (let k = 1; k < v.length; k++) {
-			dp = v[k].dotProduct(perp);
-			min1 = Math.min(min1, dp);
-			max1 = Math.max(max1, dp);
-		} // for( k )
-
-		// project cir onto perp
-		dp = cir.getCenter().dotProduct(perp);
-		min2 = dp - cir.r;
-		max2 = dp + cir.r;
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(poly.vertices, perp);
+		let [min2, max2] = projectCircle(cir, perp);
 
 		if (max1 < min2 || min1 > max2)
 			return false;
-	} // for( i )
+	}
 
 	// find the vertex closest to cir.center
-	let dist = cir.getCenter().distanceSq(v[0]);
-	let vertex = v[0];
-	for (let i = 1; i < v.length; i++) {
-		let tmp = cir.getCenter().distanceSq(v[i]);
-		if (tmp < dist) {
-			dist = tmp;
-			vertex = v[i];
-		} // if
-	} // for( k )
+	let c = cir.getCenter();
+	let v = closestVertex(poly.vertices, c);
 
 	// test line cir.center - vertext
-	perp = cir.getCenter().subtract(vertex);
-	perp.normalize();
+	let perp = calcPerp(c, v);
 
-	// project vertices of poly onto perp
-	min1 = max1 = v[0].dotProduct(perp);
-	for (let i = 1; i < v.length; i++) {
-		dp = v[i].dotProduct(perp);
-		min1 = Math.min(min1, dp);
-		max1 = Math.max(max1, dp);
-	} // for( k )
-
-	// project cir onto perp
-	dp = cir.getCenter().dotProduct(perp);
-	min2 = dp - cir.r;
-	max2 = dp + cir.r;
+	// project the shapes onto the new axis
+	let [min1, max1] = projectEdges(poly.vertices, perp);
+	let [min2, max2] = projectCircle(cir, perp);
 
 	if (max1 < min2 || min1 > max2)
 		return false;
@@ -241,7 +246,7 @@ function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _circleVsEdges(cir, poly.vertices);
+	return _circleVsEdgesSat(cir, poly.vertices);
 }
 
 function circleVsRect(cir: Circle, rect: Rect): boolean {
@@ -280,14 +285,11 @@ function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _circleVsEdges(cir, rect.vertices);
+	return _circleVsEdgesSat(cir, rect.vertices);
 }
 
-function circleVsVector(cir: Circle, vect: Vector): boolean {
-	let dx = vect.x - cir.x;
-	let dy = vect.y - cir.y;
-
-	return dx * dx + dy * dy <= cir.r * cir.r;
+function circleVsVector(c: Circle, v: Vector): boolean {
+	return distSqrXy(c.x, c.y, v.x, v.y) <= c.r * c.r;
 }
 
 function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined {
@@ -316,38 +318,25 @@ function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined {
  * see http://content.gpwiki.org/index.php/Polygon_Collision
  * see http://www.codezealot.org/archives/55
  *
- * @param {Array<Vector>} v1 An array of vertices representing the first polygon
- * @param {Array<Vector>} v2 An array of vertices representing the second polygon
+ * @param {Array<Vector>} vs1 An array of vertices representing the first polygon
+ * @param {Array<Vector>} vs2 An array of vertices representing the second polygon
  * @return {undefined|Vector} Returns the Minium Translation Vector if the polygons
  * intersect, undefined otherwise
  * @private
  */
-function _edgesVsEdges(v1: Vector[], v2: Vector[]): Vector | undefined {
-	let perp, min1, min2, max1, max2, dp, i, j, k, overlap, diff1, diff2;
+function _edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
+	let overlap, diff1, diff2;
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
 	// test edges stored in v1 against edges stored in v2
-	for (i = 0, j = v1.length - 1; i < v1.length; j = i++) {
+	for (let [p1, p2] of edges(vs1)) {
 		// calculate normalized vector perpendicular to each line segment of the polygon
-		perp = new Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x).normalize();
+		let perp = calcPerp(p1, p2);
 
-		// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
-		// project the first polygon onto the new axis (the perpendicular vector)
-		min1 = max1 = v1[0].dotProduct(perp);
-		for (k = 1; k < v1.length; k++) {
-			dp = v1[k].dotProduct(perp);
-			min1 = Math.min(min1, dp);
-			max1 = Math.max(max1, dp);
-		} // for( k )
-
-		// project the second polygon onto the new axis (the perpendicular vector)
-		min2 = max2 = v2[0].dotProduct(perp);
-		for (k = 1; k < v2.length; k++) {
-			dp = v2[k].dotProduct(perp);
-			min2 = Math.min(min2, dp);
-			max2 = Math.max(max2, dp);
-		} // for( k )
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(vs1, perp);
+		let [min2, max2] = projectEdges(vs2, perp);
 
 		// break early if projections don't overlap, no intersection exists
 		if (max1 < min2 || min1 > max2)
@@ -383,29 +372,16 @@ function _edgesVsEdges(v1: Vector[], v2: Vector[]): Vector | undefined {
 			smallest = overlap;
 			mtv = perp;
 		} // if
-	} // for( i )
+	}
 
 	// test edges stored in v2 against edges stored in v1
-	for (i = 0, j = v2.length - 1; i < v2.length; j = i++) {
+	for (let [p1, p2] of edges(vs2)) {
 		// calculate normalized vector perpendicular to each line segment of the polygon
-		perp = new Vector(-v2[i].y + v2[j].y, v2[i].x - v2[j].x).normalize();
+		let perp = calcPerp(p1, p2);
 
-		// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
-		// project the first polygon onto the new axis (the perpendicular vector)
-		min1 = max1 = v1[0].dotProduct(perp);
-		for (k = 1; k < v1.length; k++) {
-			dp = v1[k].dotProduct(perp);
-			min1 = Math.min(min1, dp);
-			max1 = Math.max(max1, dp);
-		} // for( k )
-
-		// project the second polygon onto the new axis (the perpendicular vector)
-		min2 = max2 = v2[0].dotProduct(perp);
-		for (k = 1; k < v2.length; k++) {
-			dp = v2[k].dotProduct(perp);
-			min2 = Math.min(min2, dp);
-			max2 = Math.max(max2, dp);
-		} // for( k )
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(vs1, perp);
+		let [min2, max2] = projectEdges(vs2, perp);
 
 		// break early if projections don't overlap, no intersection exists
 		if (max1 < min2 || min1 > max2)
@@ -441,7 +417,7 @@ function _edgesVsEdges(v1: Vector[], v2: Vector[]): Vector | undefined {
 			smallest = overlap;
 			mtv = perp;
 		} // if
-	} // for( i )
+	}
 
 	// return the minimum translation vector (MTV)
 	// this is the perpendicular axis with the smallest overlap, scaled to said overlap
@@ -456,34 +432,24 @@ function _edgesVsEdges(v1: Vector[], v2: Vector[]): Vector | undefined {
  * see http://content.gpwiki.org/index.php/Polygon_Collision
  * see http://www.codezealot.org/archives/55
  *
- * @param {Array<Vector>} p An array of vertices representing a polygon
+ * @param {Array<Vector>} vs An array of vertices representing a polygon
  * @param {Vector} v A single vertex
  * @return {undefined|Vector} Returns the Minium Translation Vector if there is an
  * intersection, undefined otherwise
  * @private
  */
-function _edgesVsVector(p: Vector[], v: Vector): Vector | undefined {
-	let i, j;
+function _edgesVsVectorSat(vs: Vector[], v: Vector): Vector | undefined {
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
 	// test edges stored in p against v
-	for (i = 0, j = p.length - 1; i < p.length; j = i++) {
+	for (let [p1, p2] of edges(vs)) {
 		// calculate normalized vector perpendicular to each line segment of the polygon
-		let perp = new Vector(-p[i].y + p[j].y, p[i].x - p[j].x).normalize();
+		let perp = calcPerp(p1, p2);
 
-		// assume both poly's have at least one vertex (see Polygon constructor)
-		// project the first polygon onto the new axis (the perpendicular vector)
-		let p_min = p[0].dotProduct(perp);
-		let p_max = p_min;
-		for (let k = 1; k < p.length; k++) {
-			let dist = p[k].dotProduct(perp);
-			p_min = Math.min(p_min, dist);
-			p_max = Math.max(p_max, dist);
-		}
-
-		// project the v onto the new axis (the perpendicular vector)
-		let v_dist = v.dotProduct(perp);
+		// project the shapes onto the new axis
+		let [p_min, p_max] = projectEdges(vs, perp);
+		let v_dist = projectVector(v, perp);
 
 		// break early if projections don't overlap, no intersection exists
 		if (p_min > v_dist || v_dist > p_max)
@@ -524,7 +490,7 @@ function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined
 		return undefined;
 
 	// fine test
-	return _edgesVsEdges(poly1.vertices, poly2.vertices);
+	return _edgesVsEdgesSat(poly1.vertices, poly2.vertices);
 }
 
 function polygonVsRect(poly: Polygon, rect: Rect): boolean {
@@ -535,9 +501,31 @@ function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 	let vs1 = poly.vertices;
 	let vs2 = rect.vertices;
 
-	// check vs1 against vs2 and vs2 against vs1
-	// boolean short-circuit allows calling both functions only when needed
-	return _verticesVsVertices(vs1, vs2) && _verticesVsVertices(vs2, vs1);
+	// test edges stored in vs1 against edges stored in vs2
+	for (let [p1, p2] of edges(vs1)) {
+		let perp = calcPerp(p1, p2);
+
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(vs1, perp);
+		let [min2, max2] = projectEdges(vs2, perp);
+
+		if (max1 < min2 || min1 > max2)
+			return false;
+	}
+
+	// test edges stored in vs2 against edges stored in vs1
+	for (let [p1, p2] of edges(vs2)) {
+		let perp = calcPerp(p1, p2);
+
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(vs1, perp);
+		let [min2, max2] = projectEdges(vs2, perp);
+
+		if (max1 < min2 || min1 > max2)
+			return false;
+	}
+
+	return true;
 }
 
 function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
@@ -546,7 +534,7 @@ function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _edgesVsEdges(poly.vertices, rect.vertices);
+	return _edgesVsEdgesSat(poly.vertices, rect.vertices);
 }
 
 function polygonVsVector(poly: Polygon, vect: Vector): boolean {
@@ -556,18 +544,15 @@ function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 
 	// using Point Inclusion in Polygon test (aka Crossing test)
 	let intersects = false;
-	let vs = poly.vertices;
-	for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-		let v1 = vs[i];
-		let v2 = vs[j];
+	for (let [p1, p2] of edges(poly.vertices)) {
 
 		// check if vect.y falls between the y values of v1 and v2
-		let segSpansVecY = v1.y > vect.y != v2.y > vect.y;
+		let segSpansVecY = p1.y > vect.y != p2.y > vect.y;
 		if (!segSpansVecY)
 			continue;
 
 		// given vect.y, find x such that (x, vect.y) falls on the line v1,v2
-		let segX = (v2.x - v1.x) * (vect.y - v1.y) / (v2.y - v1.y) + v1.x;
+		let segX = (p2.x - p1.x) * (vect.y - p1.y) / (p2.y - p1.y) + p1.x;
 		if (vect.x < segX)
 			intersects = !intersects;
 	}
@@ -581,7 +566,7 @@ function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _edgesVsVector(poly.vertices, vect);
+	return _edgesVsVectorSat(poly.vertices, vect);
 }
 
 function rectVsRect(rect1: Rect, rect2: Rect): boolean {
@@ -652,38 +637,6 @@ function vectorVsVectorSat(vect1: Vector, vect2: Vector): Vector | undefined {
 	return vect1.equals(vect2) ? new Vector(0, 0) : undefined;
 }
 
-function _verticesVsVertices(v1: Vector[], v2: Vector[]): boolean {
-	let min1, min2, max1, max2, dp;
-
-	// test edges stored in v1 against edges stored in v2
-	let perp;
-	for (let i = 0, j = v1.length - 1; i < v1.length; j = i++) {
-		perp = new Vector(-v1[i].y + v1[j].y, v1[i].x - v1[j].x);
-
-		let k;
-		min1 = max1 = v1[0].dotProduct(perp);
-		for (k = 1; k < v1.length; k++) {
-			dp = v1[k].dotProduct(perp);
-			min1 = Math.min(min1, dp);
-			max1 = Math.max(max1, dp);
-		} // for( k )
-
-		// assume both poly's have at least one vertex (see Shape2D.Polygon constructor)
-		min2 = max2 = v2[0].dotProduct(perp);
-		for (k = 1; k < v2.length; k++) {
-			dp = v2[k].dotProduct(perp);
-			min2 = Math.min(min2, dp);
-			max2 = Math.max(max2, dp);
-		} // for( k )
-
-		if (max1 < min2 || min1 > max2)
-			return false;
-	} // for( i )
-
-	return true;
-}
-
-type intersectTest = (shape1: any, shape2: any) => boolean;
 let shapeMap: any[] = [];
 shapeMap[ShapeId.Circle] = [];
 shapeMap[ShapeId.Circle][ShapeId.Circle] = circleVsCircle;
