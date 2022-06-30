@@ -74,8 +74,8 @@ export class Polygon implements Shape2d {
 		return ShapeId.Polygon;
 	}
 
-	getVertices(): Vector[] {
-		return this._vertices.slice();
+	get vertices(): Vector[] {
+		return this._vertices;
 	}
 
 	isConvex(): Boolean {

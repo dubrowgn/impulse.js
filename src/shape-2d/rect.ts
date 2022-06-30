@@ -70,7 +70,7 @@ export class Rect implements Shape2d {
 		return ShapeId.Rect;
 	}
 
-	getVertices(): Vector[] {
+	get vertices(): Vector[] {
 		return [
 			new Vector(this.l, this.b),
 			new Vector(this.l, this.t),

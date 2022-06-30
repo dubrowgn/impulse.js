@@ -175,7 +175,7 @@ function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 		return false;
 
 	// see http://www.metanetsoftware.com/technique/tutorialA.html#section2
-	let v = poly.getVertices();
+	let v = poly.vertices;
 	let min1, min2, max1, max2, dp, perp;
 
 	// test edges stored in v against cir
@@ -241,7 +241,7 @@ function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _circleVsEdges(cir, poly.getVertices());
+	return _circleVsEdges(cir, poly.vertices);
 }
 
 function circleVsRect(cir: Circle, rect: Rect): boolean {
@@ -280,7 +280,7 @@ function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _circleVsEdges(cir, rect.getVertices());
+	return _circleVsEdges(cir, rect.vertices);
 }
 
 function circleVsVector(cir: Circle, vect: Vector): boolean {
@@ -524,7 +524,7 @@ function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined
 		return undefined;
 
 	// fine test
-	return _edgesVsEdges(poly1.getVertices(), poly2.getVertices());
+	return _edgesVsEdges(poly1.vertices, poly2.vertices);
 }
 
 function polygonVsRect(poly: Polygon, rect: Rect): boolean {
@@ -532,12 +532,12 @@ function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 	if (!rectVsRect(poly.aabb, rect))
 		return false;
 
-	let v1 = poly.getVertices();
-	let v2 = rect.getVertices();
+	let vs1 = poly.vertices;
+	let vs2 = rect.vertices;
 
-	// check v1 against v2 and v2 against v1
+	// check vs1 against vs2 and vs2 against vs1
 	// boolean short-circuit allows calling both functions only when needed
-	return _verticesVsVertices(v1, v2) && _verticesVsVertices(v2, v1);
+	return _verticesVsVertices(vs1, vs2) && _verticesVsVertices(vs2, vs1);
 }
 
 function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
@@ -546,7 +546,7 @@ function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _edgesVsEdges(poly.getVertices(), rect.getVertices());
+	return _edgesVsEdges(poly.vertices, rect.vertices);
 }
 
 function polygonVsVector(poly: Polygon, vect: Vector): boolean {
@@ -556,7 +556,7 @@ function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 
 	// using Point Inclusion in Polygon test (aka Crossing test)
 	let intersects = false;
-	let vs = poly.getVertices();
+	let vs = poly.vertices;
 	for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
 		let v1 = vs[i];
 		let v2 = vs[j];
@@ -581,7 +581,7 @@ function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _edgesVsVector(poly.getVertices(), vect);
+	return _edgesVsVector(poly.vertices, vect);
 }
 
 function rectVsRect(rect1: Rect, rect2: Rect): boolean {
