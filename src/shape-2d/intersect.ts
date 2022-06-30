@@ -580,7 +580,7 @@ function rectVsRect(rect1: Rect, rect2: Rect): boolean {
 		rect1.l > rect2.r ||
 		rect1.r < rect2.l ||
 		rect1.t < rect2.b ||
-		rect1.b > rect2.r
+		rect1.b > rect2.t
 	);
 }
 

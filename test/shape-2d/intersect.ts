@@ -3,7 +3,22 @@ import { Polygon } from "../../src/shape-2d/polygon";
 import { Rect } from "../../src/shape-2d/rect";
 import { Vector } from "../../src/shape-2d/vector";
 
+function ensureHit(t, s1, s2) {
+	t.ok(Intersect.shapeVsShape(s1, s2), `${s1} should intersect ${s2}, but does not`);
+
+	let mtv = Intersect.shapeVsShapeSat(s1, s2);
+	if (t.notEq(mtv, undefined, `${s1} should intersect ${s2}, but produced no mtv`).pass) {
+			t.ok(isFinite(mtv.x), `${s1} intersect ${s2} produced invalid mtv.x '${mtv.x}`);
+			t.ok(isFinite(mtv.y), `${s1} intersect ${s2} produced invalid mtv.y '${mtv.y}`);
+	}
+}
+
 export default t => {
+	t.test("rect-vs-self", t => {
+		let r = new Rect(-1.094, 1.427, 1.723, 1.966);
+		ensureHit(t, r, r);
+	});
+
 	t.test("rectVsRectSat()", t => {
 		let r = new Rect(-10, -10, 20, 20);
 
