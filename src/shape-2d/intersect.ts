@@ -102,7 +102,7 @@ export function circleVsCircleSat(cir1: Circle, cir2: Circle): Vector | undefine
  * undefined otherwise
  * @private
  */
-function _circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
+function circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
 	let overlap, diff1, diff2;
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
@@ -246,7 +246,7 @@ export function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefin
 		return undefined;
 
 	// fine test
-	return _circleVsEdgesSat(cir, poly.vertices);
+	return circleVsEdgesSat(cir, poly.vertices);
 }
 
 export function circleVsRect(cir: Circle, rect: Rect): boolean {
@@ -285,7 +285,7 @@ export function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
 		return undefined;
 
 	// fine test
-	return _circleVsEdgesSat(cir, rect.vertices);
+	return circleVsEdgesSat(cir, rect.vertices);
 }
 
 export function circleVsVector(c: Circle, v: Vector): boolean {
@@ -310,14 +310,6 @@ export function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined
 	return dc;
 }
 
-export function polygonVsCircle(p: Polygon, c: Circle): boolean {
-	return circleVsPolygon(c, p);
-}
-
-export function polygonVsCircleSat(p: Polygon, c: Circle): Vector | undefined {
-	return circleVsPolygonSat(c, p)?.negate();
-}
-
 /**
  * Takes two collections of vertices and performs polygon-polygon projections intersection
  * on them. Results are always from the perspective of v1, that is, the minimum translation
@@ -332,7 +324,7 @@ export function polygonVsCircleSat(p: Polygon, c: Circle): Vector | undefined {
  * intersect, undefined otherwise
  * @private
  */
-function _edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
+function edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
 	let overlap, diff1, diff2;
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
@@ -446,7 +438,7 @@ function _edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
  * intersection, undefined otherwise
  * @private
  */
-function _edgesVsVectorSat(vs: Vector[], v: Vector): Vector | undefined {
+ function edgesVsVectorSat(vs: Vector[], v: Vector): Vector | undefined {
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
@@ -488,6 +480,14 @@ function _edgesVsVectorSat(vs: Vector[], v: Vector): Vector | undefined {
 	return mtv.scaleToMagnitude(smallest);
 }
 
+export function polygonVsCircle(p: Polygon, c: Circle): boolean {
+	return circleVsPolygon(c, p);
+}
+
+export function polygonVsCircleSat(p: Polygon, c: Circle): Vector | undefined {
+	return circleVsPolygonSat(c, p)?.negate();
+}
+
 export function polygonVsPolygon(poly1: Polygon, poly2: Polygon): boolean {
 	return polygonVsPolygonSat(poly1, poly2) !== undefined;
 }
@@ -498,7 +498,7 @@ export function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | un
 		return undefined;
 
 	// fine test
-	return _edgesVsEdgesSat(poly1.vertices, poly2.vertices);
+	return edgesVsEdgesSat(poly1.vertices, poly2.vertices);
 }
 
 export function polygonVsRect(poly: Polygon, rect: Rect): boolean {
@@ -542,7 +542,7 @@ export function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined 
 		return undefined;
 
 	// fine test
-	return _edgesVsEdgesSat(poly.vertices, rect.vertices);
+	return edgesVsEdgesSat(poly.vertices, rect.vertices);
 }
 
 export function polygonVsVector(poly: Polygon, vect: Vector): boolean {
@@ -574,7 +574,7 @@ export function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefi
 		return undefined;
 
 	// fine test
-	return _edgesVsVectorSat(poly.vertices, vect);
+	return edgesVsVectorSat(poly.vertices, vect);
 }
 
 export function rectVsCircle(r: Rect, c: Circle): boolean {
