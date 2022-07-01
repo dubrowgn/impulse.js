@@ -133,23 +133,21 @@ function circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
 				overlap += diff1;
 				if (min1 < min2)
 					perp.negate();
-			} // if
-			else {
+			} else {
 				overlap += diff2;
 				if (max1 < max2)
 					perp.negate();
-			} // else
-		} // if
-		else if (min1 > min2) {
+			}
+		} else if (min1 > min2) {
 			// shortest intersection is in the negative direction relative to perp
 			perp.negate();
-		} // else if
+		}
 
 		// does this axis contain the smallest overlap so far?
 		if (overlap < smallest) {
 			smallest = overlap;
 			mtv = perp;
-		} // if
+		}
 	}
 
 	// find closest vertex to cir
@@ -180,23 +178,21 @@ function circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
 			overlap += diff1;
 			if (min1 < min2)
 				perp.negate();
-		} // if
-		else {
+		} else {
 			overlap += diff2;
 			if (max1 < max2)
 				perp.negate();
-		} // else
-	} // if
-	else if (min1 > min2) {
+		}
+	} else if (min1 > min2) {
 		// shortest intersection is in the negative direction relative to perp
 		perp.negate();
-	} // else if
+	}
 
 	// does this axis contain the smallest overlap so far?
 	if (overlap < smallest) {
 		smallest = overlap;
 		mtv = perp;
-	} // if
+	}
 
 	// return the minimum translation vector (MTV)
 	// this is the perpendicular axis with the smallest overlap, scaled to said overlap
@@ -250,7 +246,7 @@ export function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefin
 }
 
 export function circleVsRect(cir: Circle, rect: Rect): boolean {
-	// reorient rect with respect to cir, thus cir is the new origin
+	// reorient rect with respect to cir, so cir.center is the new origin
 	let l = rect.l - cir.x;
 	let t = rect.t - cir.y;
 	let r = l + rect.w;
@@ -314,6 +310,7 @@ export function edgesVsEdges(vs1: Vector[], vs2: Vector[]): boolean {
 	for (let satCandidate of [vs1, vs2]) {
 		// use edges from satCandidate as separating axis candidates
 		for (let [p1, p2] of edges(satCandidate)) {
+			// separating axis canditate is the perpendicular of edge p1,p2
 			let perp = calcPerp(p1, p2);
 
 			// project the shapes onto the new axis
@@ -344,98 +341,52 @@ export function edgesVsEdges(vs1: Vector[], vs2: Vector[]): boolean {
  * @private
  */
 function edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
-	let overlap, diff1, diff2;
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
-	// test edges stored in v1 against edges stored in v2
-	for (let [p1, p2] of edges(vs1)) {
-		// calculate normalized vector perpendicular to each line segment of the polygon
-		let perp = calcPerp(p1, p2);
+	for (let satCandidate of [vs1, vs2]) {
+		// use edges from satCandidate as separating axis candidates
+		for (let [p1, p2] of edges(satCandidate)) {
+			// separating axis canditate is the perpendicular of edge p1,p2
+			let perp = calcPerp(p1, p2);
 
-		// project the shapes onto the new axis
-		let [min1, max1] = projectEdges(vs1, perp);
-		let [min2, max2] = projectEdges(vs2, perp);
+			// project the shapes onto the new axis
+			let [min1, max1] = projectEdges(vs1, perp);
+			let [min2, max2] = projectEdges(vs2, perp);
 
-		// break early if projections don't overlap, no intersection exists
-		if (max1 < min2 || min1 > max2)
-			return undefined;
+			// if no overlap, no intersection exists
+			if (max1 < min2 || min1 > max2)
+				return undefined;
 
-		// otherwise, calculate overlap
-		overlap = Math.min(max1, max2) - Math.max(min1, min2);
+			// otherwise, calculate overlap
+			let overlap = Math.min(max1, max2) - Math.max(min1, min2);
 
-		// test for containment
-		if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
-			diff1 = Math.abs(min1 - min2);
-			diff2 = Math.abs(max1 - max2);
+			// test for containment
+			if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
+				let diff1 = Math.abs(min1 - min2);
+				let diff2 = Math.abs(max1 - max2);
 
-			// append smallest difference to overlap, negating the axis if needed
-			if (diff1 < diff2) {
-				overlap += diff1;
-				if (min1 > min2)
-					perp.negate();
-			} // if
-			else {
-				overlap += diff2;
-				if (max1 > max2)
-					perp.negate();
-			} // else
-		} // if
-		else if (min1 < min2) {
-			// shortest intersection is in the negative direction relative to perp
-			perp.negate();
-		} // else if
+				// append smallest difference to overlap, negating the axis if needed
+				if (diff1 < diff2) {
+					overlap += diff1;
+					if (min1 > min2)
+						perp.negate();
+				} else {
+					overlap += diff2;
+					if (max1 > max2)
+						perp.negate();
+				}
+			} else if (min1 < min2) {
+				// shortest intersection is in the negative direction relative to perp
+				perp.negate();
+			}
 
-		// does this axis contain the smallest overlap so far?
-		if (overlap < smallest) {
-			smallest = overlap;
-			mtv = perp;
-		} // if
-	}
-
-	// test edges stored in v2 against edges stored in v1
-	for (let [p1, p2] of edges(vs2)) {
-		// calculate normalized vector perpendicular to each line segment of the polygon
-		let perp = calcPerp(p1, p2);
-
-		// project the shapes onto the new axis
-		let [min1, max1] = projectEdges(vs1, perp);
-		let [min2, max2] = projectEdges(vs2, perp);
-
-		// break early if projections don't overlap, no intersection exists
-		if (max1 < min2 || min1 > max2)
-			return undefined;
-
-		// otherwise, calculate overlap
-		overlap = Math.min(max1, max2) - Math.max(min1, min2);
-
-		// test for containment
-		if ((min1 > min2 && max1 < max2) || (min1 < min2 && max1 > max2)) {
-			diff1 = Math.abs(min1 - min2);
-			diff2 = Math.abs(max1 - max2);
-
-			// append smallest difference to overlap, negating the axis if needed
-			if (diff1 < diff2) {
-				overlap += diff1;
-				if (min1 > min2)
-					perp.negate();
-			} // if
-			else {
-				overlap += diff2;
-				if (max1 > max2)
-					perp.negate();
-			} // else
-		} // if
-		else if (min1 < min2) {
-			// shortest intersection is in the negative direction relative to perp
-			perp.negate();
-		} // else if
-
-		// does this axis contain the smallest overlap so far?
-		if (overlap < smallest) {
-			smallest = overlap;
-			mtv = perp;
-		} // if
+			// does this axis contain the smallest overlap so far?
+			if (overlap < smallest) {
+				smallest = overlap;
+				mtv = perp;
+			}
+		}
 	}
 
 	// return the minimum translation vector (MTV)
@@ -461,16 +412,16 @@ function edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
 	let mtv = new Vector();
 	let smallest = Number.MAX_VALUE;
 
-	// test edges stored in p against v
+	// use edges from vs as separating axis candidates
 	for (let [p1, p2] of edges(vs)) {
-		// calculate normalized vector perpendicular to each line segment of the polygon
+		// separating axis canditate is the perpendicular of edge p1,p2
 		let perp = calcPerp(p1, p2);
 
 		// project the shapes onto the new axis
 		let [p_min, p_max] = projectEdges(vs, perp);
 		let v_dist = projectVector(v, perp);
 
-		// break early if projections don't overlap, no intersection exists
+		// if no overlap, no intersection exists
 		if (p_min > v_dist || v_dist > p_max)
 			return undefined;
 
