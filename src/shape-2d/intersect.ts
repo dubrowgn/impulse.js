@@ -62,6 +62,66 @@ function projectVector(v: Vector, axis: Vector): number {
 	return v.dotProduct(axis);
 }
 
+export function circleInCircle(c1: Circle, c2: Circle): boolean {
+	let d2 = distSqrXy(c1.x, c1.y, c2.x, c2.y);
+
+	return d2 + c1.r*c1.r <= c2.r*c2.r;
+}
+
+export function circleInPolygon(c: Circle, p: Polygon): boolean {
+	// coarse test
+	if (!circleVsRect(c, p.aabb))
+		return false;
+
+	// use edges from p as separating axis candidates
+	for (let [p1, p2] of edges(p.vertices)) {
+		let perp = calcPerp(p1, p2);
+
+		// project the shapes onto the new axis
+		let [min1, max1] = projectEdges(p.vertices, perp);
+		let [min2, max2] = projectCircle(c, perp);
+
+		// test for containment escape
+		if (min1 < min2 || max1 > max2)
+			return false;
+	}
+
+	// find the vertex closest to cir.center
+	let center = c.getCenter();
+	let v = closestVertex(p.vertices, center);
+
+	// test line c.center - vertext
+	let perp = calcPerp(center, v);
+
+	// project the shapes onto the new axis
+	let [min1, max1] = projectEdges(p.vertices, perp);
+	let [min2, max2] = projectCircle(c, perp);
+
+	// test for containment escape
+	if (min1 < min2 || max1 > max2)
+		return false;
+
+	// no containment escape, c is in p
+	return true;
+}
+
+export function circleInRect(c: Circle, r: Rect): boolean {
+	return (
+		c.x - c.r >= r.l &&
+		c.y - c.r >= r.b &&
+		c.x + c.r <= r.r &&
+		c.y + c.r <= r.t
+	);
+}
+
+export function circleInVector(c: Circle, v: Vector): boolean {
+	return (
+		c.r === 0 &&
+		c.x === v.x &&
+		c.y === v.y
+	);
+}
+
 export function circleVsCircle(cir1: Circle, cir2: Circle): boolean {
 	// compare the squared distance between circle centers to the squared combined radii
 	let dx = cir2.x - cir1.x;
@@ -468,6 +528,39 @@ export function edgesVsVector(vs: Vector[], v: Vector): boolean {
 	return mtv.scaleToMagnitude(smallest);
 }
 
+export function polygonInCircle(p: Polygon, c: Circle): boolean {
+	for (let v of p.vertices) {
+		if (!circleVsVector(c, v))
+			return false;
+	}
+
+	return true;
+}
+
+export function polygonInPolygon(p1: Polygon, p2: Polygon): boolean {
+	let ps = p2.vertices;
+
+	for (let v of p1.vertices) {
+		if (!edgesVsVector(ps, v))
+			return false;
+	}
+
+	return true;
+}
+
+export function polygonInRect(p: Polygon, r: Rect): boolean {
+	return rectInRect(p.aabb, r);
+}
+
+export function polygonInVector(p: Polygon, v: Vector): boolean {
+	for (let v2 of p.vertices) {
+		if (!v2.equals(v))
+			return false;
+	}
+
+	return true;
+}
+
 export function polygonVsCircle(p: Polygon, c: Circle): boolean {
 	return circleVsPolygon(c, p);
 }
@@ -528,6 +621,43 @@ export function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefi
 
 	// fine test
 	return edgesVsVectorSat(poly.vertices, vect);
+}
+
+export function rectInCircle(r: Rect, c: Circle): boolean {
+	for (let v of r.vertices) {
+		if (!circleVsVector(c, v))
+			return false;
+	}
+
+	return true;
+}
+
+export function rectInPolygon(r: Rect, p: Polygon): boolean {
+	let ps = p.vertices;
+
+	for (let v of r.vertices) {
+		if (!edgesVsVector(ps, v))
+			return false;
+	}
+
+	return true;
+}
+
+export function rectInRect(r1: Rect, r2: Rect): boolean {
+	return (
+		r1.l >= r2.l &&
+		r1.b >= r2.b &&
+		r1.r <= r2.r &&
+		r1.t <= r2.t
+	);
+}
+
+export function rectInVector(r: Rect, v: Vector): boolean {
+	return (
+		r.w === 0 &&
+		r.h === 0 &&
+		r.getCenter().equals(v)
+	);
 }
 
 export function rectVsCircle(r: Rect, c: Circle): boolean {
@@ -606,36 +736,71 @@ export function rectVsVectorSat(rect: Rect, vect: Vector): Vector | undefined {
 	return rectMtvFromDeltas(l, t, r, b);
 }
 
-export function vectorVsCircle(v: Vector, c: Circle): boolean {
+export function vectorInCircle(v: Vector, c: Circle): boolean {
 	return circleVsVector(c, v);
 }
+
+export function vectorInPolygon(v: Vector, p: Polygon): boolean {
+	return polygonVsVector(p, v);
+}
+
+export function vectorInRect(v: Vector, r: Rect): boolean {
+	return rectVsVector(r, v);
+}
+
+export function vectorInVector(vect1: Vector, vect2: Vector): boolean {
+	return vect1.equals(vect2);
+}
+
+export const vectorVsCircle = vectorInCircle;
 
 export function vectorVsCircleSat(v: Vector, c: Circle): Vector | undefined {
 	return circleVsVectorSat(c, v)?.negate();
 }
 
-export function vectorVsPolygon(v: Vector, p: Polygon): boolean {
-	return polygonVsVector(p, v);
-}
+export const vectorVsPolygon = vectorInPolygon;
 
 export function vectorVsPolygonSat(v: Vector, p: Polygon): Vector | undefined {
 	return polygonVsVectorSat(p, v)?.negate();
 }
 
-export function vectorVsRect(v: Vector, r: Rect): boolean {
-	return rectVsVector(r, v);
-}
+export const vectorVsRect = vectorInRect;
 
 export function vectorVsRectSat(v: Vector, r: Rect): Vector | undefined {
 	return rectVsVectorSat(r, v)?.negate();
 }
 
-export function vectorVsVector(vect1: Vector, vect2: Vector): boolean {
-	return vect1.equals(vect2);
-}
+export const vectorVsVector = vectorInVector;
 
 export function vectorVsVectorSat(vect1: Vector, vect2: Vector): Vector | undefined {
 	return vect1.equals(vect2) ? new Vector(0, 0) : undefined;
+}
+
+type containsTest = (shape1: any, shape2: any) => boolean;
+let shapeInMap: containsTest[][] = [];
+shapeInMap[ShapeId.Circle] = [];
+shapeInMap[ShapeId.Circle][ShapeId.Circle] = circleInCircle;
+shapeInMap[ShapeId.Circle][ShapeId.Polygon] = circleInPolygon;
+shapeInMap[ShapeId.Circle][ShapeId.Rect] = circleInRect;
+shapeInMap[ShapeId.Circle][ShapeId.Vector] = circleInVector;
+shapeInMap[ShapeId.Polygon] = [];
+shapeInMap[ShapeId.Polygon][ShapeId.Circle] = polygonInCircle;
+shapeInMap[ShapeId.Polygon][ShapeId.Polygon] = polygonInPolygon;
+shapeInMap[ShapeId.Polygon][ShapeId.Rect] = polygonInRect;
+shapeInMap[ShapeId.Polygon][ShapeId.Vector] = polygonInVector;
+shapeInMap[ShapeId.Rect] = [];
+shapeInMap[ShapeId.Rect][ShapeId.Circle] = rectInCircle;
+shapeInMap[ShapeId.Rect][ShapeId.Polygon] = rectInPolygon;
+shapeInMap[ShapeId.Rect][ShapeId.Rect] = rectInRect;
+shapeInMap[ShapeId.Rect][ShapeId.Vector] = rectInVector;
+shapeInMap[ShapeId.Vector] = [];
+shapeInMap[ShapeId.Vector][ShapeId.Circle] = vectorInCircle;
+shapeInMap[ShapeId.Vector][ShapeId.Polygon] = vectorInPolygon;
+shapeInMap[ShapeId.Vector][ShapeId.Rect] = vectorInRect;
+shapeInMap[ShapeId.Vector][ShapeId.Vector] = vectorInVector;
+
+export function shapeInShape(shape1: Shape2d, shape2: Shape2d): boolean {
+	return shapeInMap[shape1.getShapeId()][shape2.getShapeId()](shape1, shape2);
 }
 
 type intersectTest = (shape1: any, shape2: any) => boolean;

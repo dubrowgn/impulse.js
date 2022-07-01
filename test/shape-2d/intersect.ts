@@ -1,8 +1,8 @@
 import { Circle } from "../../src/shape-2d/circle";
 import {
-	polygonVsVector, polygonVsVectorSat,
+	polygonVsVectorSat,
 	rectVsRectSat, rectVsVectorSat,
-	shapeVsShape, shapeVsShapeSat,
+	shapeInShape, shapeVsShape, shapeVsShapeSat,
 } from "../../src/shape-2d/intersect";
 import { rand, twoPi } from "../../src/math";
 import { Polygon } from "../../src/shape-2d/polygon";
@@ -64,7 +64,13 @@ function ensureHit(t, s1, s2) {
 	}
 }
 
+function ensureIn(t, s1, s2) {
+	t.ok(shapeInShape(s1, s2), `${s2} should contain ${s1}, but does not`);
+	ensureHit(t, s1, s2);
+}
+
 function ensureMiss(t, s1, s2) {
+	t.notOk(shapeInShape(s1, s2), `${s1} should NOT intersect ${s2}, but is contained by the latter`);
 	t.notOk(shapeVsShape(s1, s2), `${s1} should NOT intersect ${s2}, but it does`);
 
 	let mtv = shapeVsShapeSat(s1, s2);
@@ -74,7 +80,7 @@ function ensureMiss(t, s1, s2) {
 export default t => {
 	t.test("circle-vs-self", t => {
 		let c = new Circle(2.955, 1.490, 0.941);
-		ensureHit(t, c, c);
+		ensureIn(t, c, c);
 	});
 
 	t.test("polygon-vs-self", t => {
@@ -84,17 +90,25 @@ export default t => {
 			new Vector(-1.027, -1.416),
 			new Vector(-0.655, -1.960),
 		]);
-		ensureHit(t, p, p);
+		ensureIn(t, p, p);
+
+		p = new Polygon([
+			new Vector(2.449, 3.703),
+			new Vector(3.446, 2.777),
+			new Vector(4.589, 3.997),
+			new Vector(3.675, 4.771),
+		]);
+		ensureIn(t, p, p);
 	});
 
 	t.test("rect-vs-self", t => {
 		let r = new Rect(-1.094, 1.427, 1.723, 1.966);
-		ensureHit(t, r, r);
+		ensureIn(t, r, r);
 	});
 
 	t.test("vector-vs-self", t => {
 		let v = new Vector(1.164, -2.890);
-		ensureHit(t, v, v);
+		ensureIn(t, v, v);
 	});
 
 	t.test("rectVsRectSat", t => {
@@ -151,18 +165,18 @@ export default t => {
 			new Vector(1, 1),
 			new Vector(1, 0),
 		]);
-		ensureHit(t, p, new Vector(0, 0));
-		ensureHit(t, p, new Vector(0.5, 0));
+		ensureIn(t, new Vector(0, 0), p);
+		ensureIn(t, new Vector(0.5, 0), p);
 		ensureMiss(t, p, new Vector(-1, 0));
-		ensureHit(t, p, new Vector(0, 0.5));
-		ensureHit(t, p, new Vector(1, 0.5));
+		ensureIn(t, new Vector(0, 0.5), p);
+		ensureIn(t, new Vector(1, 0.5), p);
 
 		p = new Polygon([
 			new Vector(-1, -1),
 			new Vector(0, 1),
 			new Vector(1, -1),
 		]);
-		ensureHit(t, p, new Vector(0, 1));
+		ensureIn(t, new Vector(0, 1), p);
 		ensureMiss(t, p, new Vector(-1, 1));
 	});
 
@@ -193,11 +207,17 @@ export default t => {
 
 		for (let s1 of shapes) {
 			for (let s2 of shapes) {
+				let contains = shapeInShape(s1, s2);
 				let hit = shapeVsShape(s1, s2);
 				let mtv = shapeVsShapeSat(s1, s2);
 
-				if (s1 === s2)
+				if (s1 === s2) {
+					t.ok(contains, `${s1} should contain itself, but does not`);
 					t.ok(hit, `${s1} should intersect with itself, but does not`);
+				}
+
+				if (contains)
+					t.ok(hit, `${s2} contains ${s1}, but produced no intersection`);
 
 				if (hit)
 					t.notEq(mtv, undefined, `${s1} intersects ${s2}, but produced no mtv`);
