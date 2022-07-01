@@ -310,6 +310,25 @@ export function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined
 	return dc;
 }
 
+export function edgesVsEdges(vs1: Vector[], vs2: Vector[]): boolean {
+	for (let satCandidate of [vs1, vs2]) {
+		// use edges from satCandidate as separating axis candidates
+		for (let [p1, p2] of edges(satCandidate)) {
+			let perp = calcPerp(p1, p2);
+
+			// project the shapes onto the new axis
+			let [min1, max1] = projectEdges(vs1, perp);
+			let [min2, max2] = projectEdges(vs2, perp);
+
+			// if no overlap, no intersection exists
+			if (max1 < min2 || min1 > max2)
+				return false;
+		}
+	}
+
+	return true;
+}
+
 /**
  * Takes two collections of vertices and performs polygon-polygon projections intersection
  * on them. Results are always from the perspective of v1, that is, the minimum translation
@@ -488,52 +507,31 @@ export function polygonVsCircleSat(p: Polygon, c: Circle): Vector | undefined {
 	return circleVsPolygonSat(c, p)?.negate();
 }
 
-export function polygonVsPolygon(poly1: Polygon, poly2: Polygon): boolean {
-	return polygonVsPolygonSat(poly1, poly2) !== undefined;
+export function polygonVsPolygon(p1: Polygon, p2: Polygon): boolean {
+	// coarse test
+	if (!rectVsRect(p1.aabb, p2.aabb))
+		return false;
+
+	// fine test
+	return edgesVsEdges(p1.vertices, p2.vertices);
 }
 
-export function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined {
+export function polygonVsPolygonSat(p1: Polygon, p2: Polygon): Vector | undefined {
 	// coarse test
-	if (!rectVsRect(poly1.aabb, poly2.aabb))
+	if (!rectVsRect(p1.aabb, p2.aabb))
 		return undefined;
 
 	// fine test
-	return edgesVsEdgesSat(poly1.vertices, poly2.vertices);
+	return edgesVsEdgesSat(p1.vertices, p2.vertices);
 }
 
-export function polygonVsRect(poly: Polygon, rect: Rect): boolean {
-	// quick rejection
-	if (!rectVsRect(poly.aabb, rect))
+export function polygonVsRect(p: Polygon, r: Rect): boolean {
+	// coarse test
+	if (!rectVsRect(p.aabb, r))
 		return false;
 
-	let vs1 = poly.vertices;
-	let vs2 = rect.vertices;
-
-	// test edges stored in vs1 against edges stored in vs2
-	for (let [p1, p2] of edges(vs1)) {
-		let perp = calcPerp(p1, p2);
-
-		// project the shapes onto the new axis
-		let [min1, max1] = projectEdges(vs1, perp);
-		let [min2, max2] = projectEdges(vs2, perp);
-
-		if (max1 < min2 || min1 > max2)
-			return false;
-	}
-
-	// test edges stored in vs2 against edges stored in vs1
-	for (let [p1, p2] of edges(vs2)) {
-		let perp = calcPerp(p1, p2);
-
-		// project the shapes onto the new axis
-		let [min1, max1] = projectEdges(vs1, perp);
-		let [min2, max2] = projectEdges(vs2, perp);
-
-		if (max1 < min2 || min1 > max2)
-			return false;
-	}
-
-	return true;
+	// fine test
+	return edgesVsEdges(p.vertices, r.vertices);
 }
 
 export function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
