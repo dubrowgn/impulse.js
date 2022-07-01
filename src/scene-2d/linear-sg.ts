@@ -1,6 +1,6 @@
 import { Entity } from "./entity";
 import { SceneGraph } from "./scene-graph";
-import { Intersect } from "../shape-2d/intersect";
+import { shapeVsShape, shapeVsShapeSat } from "../shape-2d/intersect";
 import { Shape2d } from "../shape-2d/shape-2d";
 import { Vector } from "../shape-2d/vector";
 
@@ -42,7 +42,7 @@ export class LinearSg implements SceneGraph {
 			if (!matches_flags(flags, ent.flags, useOr))
 				continue;
 
-			let localMtv = Intersect.shapeVsShapeSat(shape, ent.getCollidable());
+			let localMtv = shapeVsShapeSat(shape, ent.getCollidable());
 			if (localMtv !== undefined)
 				mtv.add(localMtv);
 		}
@@ -78,7 +78,7 @@ export class LinearSg implements SceneGraph {
 			if (!matches_flags(flags, ent.flags, useOr))
 				continue;
 
-			if (Intersect.shapeVsShape(center, ent.getCollidable()))
+			if (shapeVsShape(center, ent.getCollidable()))
 				found.push(ent);
 		}
 
@@ -108,7 +108,7 @@ export class LinearSg implements SceneGraph {
 			if (!matches_flags(flags, ent.flags, useOr))
 				continue;
 
-			if (Intersect.shapeVsShape(shape, ent.getCollidable()))
+			if (shapeVsShape(shape, ent.getCollidable()))
 				found.push(ent);
 		}
 

@@ -1,5 +1,9 @@
 import { Circle } from "../../src/shape-2d/circle";
-import { Intersect } from "../../src/shape-2d/intersect";
+import {
+	polygonVsVectorSat,
+	rectVsRectSat, rectVsVectorSat,
+	shapeVsShape, shapeVsShapeSat,
+} from "../../src/shape-2d/intersect";
 import { rand, twoPi } from "../../src/math";
 import { Polygon } from "../../src/shape-2d/polygon";
 import { Rect } from "../../src/shape-2d/rect";
@@ -51,9 +55,9 @@ function genVect() {
 }
 
 function ensureHit(t, s1, s2) {
-	t.ok(Intersect.shapeVsShape(s1, s2), `${s1} should intersect ${s2}, but does not`);
+	t.ok(shapeVsShape(s1, s2), `${s1} should intersect ${s2}, but does not`);
 
-	let mtv = Intersect.shapeVsShapeSat(s1, s2);
+	let mtv = shapeVsShapeSat(s1, s2);
 	if (t.notEq(mtv, undefined, `${s1} should intersect ${s2}, but produced no mtv`).pass) {
 		t.ok(isFinite(mtv.x), `${s1} intersect ${s2} produced invalid mtv.x '${mtv.x}`);
 		t.ok(isFinite(mtv.y), `${s1} intersect ${s2} produced invalid mtv.y '${mtv.y}`);
@@ -61,9 +65,9 @@ function ensureHit(t, s1, s2) {
 }
 
 function ensureMiss(t, s1, s2) {
-	t.notOk(Intersect.shapeVsShape(s1, s2), `${s1} should NOT intersect ${s2}, but it does`);
+	t.notOk(shapeVsShape(s1, s2), `${s1} should NOT intersect ${s2}, but it does`);
 
-	let mtv = Intersect.shapeVsShapeSat(s1, s2);
+	let mtv = shapeVsShapeSat(s1, s2);
 	t.eq(mtv, undefined, `${s1} does NOT intersect ${s2}, but produced mtv ${mtv}`);
 }
 
@@ -96,27 +100,27 @@ export default t => {
 	t.test("rectVsRectSat", t => {
 		let r = new Rect(-10, -10, 20, 20);
 
-		t.equal(Intersect.rectVsRectSat(r, new Rect(20, -5, 5, 5)), undefined);
+		t.equal(rectVsRectSat(r, new Rect(20, -5, 5, 5)), undefined);
 
-		t.equal(Intersect.rectVsRectSat(r, new Rect(0, 5, 5, 5)), new Vector(0, -5));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(5, -5, 5, 5)), new Vector(-5, 0));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(0, -10, 5, 5)), new Vector(0, 5));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(-10, -5, 5, 5)), new Vector(5, 0));
+		t.equal(rectVsRectSat(r, new Rect(0, 5, 5, 5)), new Vector(0, -5));
+		t.equal(rectVsRectSat(r, new Rect(5, -5, 5, 5)), new Vector(-5, 0));
+		t.equal(rectVsRectSat(r, new Rect(0, -10, 5, 5)), new Vector(0, 5));
+		t.equal(rectVsRectSat(r, new Rect(-10, -5, 5, 5)), new Vector(5, 0));
 
-		t.equal(Intersect.rectVsRectSat(r, new Rect(-5, -30, 40, 40)), new Vector(-15, 0));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(-30, -45, 40, 40)), new Vector(0, 5));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(5, -10, 40, 40)), new Vector(-5, 0));
-		t.equal(Intersect.rectVsRectSat(r, new Rect(-10, -35, 40, 40)), new Vector(0, 15));
+		t.equal(rectVsRectSat(r, new Rect(-5, -30, 40, 40)), new Vector(-15, 0));
+		t.equal(rectVsRectSat(r, new Rect(-30, -45, 40, 40)), new Vector(0, 5));
+		t.equal(rectVsRectSat(r, new Rect(5, -10, 40, 40)), new Vector(-5, 0));
+		t.equal(rectVsRectSat(r, new Rect(-10, -35, 40, 40)), new Vector(0, 15));
 	});
 
 	t.test("rectVsVectorSat", t => {
 		let r = new Rect(-10, -10, 20, 20);
 
-		t.equal(Intersect.rectVsVectorSat(r, new Vector(20, 0)), undefined);
-		t.equal(Intersect.rectVsVectorSat(r, new Vector(0, 5)), new Vector(0, -5));
-		t.equal(Intersect.rectVsVectorSat(r, new Vector(5, 0)), new Vector(-5, 0));
-		t.equal(Intersect.rectVsVectorSat(r, new Vector(0, -5)), new Vector(0, 5));
-		t.equal(Intersect.rectVsVectorSat(r, new Vector(-5, 0)), new Vector(5, 0));
+		t.equal(rectVsVectorSat(r, new Vector(20, 0)), undefined);
+		t.equal(rectVsVectorSat(r, new Vector(0, 5)), new Vector(0, -5));
+		t.equal(rectVsVectorSat(r, new Vector(5, 0)), new Vector(-5, 0));
+		t.equal(rectVsVectorSat(r, new Vector(0, -5)), new Vector(0, 5));
+		t.equal(rectVsVectorSat(r, new Vector(-5, 0)), new Vector(5, 0));
 	});
 
 	t.test("polygonVsVectorSat", t => {
@@ -127,9 +131,9 @@ export default t => {
 			new Vector(30, -60),
 		]);
 
-		t.equal(Intersect.polygonVsVectorSat(p, new Vector(0, 10)), undefined);
-		t.ok(Intersect.polygonVsVectorSat(p, new Vector(40, -50)).isNear(new Vector(12, 6)));
-		t.ok(Intersect.polygonVsVectorSat(p, new Vector(10, 0)).isNear(new Vector(2, -4)));
+		t.equal(polygonVsVectorSat(p, new Vector(0, 10)), undefined);
+		t.ok(polygonVsVectorSat(p, new Vector(40, -50)).isNear(new Vector(12, 6)));
+		t.ok(polygonVsVectorSat(p, new Vector(10, 0)).isNear(new Vector(2, -4)));
 	});
 
 	t.test("polygon-vs-vector", t => {
@@ -169,8 +173,8 @@ export default t => {
 
 		for (let s1 of shapes) {
 			for (let s2 of shapes) {
-				let hit = Intersect.shapeVsShape(s1, s2);
-				let mtv = Intersect.shapeVsShapeSat(s1, s2);
+				let hit = shapeVsShape(s1, s2);
+				let mtv = shapeVsShapeSat(s1, s2);
 
 				if (s1 === s2)
 					t.ok(hit, `${s1} should intersect with itself, but does not`);

@@ -62,7 +62,7 @@ function projectVector(v: Vector, axis: Vector): number {
 	return v.dotProduct(axis);
 }
 
-function circleVsCircle(cir1: Circle, cir2: Circle): boolean {
+export function circleVsCircle(cir1: Circle, cir2: Circle): boolean {
 	// compare the squared distance between circle centers to the squared combined radii
 	let dx = cir2.x - cir1.x;
 	let dy = cir2.y - cir1.y;
@@ -71,7 +71,7 @@ function circleVsCircle(cir1: Circle, cir2: Circle): boolean {
 	return dx * dx + dy * dy < rs * rs;
 }
 
-function circleVsCircleSat(cir1: Circle, cir2: Circle): Vector | undefined {
+export function circleVsCircleSat(cir1: Circle, cir2: Circle): Vector | undefined {
 	// calculate the vector between the circles' centers
 	let dc = new Vector(cir1.x - cir2.x, cir1.y - cir2.y);
 
@@ -203,7 +203,7 @@ function _circleVsEdgesSat(cir: Circle, vs: Vector[]): Vector | undefined {
 	return mtv.scaleToMagnitude(smallest);
 }
 
-function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
+export function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 	// quick rejection
 	if (!circleVsRect(cir, poly.aabb))
 		return false;
@@ -240,7 +240,7 @@ function circleVsPolygon(cir: Circle, poly: Polygon): boolean {
 	return true;
 }
 
-function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
+export function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 	// coarse test
 	if (!circleVsRect(cir, poly.aabb))
 		return undefined;
@@ -249,7 +249,7 @@ function circleVsPolygonSat(cir: Circle, poly: Polygon): Vector | undefined {
 	return _circleVsEdgesSat(cir, poly.vertices);
 }
 
-function circleVsRect(cir: Circle, rect: Rect): boolean {
+export function circleVsRect(cir: Circle, rect: Rect): boolean {
 	// reorient rect with respect to cir, thus cir is the new origin
 	let l = rect.l - cir.x;
 	let t = rect.t - cir.y;
@@ -279,7 +279,7 @@ function circleVsRect(cir: Circle, rect: Rect): boolean {
 		return true;
 }
 
-function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
+export function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
 	// coarse test
 	if (!circleVsRect(cir, rect))
 		return undefined;
@@ -288,11 +288,11 @@ function circleVsRectSat(cir: Circle, rect: Rect): Vector | undefined {
 	return _circleVsEdgesSat(cir, rect.vertices);
 }
 
-function circleVsVector(c: Circle, v: Vector): boolean {
+export function circleVsVector(c: Circle, v: Vector): boolean {
 	return distSqrXy(c.x, c.y, v.x, v.y) <= c.r * c.r;
 }
 
-function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined {
+export function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined {
 	// calculate the vector between the circles' centers
 	let dc = new Vector(cir.x - vect.x, cir.y - vect.y);
 
@@ -308,6 +308,14 @@ function circleVsVectorSat(cir: Circle, vect: Vector): Vector | undefined {
 
 	// return dc as mtv
 	return dc;
+}
+
+export function polygonVsCircle(p: Polygon, c: Circle): boolean {
+	return circleVsPolygon(c, p);
+}
+
+export function polygonVsCircleSat(p: Polygon, c: Circle): Vector | undefined {
+	return circleVsPolygonSat(c, p)?.negate();
 }
 
 /**
@@ -480,11 +488,11 @@ function _edgesVsVectorSat(vs: Vector[], v: Vector): Vector | undefined {
 	return mtv.scaleToMagnitude(smallest);
 }
 
-function polygonVsPolygon(poly1: Polygon, poly2: Polygon): boolean {
+export function polygonVsPolygon(poly1: Polygon, poly2: Polygon): boolean {
 	return polygonVsPolygonSat(poly1, poly2) !== undefined;
 }
 
-function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined {
+export function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined {
 	// coarse test
 	if (!rectVsRect(poly1.aabb, poly2.aabb))
 		return undefined;
@@ -493,7 +501,7 @@ function polygonVsPolygonSat(poly1: Polygon, poly2: Polygon): Vector | undefined
 	return _edgesVsEdgesSat(poly1.vertices, poly2.vertices);
 }
 
-function polygonVsRect(poly: Polygon, rect: Rect): boolean {
+export function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 	// quick rejection
 	if (!rectVsRect(poly.aabb, rect))
 		return false;
@@ -528,7 +536,7 @@ function polygonVsRect(poly: Polygon, rect: Rect): boolean {
 	return true;
 }
 
-function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
+export function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 	// coarse test
 	if (!rectVsRect(poly.aabb, rect))
 		return undefined;
@@ -537,7 +545,7 @@ function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined {
 	return _edgesVsEdgesSat(poly.vertices, rect.vertices);
 }
 
-function polygonVsVector(poly: Polygon, vect: Vector): boolean {
+export function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 	// quick rejection
 	if (!rectVsVector(poly.aabb, vect))
 		return false;
@@ -560,7 +568,7 @@ function polygonVsVector(poly: Polygon, vect: Vector): boolean {
 	return intersects;
 }
 
-function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
+export function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 	// coarse test
 	if (!rectVsVector(poly.aabb, vect))
 		return undefined;
@@ -569,7 +577,23 @@ function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {
 	return _edgesVsVectorSat(poly.vertices, vect);
 }
 
-function rectVsRect(rect1: Rect, rect2: Rect): boolean {
+export function rectVsCircle(r: Rect, c: Circle): boolean {
+	return circleVsRect(c, r);
+}
+
+export function rectVsCircleSat(r: Rect, c: Circle): Vector | undefined {
+	return circleVsRectSat(c, r)?.negate();
+}
+
+export function rectVsPolygon(r: Rect, p: Polygon): boolean {
+	return polygonVsRect(p, r);
+}
+
+export function rectVsPolygonSat(r: Rect, p: Polygon): Vector | undefined {
+	return polygonVsRectSat(p, r)?.negate();
+}
+
+export function rectVsRect(rect1: Rect, rect2: Rect): boolean {
 	return !(
 		rect1.l > rect2.r ||
 		rect1.r < rect2.l ||
@@ -601,7 +625,7 @@ function rectMtvFromDeltas(l: number, t: number, r: number, b: number): Vector |
 	return mtv;
 }
 
-function rectVsRectSat(rect1: Rect, rect2: Rect): Vector | undefined {
+export function rectVsRectSat(rect1: Rect, rect2: Rect): Vector | undefined {
 	let dl = rect1.l - rect2.r;
 	let dt = rect1.t - rect2.b;
 	let dr = rect1.r - rect2.l;
@@ -610,7 +634,7 @@ function rectVsRectSat(rect1: Rect, rect2: Rect): Vector | undefined {
 	return rectMtvFromDeltas(dl, dt, dr, db);
 }
 
-function rectVsVector(rect: Rect, vect: Vector): boolean {
+export function rectVsVector(rect: Rect, vect: Vector): boolean {
 	return !(
 		vect.x < rect.l ||
 		vect.x > rect.r ||
@@ -619,7 +643,7 @@ function rectVsVector(rect: Rect, vect: Vector): boolean {
 	);
 }
 
-function rectVsVectorSat(rect: Rect, vect: Vector): Vector | undefined {
+export function rectVsVectorSat(rect: Rect, vect: Vector): Vector | undefined {
 	// re-orient rect relative to vect
 	let l = rect.l - vect.x;
 	let b = rect.b - vect.y;
@@ -629,37 +653,62 @@ function rectVsVectorSat(rect: Rect, vect: Vector): Vector | undefined {
 	return rectMtvFromDeltas(l, t, r, b);
 }
 
-function vectorVsVector(vect1: Vector, vect2: Vector): boolean {
+export function vectorVsCircle(v: Vector, c: Circle): boolean {
+	return circleVsVector(c, v);
+}
+
+export function vectorVsCircleSat(v: Vector, c: Circle): Vector | undefined {
+	return circleVsVectorSat(c, v)?.negate();
+}
+
+export function vectorVsPolygon(v: Vector, p: Polygon): boolean {
+	return polygonVsVector(p, v);
+}
+
+export function vectorVsPolygonSat(v: Vector, p: Polygon): Vector | undefined {
+	return polygonVsVectorSat(p, v)?.negate();
+}
+
+export function vectorVsRect(v: Vector, r: Rect): boolean {
+	return rectVsVector(r, v);
+}
+
+export function vectorVsRectSat(v: Vector, r: Rect): Vector | undefined {
+	return rectVsVectorSat(r, v)?.negate();
+}
+
+export function vectorVsVector(vect1: Vector, vect2: Vector): boolean {
 	return vect1.equals(vect2);
 }
 
-function vectorVsVectorSat(vect1: Vector, vect2: Vector): Vector | undefined {
+export function vectorVsVectorSat(vect1: Vector, vect2: Vector): Vector | undefined {
 	return vect1.equals(vect2) ? new Vector(0, 0) : undefined;
 }
 
-let shapeMap: any[] = [];
+type intersectTest = (shape1: any, shape2: any) => boolean;
+let shapeMap: intersectTest[][] = [];
 shapeMap[ShapeId.Circle] = [];
 shapeMap[ShapeId.Circle][ShapeId.Circle] = circleVsCircle;
 shapeMap[ShapeId.Circle][ShapeId.Polygon] = circleVsPolygon;
 shapeMap[ShapeId.Circle][ShapeId.Rect] = circleVsRect;
 shapeMap[ShapeId.Circle][ShapeId.Vector] = circleVsVector;
 shapeMap[ShapeId.Polygon] = [];
-shapeMap[ShapeId.Polygon][ShapeId.Circle] = (p: any, c: any) => circleVsPolygon(c, p);
+shapeMap[ShapeId.Polygon][ShapeId.Circle] = polygonVsCircle;
 shapeMap[ShapeId.Polygon][ShapeId.Polygon] = polygonVsPolygon;
 shapeMap[ShapeId.Polygon][ShapeId.Rect] = polygonVsRect;
 shapeMap[ShapeId.Polygon][ShapeId.Vector] = polygonVsVector;
 shapeMap[ShapeId.Rect] = [];
-shapeMap[ShapeId.Rect][ShapeId.Circle] = (r: any, c: any) => circleVsRect(c, r);
-shapeMap[ShapeId.Rect][ShapeId.Polygon] = (r: any, p: any) => polygonVsRect(p, r);
+shapeMap[ShapeId.Rect][ShapeId.Circle] = rectVsCircle;
+shapeMap[ShapeId.Rect][ShapeId.Polygon] = rectVsPolygon;
 shapeMap[ShapeId.Rect][ShapeId.Rect] = rectVsRect;
 shapeMap[ShapeId.Rect][ShapeId.Vector] = rectVsVector;
 shapeMap[ShapeId.Vector] = [];
-shapeMap[ShapeId.Vector][ShapeId.Circle] = (v: any, c: any) => circleVsVector(c, v);
-shapeMap[ShapeId.Vector][ShapeId.Polygon] = (v: any, p: any) => polygonVsVector(p, v);
-shapeMap[ShapeId.Vector][ShapeId.Rect] = (v: any, r: any) => rectVsVector(r, v);
+shapeMap[ShapeId.Vector][ShapeId.Circle] = vectorVsCircle;
+shapeMap[ShapeId.Vector][ShapeId.Polygon] = vectorVsPolygon;
+shapeMap[ShapeId.Vector][ShapeId.Rect] = vectorVsRect;
 shapeMap[ShapeId.Vector][ShapeId.Vector] = vectorVsVector;
 
-function shapeVsShape(shape1: Shape2d, shape2: Shape2d): boolean {
+export function shapeVsShape(shape1: Shape2d, shape2: Shape2d): boolean {
 	return shapeMap[shape1.getShapeId()][shape2.getShapeId()](shape1, shape2);
 }
 
@@ -671,52 +720,21 @@ shapeMapSat[ShapeId.Circle][ShapeId.Polygon] = circleVsPolygonSat;
 shapeMapSat[ShapeId.Circle][ShapeId.Rect] = circleVsRectSat;
 shapeMapSat[ShapeId.Circle][ShapeId.Vector] = circleVsVectorSat;
 shapeMapSat[ShapeId.Polygon] = [];
-shapeMapSat[ShapeId.Polygon][ShapeId.Circle] =
-	(p: any, c: any) => circleVsPolygonSat(c, p)?.negate();
+shapeMapSat[ShapeId.Polygon][ShapeId.Circle] = polygonVsCircleSat;
 shapeMapSat[ShapeId.Polygon][ShapeId.Polygon] = polygonVsPolygonSat;
 shapeMapSat[ShapeId.Polygon][ShapeId.Rect] = polygonVsRectSat;
 shapeMapSat[ShapeId.Polygon][ShapeId.Vector] = polygonVsVectorSat;
 shapeMapSat[ShapeId.Rect] = [];
-shapeMapSat[ShapeId.Rect][ShapeId.Circle] =
-	(r: any, c: any) => circleVsRectSat(c, r)?.negate();
-shapeMapSat[ShapeId.Rect][ShapeId.Polygon] =
-	(r: any, p: any) => polygonVsRectSat(p, r)?.negate();
+shapeMapSat[ShapeId.Rect][ShapeId.Circle] = rectVsCircleSat;
+shapeMapSat[ShapeId.Rect][ShapeId.Polygon] = rectVsPolygonSat;
 shapeMapSat[ShapeId.Rect][ShapeId.Rect] = rectVsRectSat;
 shapeMapSat[ShapeId.Rect][ShapeId.Vector] = rectVsVectorSat;
 shapeMapSat[ShapeId.Vector] = [];
-shapeMapSat[ShapeId.Vector][ShapeId.Circle] =
-	(v: any, c: any) => circleVsVectorSat(c, v)?.negate();
-shapeMapSat[ShapeId.Vector][ShapeId.Polygon] =
-	(v: any, p: any) => polygonVsVectorSat(p, v)?.negate();
-shapeMapSat[ShapeId.Vector][ShapeId.Rect] =
-	(v: any, r: any) => rectVsVectorSat(r, v)?.negate();
+shapeMapSat[ShapeId.Vector][ShapeId.Circle] = vectorVsCircleSat;
+shapeMapSat[ShapeId.Vector][ShapeId.Polygon] = vectorVsPolygonSat;
+shapeMapSat[ShapeId.Vector][ShapeId.Rect] = vectorVsRectSat;
 shapeMapSat[ShapeId.Vector][ShapeId.Vector] = vectorVsVectorSat;
 
-function shapeVsShapeSat(shape1: Shape2d, shape2: Shape2d): Vector | undefined {
+export function shapeVsShapeSat(shape1: Shape2d, shape2: Shape2d): Vector | undefined {
 	return shapeMapSat[shape1.getShapeId()][shape2.getShapeId()](shape1, shape2);
 }
-
-export const Intersect = {
-	circleVsCircle,
-	circleVsCircleSat,
-	circleVsPolygon,
-	circleVsPolygonSat,
-	circleVsRect,
-	circleVsRectSat,
-	circleVsVector,
-	circleVsVectorSat,
-	polygonVsPolygon,
-	polygonVsPolygonSat,
-	polygonVsRect,
-	polygonVsRectSat,
-	polygonVsVector,
-	polygonVsVectorSat,
-	rectVsRect,
-	rectVsRectSat,
-	rectVsVector,
-	rectVsVectorSat,
-	shapeVsShape,
-	shapeVsShapeSat,
-	vectorVsVector,
-	vectorVsVectorSat,
-};
