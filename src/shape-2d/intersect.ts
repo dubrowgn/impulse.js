@@ -394,6 +394,24 @@ function edgesVsEdgesSat(vs1: Vector[], vs2: Vector[]): Vector | undefined {
 	return mtv.scaleToMagnitude(smallest);
 }
 
+export function edgesVsVector(vs: Vector[], v: Vector): boolean {
+	// use edges from vs as separating axis candidates
+	for (let [p1, p2] of edges(vs)) {
+		// separating axis canditate is the perpendicular of edge p1,p2
+		let perp = calcPerp(p1, p2);
+
+		// project the shapes onto the new axis
+		let [p_min, p_max] = projectEdges(vs, perp);
+		let v_dist = projectVector(v, perp);
+
+		// if no overlap, no intersection exists
+		if (p_min > v_dist || v_dist > p_max)
+			return false;
+	}
+
+	return true;
+}
+
 /**
  * Performs a projection intersection between a convex polygon and a single vertex.
  * Results are always from the perspective of p, that is, the minimum translation
@@ -494,27 +512,13 @@ export function polygonVsRectSat(poly: Polygon, rect: Rect): Vector | undefined 
 	return edgesVsEdgesSat(poly.vertices, rect.vertices);
 }
 
-export function polygonVsVector(poly: Polygon, vect: Vector): boolean {
-	// quick rejection
-	if (!rectVsVector(poly.aabb, vect))
+export function polygonVsVector(p: Polygon, v: Vector): boolean {
+	// coarse test
+	if (!rectVsVector(p.aabb, v))
 		return false;
 
-	// using Point Inclusion in Polygon test (aka Crossing test)
-	let intersects = false;
-	for (let [p1, p2] of edges(poly.vertices)) {
-
-		// check if vect.y falls between the y values of v1 and v2
-		let segSpansVecY = p1.y > vect.y != p2.y > vect.y;
-		if (!segSpansVecY)
-			continue;
-
-		// given vect.y, find x such that (x, vect.y) falls on the line v1,v2
-		let segX = (p2.x - p1.x) * (vect.y - p1.y) / (p2.y - p1.y) + p1.x;
-		if (vect.x < segX)
-			intersects = !intersects;
-	}
-
-	return intersects;
+	// fine test
+	return edgesVsVector(p.vertices, v);
 }
 
 export function polygonVsVectorSat(poly: Polygon, vect: Vector): Vector | undefined {

@@ -1,6 +1,6 @@
 import { Circle } from "../../src/shape-2d/circle";
 import {
-	polygonVsVectorSat,
+	polygonVsVector, polygonVsVectorSat,
 	rectVsRectSat, rectVsVectorSat,
 	shapeVsShape, shapeVsShapeSat,
 } from "../../src/shape-2d/intersect";
@@ -123,19 +123,6 @@ export default t => {
 		t.equal(rectVsVectorSat(r, new Vector(-5, 0)), new Vector(5, 0));
 	});
 
-	t.test("polygonVsVectorSat", t => {
-		let p = new Polygon([
-			new Vector(0, 0),
-			new Vector(60, 30),
-			new Vector(90, -90),
-			new Vector(30, -60),
-		]);
-
-		t.equal(polygonVsVectorSat(p, new Vector(0, 10)), undefined);
-		t.ok(polygonVsVectorSat(p, new Vector(40, -50)).isNear(new Vector(12, 6)));
-		t.ok(polygonVsVectorSat(p, new Vector(10, 0)).isNear(new Vector(2, -4)));
-	});
-
 	t.test("polygon-vs-vector", t => {
 		ensureHit(
 			t,
@@ -157,6 +144,39 @@ export default t => {
 			]),
 			new Vector(3.610, 3.099),
 		);
+
+		let p = new Polygon([
+			new Vector(0, 0),
+			new Vector(0, 1),
+			new Vector(1, 1),
+			new Vector(1, 0),
+		]);
+		ensureHit(t, p, new Vector(0, 0));
+		ensureHit(t, p, new Vector(0.5, 0));
+		ensureMiss(t, p, new Vector(-1, 0));
+		ensureHit(t, p, new Vector(0, 0.5));
+		ensureHit(t, p, new Vector(1, 0.5));
+
+		p = new Polygon([
+			new Vector(-1, -1),
+			new Vector(0, 1),
+			new Vector(1, -1),
+		]);
+		ensureHit(t, p, new Vector(0, 1));
+		ensureMiss(t, p, new Vector(-1, 1));
+	});
+
+	t.test("polygonVsVectorSat", t => {
+		let p = new Polygon([
+			new Vector(0, 0),
+			new Vector(60, 30),
+			new Vector(90, -90),
+			new Vector(30, -60),
+		]);
+
+		t.equal(polygonVsVectorSat(p, new Vector(0, 10)), undefined);
+		t.ok(polygonVsVectorSat(p, new Vector(40, -50)).isNear(new Vector(12, 6)));
+		t.ok(polygonVsVectorSat(p, new Vector(10, 0)).isNear(new Vector(2, -4)));
 	});
 
 	t.skip("shape-gen", t => {
