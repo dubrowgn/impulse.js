@@ -1,7 +1,17 @@
 import { Polygon } from "../../src/shape-2d/polygon";
+import { Rect } from "../../src/shape-2d/rect";
 import { Vector } from "../../src/shape-2d/vector";
 
 export default t => {
+	t.test("aabb", t => {
+		let p = new Polygon([
+			new Vector(-1, -1),
+			new Vector(-3, -1),
+			new Vector(-2, 1),
+		]);
+		t.equals(p.aabb, new Rect(-3, -1, 2, 2));
+	});
+
 	t.test("isConvex", t => {
 		let convex = new Polygon([
 			new Vector(3.588, -3.027),

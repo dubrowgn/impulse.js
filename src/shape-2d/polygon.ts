@@ -50,10 +50,10 @@ export class Polygon implements Shape2d {
 		if (this._aabb !== undefined)
 			return this._aabb;
 
-		let l = Number.NEGATIVE_INFINITY;
-		let b = Number.NEGATIVE_INFINITY;
-		let r = Number.POSITIVE_INFINITY;
-		let t = Number.POSITIVE_INFINITY;
+		let l = Number.POSITIVE_INFINITY;
+		let b = Number.POSITIVE_INFINITY;
+		let r = Number.NEGATIVE_INFINITY;
+		let t = Number.NEGATIVE_INFINITY;
 		for (let v of this._vertices) {
 			l = Math.min(l, v.x);
 			r = Math.max(r, v.x);
