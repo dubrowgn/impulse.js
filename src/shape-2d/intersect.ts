@@ -549,7 +549,12 @@ export function polygonInPolygon(p1: Polygon, p2: Polygon): boolean {
 }
 
 export function polygonInRect(p: Polygon, r: Rect): boolean {
-	return rectInRect(p.aabb, r);
+	for (let v of p.vertices) {
+		if (!rectVsVector(r, v))
+			return false;
+	}
+
+	return true;
 }
 
 export function polygonInVector(p: Polygon, v: Vector): boolean {
@@ -717,12 +722,12 @@ export function rectVsRectSat(rect1: Rect, rect2: Rect): Vector | undefined {
 	return rectMtvFromDeltas(dl, dt, dr, db);
 }
 
-export function rectVsVector(rect: Rect, vect: Vector): boolean {
-	return !(
-		vect.x < rect.l ||
-		vect.x > rect.r ||
-		vect.y < rect.b ||
-		vect.y > rect.t
+export function rectVsVector(r: Rect, v: Vector): boolean {
+	return (
+		v.x >= r.l &&
+		v.y >= r.b &&
+		v.x <= r.r &&
+		v.y <= r.t
 	);
 }
 
