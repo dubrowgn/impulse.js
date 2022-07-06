@@ -46,8 +46,8 @@ function projectCircle(c: Circle, axis: Vector): [number, number] {
 }
 
 function projectEdges(vs: Vector[], axis: Vector): [number, number] {
-	let min = Number.MAX_VALUE;
-	let max = Number.MIN_VALUE;
+	let min = Number.POSITIVE_INFINITY;
+	let max = Number.NEGATIVE_INFINITY;
 
 	for (let v of vs) {
 		let dist = v.dotProduct(axis);

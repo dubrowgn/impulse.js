@@ -74,7 +74,7 @@ function ensureMiss(t, s1, s2) {
 	t.notOk(shapeVsShape(s1, s2), `${s1} should NOT intersect ${s2}, but it does`);
 
 	let mtv = shapeVsShapeSat(s1, s2);
-	t.eq(mtv, undefined, `${s1} does NOT intersect ${s2}, but produced mtv ${mtv}`);
+	t.eq(mtv, undefined, `${s1} should NOT intersect ${s2}, but produced mtv ${mtv}`);
 }
 
 export default t => {
@@ -191,6 +191,18 @@ export default t => {
 		t.equal(polygonVsVectorSat(p, new Vector(0, 10)), undefined);
 		t.ok(polygonVsVectorSat(p, new Vector(40, -50)).isNear(new Vector(12, 6)));
 		t.ok(polygonVsVectorSat(p, new Vector(10, 0)).isNear(new Vector(2, -4)));
+	});
+
+	t.test("polygon-vs-rect", t => {
+		ensureMiss(
+			t,
+			new Polygon([
+				new Vector(-10, -10),
+				new Vector(-30, -10),
+				new Vector(-20, 10),
+			]),
+			new Rect(-15, 7.5, 20, 20),
+		);
 	});
 
 	t.skip("shape-gen", t => {
