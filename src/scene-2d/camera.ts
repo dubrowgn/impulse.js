@@ -16,8 +16,10 @@ export class Camera {
 	protected targetW: number;
 	protected viewportMargin: number;
 	protected w!: number;
+	protected scale: number = 1;
 
 	moved: Event<CameraHandler>;
+	resized: Event<CameraHandler>;
 	rotated: Event<CameraHandler>;
 	zoomed: Event<CameraHandler>;
 
@@ -28,6 +30,7 @@ export class Camera {
 		this.cameraMatrix = new Matrix(1, 0, 0, 1, -x, -y);
 		this.canvas = canvas;
 		this.moved = new Event();
+		this.resized = new Event();
 		this.rotated = new Event();
 		this.targetH = h;
 		this.targetW = w;
@@ -46,6 +49,9 @@ export class Camera {
 	canvasToWorld(x: number, y: number): Vector;
 	canvasToWorld(x: any, y?: number): Vector {
 		let vect = x instanceof Vector ? x.clone() : new Vector(x, y as number);
+
+		let dpr = window.devicePixelRatio || 1;
+		vect.scale(dpr);
 
 		return vect.transform(this.getRenderMatrix().invert());
 	}
@@ -118,8 +124,9 @@ export class Camera {
 	}
 
 	setZoom(zoom: number): this {
-		let scale = this.cameraMatrix.getScale();
-		this.cameraMatrix.preScale(zoom / scale.x, zoom / scale.y);
+		this.cameraMatrix.preScale(zoom / this.scale);
+		this.scale = zoom;
+
 		this.zoomed.dispatch(this);
 
 		return this;
@@ -138,23 +145,39 @@ export class Camera {
 		return this;
 	}
 
+	protected canvasScreenDims(canvas: HTMLCanvasElement): Vector {
+		let style = window.getComputedStyle(canvas);
+		let l = parseFloat(style.paddingLeft);
+		let b = parseFloat(style.paddingBottom);
+		let r = parseFloat(style.paddingRight);
+		let t = parseFloat(style.paddingTop);
+
+		return new Vector(canvas.clientWidth - l - r, canvas.clientHeight - b - t);
+	}
+
 	protected updateCanvasValues() {
+		let dpr = window.devicePixelRatio || 1;
+
+		let c = this.canvas;
+		let dims = this.canvasScreenDims(c);
+		c.width = dims.x * dpr;
+		c.height = dims.y * dpr;
+
 		// calculate zoom factor
 		let zoom = Math.min(
-			this.canvas.width / this.targetW,
-			this.canvas.height / this.targetH
+			c.width / this.targetW,
+			c.height / this.targetH
 		);
 
 		// update width/height values
-		this.h = this.canvas.height / zoom;
-		this.w = this.canvas.width / zoom;
+		this.w = c.width / zoom;
+		this.h = c.height / zoom;
 
 		// rebuild the transformation matrix
-		this.canvasMatrix = new Matrix(
-			zoom, 0, 0, -zoom, this.canvas.width/2, this.canvas.height/2
-		);
+		this.canvasMatrix = new Matrix(zoom, 0, 0, -zoom, c.width / 2, c.height / 2);
 
-		// dispatch zoom changed event
+		// dispatch events
+		this.resized.dispatch(this);
 		this.zoomed.dispatch(this);
 	}
 
@@ -168,6 +191,8 @@ export class Camera {
 
 	zoom(zoom: number): this {
 		this.cameraMatrix.preScale(zoom);
+		this.scale *= zoom;
+
 		this.zoomed.dispatch(this);
 
 		return this;
