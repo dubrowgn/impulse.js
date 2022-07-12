@@ -40,6 +40,20 @@ export function deepEquals(left: any, right: any): boolean {
 	return false;
 };
 
+export function mapToObj<T>(map: Map<string, T>): Record<string, T> {
+	return Object.fromEntries(map);
+}
+
+export function mapToObjF<T, T2>(map: Map<string, T>, f: (o: T) => T2): Record<string, T2> {
+	let obj: Record<string, T2> = {};
+
+	for (let [k, v] of map.entries()) {
+		obj[k] = f(v);
+	}
+
+	return obj;
+}
+
 export function mostCommon(objs: any[]): any | undefined {
 	if (objs.length < 2)
 		return undefined;
@@ -81,7 +95,7 @@ export function objDiff(obj: Record<string, any>, base?: Record<string, any>): a
 }
 
 export function objEmpty(obj: Record<string, any>): boolean {
-	for (let key in obj) {
+	for (let _ in obj) {
 		return false;
 	}
 
@@ -89,13 +103,33 @@ export function objEmpty(obj: Record<string, any>): boolean {
 }
 
 export function objMap<T, T2>(obj: Record<string, T>, f: (o: T) => T2): Record<string, T2> {
-	let mapped: Record<string, T2> = {};
+	let mapped = obj as any;
 
-	for (let k of Object.keys(obj)) {
-		mapped[k] = f(obj[k]);
+	for (let [k, v] of Object.entries(obj)) {
+		mapped[k] = f(v);
 	}
 
 	return mapped;
+}
+
+export function objToMap<T>(obj: Record<string, T>): Map<string, T> {
+	let m = new Map();
+
+	for (let [k, v] of Object.entries(obj)) {
+		m.set(k, v);
+	}
+
+	return m;
+}
+
+export function objToMapF<T, T2>(obj: Record<string, T>, f: (o: T) => T2): Map<string, T2> {
+	let m = new Map();
+
+	for (let [k, v] of Object.entries(obj)) {
+		m.set(k, f(v));
+	}
+
+	return m;
 }
 
 export function toString(this: any): string {

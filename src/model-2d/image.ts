@@ -9,6 +9,7 @@ export interface ImageJson {
 	tileW: number;
 };
 
+/** @deprecated */
 export class Image implements Clone, ToJson, ToString {
 	fps!: number;
 	matrix!: Matrix;

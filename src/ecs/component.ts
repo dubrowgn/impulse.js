@@ -1,6 +1,6 @@
 import { EntityId } from "./entity-id";
 
-export class Component {
+export interface Component {
 	eid: EntityId;
 };
 

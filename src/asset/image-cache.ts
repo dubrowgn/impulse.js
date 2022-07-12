@@ -18,3 +18,5 @@ export class ImageCache {
 		this.cache.clear();
 	}
 };
+
+export const images = new ImageCache();

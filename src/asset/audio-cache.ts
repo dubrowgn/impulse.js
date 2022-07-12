@@ -17,3 +17,5 @@ export class AudioCache {
 		this.cache.clear();
 	}
 };
+
+export const sounds = new AudioCache();

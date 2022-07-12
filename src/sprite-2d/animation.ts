@@ -1,18 +1,21 @@
 import { Clone, ToJson, toString, ToString } from "../lib";
 import { Frame, FrameJson } from "./frame";
+import { SpriteSheet } from "./sprite-sheet";
 
 export interface AnimationJson {
 	frames: FrameJson[];
+	tileY: number;
 };
 
-/** @deprecated */
 export class Animation implements Clone, ToJson, ToString {
 	frames!: Frame[];
+	spriteSheet!: SpriteSheet;
+	tileY!: number;
 
 	constructor(anim: Animation);
-	constructor(frames: Frame[]);
-	constructor(frames: any) {
-		this._set(frames);
+	constructor(frames: Frame[], tileY: number);
+	constructor(frames: any, tileY?: number) {
+		this._set(frames, tileY);
 	}
 
 	clone(): Animation {
@@ -20,31 +23,34 @@ export class Animation implements Clone, ToJson, ToString {
 	}
 
 	static fromJson(data: AnimationJson): Animation {
-		let { frames } = data;
+		let { frames, tileY } = data;
 		return new Animation(
-			frames.map(Frame.fromJson)
+			frames.map(Frame.fromJson),
+			tileY,
 		);
 	}
 
 	set(anim: Animation): this;
-	set(frames: Frame[]): this;
-	set(frames: any): this {
-		return this._set(frames);
+	set(frames: Frame[], tileY: number): this;
+	set(frames: any, tileY?: number): this {
+		return this._set(frames, tileY);
 	}
 
-	private _set(frames: Frame[]): this {
+	private _set(frames: Frame[], tileY?: number): this {
 		if (frames instanceof Animation)
-			({ frames } = frames);
+			({ frames, tileY } = frames);
 
 		this.frames = frames as Frame[];
+		this.tileY = tileY as number;
 
 		return this;
 	}
 
 	toJson(): AnimationJson {
-		let { frames } = this;
+		let { frames, tileY } = this;
 		return {
-			frames: frames.map(f => f.toJson())
+			frames: frames.map(f => f.toJson()),
+			tileY,
 		};
 	}
 

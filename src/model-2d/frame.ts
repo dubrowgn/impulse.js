@@ -9,6 +9,7 @@ export interface FrameJson {
 	y: number;
 };
 
+/** @deprecated */
 export class Frame implements Clone, ToJson, ToString {
 	attack!: boolean;
 	image!: string;
