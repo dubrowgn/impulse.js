@@ -30,13 +30,19 @@ export class SpriteSheet implements Clone, ToJson, ToString {
 
 	static fromJson(data: SpriteSheetJson): SpriteSheet {
 		let { anims, matrix, path, tileH, tileW } = data;
-		return new SpriteSheet(
+		let sheet = new SpriteSheet(
 			objToMapF(anims, Animation.fromJson),
 			Matrix.fromJson(matrix),
 			path,
 			tileW,
 			tileH,
 		);
+
+		for (let anim of sheet.anims.values()) {
+			anim.spriteSheet = sheet;
+		}
+
+		return sheet;
 	}
 
 	set(sheet: SpriteSheet): this;

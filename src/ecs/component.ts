@@ -37,5 +37,5 @@ export class ComponentList<T extends Component> {
 };
 
 export interface ComponentSystem<T extends Component> {
-	update(comps: ComponentList<T>): void;
+	update(comps: ComponentList<T>, ...args: any[]): this;
 };

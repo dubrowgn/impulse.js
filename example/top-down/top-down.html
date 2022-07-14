@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Top Down Demo - Impulse.js</title>
+		<meta charset="utf-8">
+		<script type="text/javascript" src="../almond.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../../dist/impulse.js" charset="utf-8"></script>
+		<script type="text/javascript" src="top-down.js" charset="utf-8"></script>
+		<script type="text/javascript">
+			function Start() {
+				let demo = new Demo(
+					document.getElementById("canvas"),
+					document.getElementById("console"),
+					document.getElementById("status"),
+				);
+				demo.start();
+			}
+		</script>
+		<style type="text/css">
+			canvas {
+				height: 100%;
+				position: absolute;
+				width: 100%;
+				top: 0px;
+			}
+			body {
+				background: #333;
+				margin: 0px;
+			}
+			#console {
+				background-color: #0003;
+				border: none;
+				bottom: 0px;
+				color: #0c0;
+				max-width: 100%;
+				position: absolute;
+				resize: none;
+			}
+			#status {
+				background-color: #0000;
+				border: none;
+				top: 0px;
+				color: #0c0;
+				max-width: 100%;
+				position: absolute;
+				resize: none;
+			}
+		</style>
+	</head>
+	<body onload="Start();">
+		<canvas id="canvas"></canvas>
+		<textarea id="status" readonly></textarea>
+		<textarea id="console" readonly rows="8"></textarea>
+	</body>
+</html>

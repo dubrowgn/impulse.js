@@ -10,6 +10,7 @@ export class Camera {
 	protected cameraMatrix: Matrix;
 	protected canvas: HTMLCanvasElement;
 	protected canvasMatrix!: Matrix;
+	protected ctx: CanvasRenderingContext2D;
 	protected h!: number;
 	protected resizeHandler: () => void;
 	protected targetH: number;
@@ -27,8 +28,13 @@ export class Camera {
 		canvas: HTMLCanvasElement, x: number, y: number,
 		w: number, h: number, viewportMargin: number = 0
 	) {
+		let ctx = canvas.getContext("2d");
+		if (ctx == null)
+			throw "Failed to initialize 2d canvas context";
+
 		this.cameraMatrix = new Matrix(1, 0, 0, 1, -x, -y);
 		this.canvas = canvas;
+		this.ctx = ctx;
 		this.moved = new Event();
 		this.resized = new Event();
 		this.rotated = new Event();
@@ -55,6 +61,8 @@ export class Camera {
 
 		return vect.transform(this.getRenderMatrix().invert());
 	}
+
+	get drawContext() { return this.ctx; }
 
 	destroy() {
 		window.removeEventListener("resize", this.resizeHandler, false);
