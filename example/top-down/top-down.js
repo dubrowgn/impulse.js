@@ -16,15 +16,15 @@ let sheet = SpriteSheet.fromJson({
 		},
 		"walk": {
 			"frames": [
-				{ "seconds": 0.3, "tileX": 1 },
-				{ "seconds": 0.3, "tileX": 2, "event": "step" },
-				{ "seconds": 0.3, "tileX": 1 },
-				{ "seconds": 0.3, "tileX": 0, "event": "step" }
+				{ "seconds": 0.25, "tileX": 1 },
+				{ "seconds": 0.25, "tileX": 2, "event": "step" },
+				{ "seconds": 0.25, "tileX": 1 },
+				{ "seconds": 0.25, "tileX": 0, "event": "step" }
 			],
 			"tileY": 0
 		}
 	},
-	"matrix": { "a": 1, "b": 0, "c": 0, "d": 1, "e": -64, "f": -64 },
+	"matrix": { "a": 0.5, "b": 0, "c": 0, "d": 0.5, "e": -32, "f": -32 },
 	"path": "image/td-player-128.png",
 	"tileH": 128,
 	"tileW": 128
@@ -47,7 +47,7 @@ class Demo {
 	#mousePos = new Vector(0, 0);
 	#nowMs;
 	#player;
-	#playerS = 256;
+	#playerS = 192;
 	#playerV = new Vector(0, 0);
 	#status;
 	#topDowns;

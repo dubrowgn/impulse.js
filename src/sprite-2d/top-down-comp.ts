@@ -33,7 +33,6 @@ export class TopDownSystem implements ComponentSystem<TopDownComp> {
 			m = update.matrix
 				.combine(m)
 				.combine(camMatrix);
-			console.log(m);
 
 			// init canvas transformation
 			ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
