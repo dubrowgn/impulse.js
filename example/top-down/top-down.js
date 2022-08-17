@@ -46,6 +46,7 @@ class Demo {
 	#keyState = { w: false, a: false, s: false, d: false };
 	#mousePos = new Vector(0, 0);
 	#nowMs;
+	#paused = false;
 	#player;
 	#playerS = 192;
 	#playerV = new Vector(0, 0);
@@ -88,8 +89,18 @@ class Demo {
 		canvas.addEventListener('mousemove', this.#onMouseMove.bind(this), false);
 	}
 
+	#onFrame(tsMs) {
+		let deltaMs = tsMs - this.#nowMs;
+		this.#nowMs = tsMs;
+
+		if (!this.#paused)
+			this.#step(deltaMs / 1000);
+
+		requestAnimationFrame(this.#onFrame.bind(this));
+	}
+
 	#onKey(e, down) {
-		if (e.altKey || e.ctrlKey || e.shiftKey)
+		if (e.repeat || e.altKey || e.ctrlKey || e.shiftKey)
 			return;
 
 		switch (e.key) {
@@ -98,6 +109,10 @@ class Demo {
 			case "s":
 			case "d":
 				break;
+			case " ":
+				if (down)
+					this.#paused = !this.#paused;
+				return;
 			default:
 				return;
 		}
@@ -128,11 +143,7 @@ class Demo {
 		this.#console.textContent += `${msg}\n`;
 	}
 
-	#step(tsMs) {
-		let deltaMs = tsMs - this.#nowMs;
-		this.#nowMs = tsMs;
-		let deltaS = deltaMs / 1000;
-
+	#step(deltaS) {
 		this.#status.textContent =
 			`${(1/deltaS).toFixed(1)} fps\n` +
 			`(${this.#mousePos.x.toFixed(2)}, ${this.#mousePos.y.toFixed(2)})`;
@@ -147,8 +158,6 @@ class Demo {
 		this.#player.pos.y += this.#playerV.y * deltaS;
 
 		this.#topDownSystem.update(this.#topDowns, this.#camera, deltaS);
-
-		requestAnimationFrame(this.#step.bind(this));
 	}
 
 	#updateRads() {
@@ -159,6 +168,6 @@ class Demo {
 	start() {
 		this.#writeLine("start!");
 		this.#nowMs = performance.now();
-		requestAnimationFrame(this.#step.bind(this));
+		requestAnimationFrame(this.#onFrame.bind(this));
 	}
 };
