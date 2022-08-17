@@ -3,232 +3,180 @@
 const { Camera } = require("scene2d");
 const { Circle, Intersect, Polygon, Rect, ShapeId, Vector } = require("shape2d")
 
-var intersect = (function() {
-	var intersect = {};
+class IntersectSatDemo {
+	#camera;
+	#canvas;
+	#console;
+	#ctx;
+	#drawMap;
+	#moving;
+	#mouseOffset = new Vector(0, 0);
+	#shapes;
 
-	// constants
-	var _borderColorNormal = "#ffffff";
+	#clearCanvas() {
+		this.#ctx.setTransform(1, 0, 0, 1, 0, 0);
+		this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+	}
 
-	// private variables
-	var _camera;
-	var _canvas;
-	var _console;
-	var _ctx;
-	var _intersecting;
-	var _moving;
-	var _mouseOffset;
-	var _shapes;
+	#clearConsole() {
+		this.#console.innerHTML = "";
+	}
 
-	// public variables
-	intersect.isInit = false;
-	
-	intersect.clearCanvas = function() {
-		_ctx.setTransform(1, 0, 0, 1, 0, 0);
-		_ctx.clearRect(0, 0, _canvas.width, _canvas.height);
-	}; // clearCanvas( )
+	#printDebug() {
+		this.#clearConsole();
 
-	intersect.clearConsole = function() {
-		_console.innerHTML = "";
-	}; // clearConsole( )
+		for (let s of this.#shapes) {
+			this.#printLn(s);
+		}
+	}
 
-	intersect.printDebug = function() {
-		this.clearConsole();
+	#draw() {
+		this.#clearCanvas();
 
-		for (var i = 0; i < _shapes.length; i++) {
-			this.printLn(_shapes[i]);
-		} // for( i )
-	}; // printDebug( )
+		let m = this.#camera.getRenderMatrix();
+		this.#ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 
-	var drawing = false;
-	intersect.draw = function() {
-		if (drawing)
-			return;
-			
-		drawing = true;
-		this.clearCanvas();
+		for (let i = 0; i < this.#shapes.length; i++) {
+			let s = this.#shapes[i];
+			this.#drawMap[s.getShapeId()](this.#ctx, s, "#ffffff");
+		}
+	}
 
-		for (var i = 0; i < _shapes.length; i++) {
-			switch(_shapes[i].getShapeId()) {
-				case ShapeId.Circle: intersect.drawCircle(_shapes[i]); break;
-				case ShapeId.Polygon: intersect.drawPolygon(_shapes[i]); break;
-				case ShapeId.Rect: intersect.drawRect(_shapes[i]); break;
-				case ShapeId.Vector: intersect.drawVector(_shapes[i]); break;
-			} // switch
-		} // for( i )
-		drawing = false;
-	}; // draw( )
+	#drawCircle(ctx, cir, strokeStyle) {
+		ctx.beginPath();
+		ctx.arc(cir.x, cir.y, cir.r, 0, Math.PI * 2, true);
+		ctx.closePath();
+		ctx.fillStyle = "#0080ff";
+		ctx.fill();
+		ctx.strokeStyle = strokeStyle;
+		ctx.stroke();
+	}
 
-	intersect.drawCircle = function(cir) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-		_ctx.beginPath();
-		_ctx.arc(cir.x, cir.y, cir.r, 0, Math.PI * 2, true);
-		_ctx.closePath();
-		_ctx.fillStyle = "#0080ff";
-		_ctx.fill();
-		_ctx.strokeStyle = _borderColorNormal;
-		_ctx.stroke();
-	}; // drawCircle( )
+	#drawPolygon(ctx, poly, strokeStyle) {
+		ctx.beginPath();
+		for (let i = 1; i < poly._vertices.length; i++) {
+			ctx.lineTo(poly._vertices[i-1].x, poly._vertices[i-1].y);
+			ctx.lineTo(poly._vertices[i].x, poly._vertices[i].y);
+		}
 
-	intersect.drawPolygon = function(poly) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-		_ctx.beginPath();
-		for (var i = 1; i < poly._vertices.length; i++) {
-			_ctx.lineTo(poly._vertices[i-1].x, poly._vertices[i-1].y);
-			_ctx.lineTo(poly._vertices[i].x, poly._vertices[i].y);
-		} // for( i )
-		_ctx.closePath();
-		_ctx.fillStyle = "#00cc00";
-		_ctx.fill();
-		_ctx.strokeStyle = _borderColorNormal;
-		_ctx.stroke();
-	}; // drawPolygon( )
+		ctx.closePath();
+		ctx.fillStyle = "#00cc00";
+		ctx.fill();
+		ctx.strokeStyle = strokeStyle;
+		ctx.stroke();
+	}
 
-	intersect.drawRect = function(rect) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-		_ctx.fillStyle = "#ff8000";
-		_ctx.fillRect(rect.x, rect.y, rect.w, -rect.h);
-		_ctx.strokeStyle = _borderColorNormal;
-		_ctx.strokeRect(rect.x, rect.y, rect.w, -rect.h);
-	}; // drawRect( )
+	#drawRect(ctx, rect, strokeStyle) {
+		ctx.fillStyle = "#ff8000";
+		ctx.fillRect(rect.l, rect.b, rect.w, rect.h);
+		ctx.strokeStyle = strokeStyle;
+		ctx.strokeRect(rect.l, rect.b, rect.w, rect.h);
+	}
 
-	intersect.drawVector = function(vect) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-		_ctx.fillStyle = "#ff00ff";
-		_ctx.fillRect(vect.x, vect.y, 1, -1);
-		_ctx.strokeStyle = _borderColorNormal;
-		_ctx.strokeRect(vect.x, vect.y, 1, -1);
-	}; // drawVector( )
+	#drawVector(ctx, vect, strokeStyle) {
+		ctx.strokeStyle = strokeStyle;
+		ctx.strokeRect(vect.x, vect.y, 0.5, 0.5);
+	}
 
-	intersect.init = function(canvas, console) {
-		_canvas = canvas;
-		_camera = new Camera(canvas, 0, 0, 768, 480, 0);
-		_console = console;
-		_ctx = canvas.getContext("2d");
-		_mouseOffset = new Vector(0, 0);
+	constructor(canvas, konsole) {
+		this.#canvas = canvas;
+		this.#camera = new Camera(canvas, 0, 0, 768, 480, 0);
+		this.#console = konsole;
+		this.#ctx = canvas.getContext("2d");
 
-		var s;
-		_shapes = [];
+		this.#drawMap = [];
+		this.#drawMap[ShapeId.Circle] = this.#drawCircle;
+		this.#drawMap[ShapeId.Polygon] = this.#drawPolygon;
+		this.#drawMap[ShapeId.Rect] = this.#drawRect;
+		this.#drawMap[ShapeId.Vector] = this.#drawVector;
 
-		// circle 1
-		s = (new Circle(0, 0, 64)).setCenter(-80, 80);
-		_shapes.push(s);
-		// circle 2
-		s = s.clone();
-		s.r = 48;
-		s.setCenter(240, 80);
-		_shapes.push(s);
-
-		// polygon 1
-		s = new Polygon([
-			new Vector(64, 4),
-			new Vector(126, 50),
-			new Vector(102, 122),
-			new Vector(26, 122),
-			new Vector(2, 50)]);
-		s.setCenter(new Vector(-240, -80));
-		_shapes.push(s);
-		// polygon 2
-		s = new Polygon([
-			new Vector(0, 0),
-			new Vector(60, 30),
-			new Vector(90, -90),
-			new Vector(30, -60)]);
-		s.setCenter(new Vector(80, -80));
-		_shapes.push(s);
-
-		// rect 1
-		s = new Rect(-64, 64, 128, 128).setCenter(-240, 80);
-		_shapes.push(s);
-		// rect 2
-		s = s.clone();
-		s.h = 84;
-		s.w = 84;
-		s.setCenter(80, 80);
-		_shapes.push(s);
-
-		// vector 1
-		s = new Vector(0, 0).setCenter(-80, -80);
-		_shapes.push(s);
-		// vector 2
-		s = s.clone().setCenter(240, -80);
-		_shapes.push(s);
-
-		// generate intersecting flags
-		_intersecting = [];
-		for (var i = 0; i < _shapes.length; i++) {
-			_intersecting.push(false);
-		} // for( i )
+		this.#shapes = [
+			new Circle(-80, 80, 64),
+			new Circle(240, 80, 48),
+			new Polygon([
+				new Vector(-240, -139),
+				new Vector(-178, -93),
+				new Vector(-202, -21),
+				new Vector(-278, -21),
+				new Vector(-302, -93),
+			]),
+			new Polygon([
+				new Vector(35, -50),
+				new Vector(95, -20),
+				new Vector(125, -140),
+				new Vector(65, -110),
+			]),
+			new Rect(-304, 16, 128, 128),
+			new Rect(38, 38, 84, 84),
+			new Vector(-80, -80),
+			new Vector(240, -80),
+		];
 
 		// draw visuals
-		this.draw();
-		this.printDebug();
-		
+		this.#draw();
+		this.#printDebug();
+
 		// add event handlers for mouse
-		canvas.addEventListener('mousedown', this.mouseDown, false);
-		canvas.addEventListener('mousemove', this.mouseMove, false);
-		canvas.addEventListener('mouseup', this.mouseUp, false);
+		canvas.addEventListener('mousedown', this.#mouseDown.bind(this), false);
+		canvas.addEventListener('mousemove', this.#mouseMove.bind(this), false);
+		canvas.addEventListener('mouseup', this.#mouseUp.bind(this), false);
 
-		// set init flag
-		this.isInit = true;
-	};
+		this.#camera.resized.register(this.#draw.bind(this));
+	}
 
-	intersect.mousePosition = function(e) {
+	#mousePosition(e) {
 		return new Vector(
 			e.offsetX !== undefined ? e.offsetX : e.pageX - e.currentTarget.offsetLeft,
 			e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
 		);
-	}; // mousePosition( )
-	
-	intersect.mouseDown = function(e) {
-		// back-translate mouse position into world coordinates
-		var mousePos = intersect.mousePosition(e);
-		var pos = mousePos.clone().transform(_camera.getRenderMatrix().invert());
+	}
 
-		for (var i = _shapes.length - 1; i >= 0; i--) {
-			if (Intersect.shapeVsShape(_shapes[i], pos)) {
-				_moving = _shapes[i];
-				_mouseOffset = _moving.getCenter().transform(_camera.getRenderMatrix()).add(mousePos.negate());
-				break;
-			} // if
-		} // for( i )
-	}; // mouseDown( )
-	
-	intersect.mouseMove = function(e) {
-		if (_moving === undefined)
+	#mouseDown(e) {
+		let mousePos = this.#mousePosition(e);
+		let worldPos = this.#camera.canvasToWorld(mousePos);
+
+		for (let s of this.#shapes) {
+			if (!Intersect.shapeVsShape(s, worldPos))
+				continue;
+
+			this.#moving = s;
+			this.#mouseOffset = s.getCenter().clone().subtract(worldPos);
+		}
+	}
+
+	#mouseMove(e) {
+		if (this.#moving === undefined)
 			return;
-		
+
 		// back-translate mouse position into world coordinates
-		var pos = intersect.mousePosition(e).add(_mouseOffset);
-		pos.transform(_camera.getRenderMatrix().invert());
-		
+		let pos = this.#mousePosition(e);
+		pos = this.#camera.canvasToWorld(pos).add(this.#mouseOffset);
+
 		// move selected object
-		_moving.setCenter(pos.x, pos.y);
+		this.#moving.setCenter(pos.x, pos.y);
 
 		// test for intersections
-		for (var i = 0; i < _shapes.length; i++) {
-			_intersecting[i] = false;
-			if (_moving !== _shapes[i]) {
-				var mtv = Intersect.shapeVsShapeSat(_moving, _shapes[i]);
-				if (mtv !== undefined)
-					_moving.setCenter(_moving.getCenter().add(mtv));
-			} // if
-		} // for( i )
+		for (let s of this.#shapes) {
+			if (this.#moving === s)
+				continue;
 
-		intersect.draw();
-		intersect.printDebug();
-	}; // mouseMove( )
-	
-	intersect.mouseUp = function(e) {
-		_moving = undefined;
-	}; // mouseUp( )
+			let mtv = Intersect.shapeVsShapeSat(this.#moving, s);
+			if (mtv === undefined)
+				continue;
 
-	intersect.printLn = function(str) {
-		_console.innerHTML += str + "<br />";
-	}; // printLn( )
+			this.#moving.setCenter(this.#moving.getCenter().add(mtv));
+			this.#mouseOffset.add(mtv);
+		}
 
-	return intersect;
-})();
+		this.#draw();
+		this.#printDebug();
+	}
+
+	#mouseUp(e) {
+		this.#moving = undefined;
+	}
+
+	#printLn(str) {
+		this.#console.innerHTML += str + "<br />";
+	}
+};
