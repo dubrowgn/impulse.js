@@ -22,7 +22,7 @@ var intersect = (function() {
 
 	// public variables
 	intersect.isInit = false;
-	
+
 	intersect.clearCanvas = function() {
 		_ctx.setTransform(1, 0, 0, 1, 0, 0);
 		_ctx.clearRect(0, 0, _canvas.width, _canvas.height);
@@ -40,13 +40,11 @@ var intersect = (function() {
 		} // for( i )
 	}; // printDebug( )
 
-	var drawing = false;
 	intersect.draw = function() {
-		if (drawing)
-			return;
-			
-		drawing = true;
 		this.clearCanvas();
+
+		var m = _camera.getRenderMatrix();
+		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 
 		for (var i = 0; i < _shapes.length; i++) {
 			switch(_shapes[i].getShapeId()) {
@@ -55,13 +53,10 @@ var intersect = (function() {
 				case ShapeId.Rect: intersect.drawRect(_shapes[i], _intersecting[i]); break;
 				case ShapeId.Vector: intersect.drawVector(_shapes[i], _intersecting[i]); break;
 			} // switch
-		} // for( i )
-		drawing = false;
-	}; // draw( )
+		}
+	};
 
 	intersect.drawCircle = function(cir, intersecting) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 		_ctx.beginPath();
 		_ctx.arc(cir.x, cir.y, cir.r, 0, Math.PI * 2, true);
 		_ctx.closePath();
@@ -69,11 +64,9 @@ var intersect = (function() {
 		_ctx.fill();
 		_ctx.strokeStyle = intersecting ? _borderColorIntersect : _borderColorNormal;
 		_ctx.stroke();
-	}; // drawCircle( )
+	};
 
 	intersect.drawPolygon = function(poly, intersecting) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 		_ctx.beginPath();
 		for (var i = 1; i < poly._vertices.length; i++) {
 			_ctx.lineTo(poly._vertices[i-1].x, poly._vertices[i-1].y);
@@ -84,25 +77,19 @@ var intersect = (function() {
 		_ctx.fill();
 		_ctx.strokeStyle = intersecting ? _borderColorIntersect : _borderColorNormal;
 		_ctx.stroke();
-	}; // drawPolygon( )
+	};
 
 	intersect.drawRect = function(rect, intersecting) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 		_ctx.fillStyle = "#ff8000";
-		_ctx.fillRect(rect.x, rect.y, rect.w, -rect.h);
+		_ctx.fillRect(rect.l, rect.b, rect.w, rect.h);
 		_ctx.strokeStyle = intersecting ? _borderColorIntersect : _borderColorNormal;
-		_ctx.strokeRect(rect.x, rect.y, rect.w, -rect.h);
-	}; // drawRect( )
+		_ctx.strokeRect(rect.l, rect.b, rect.w, rect.h);
+	};
 
 	intersect.drawVector = function(vect, intersecting) {
-		var m = _camera.getRenderMatrix();
-		_ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
-		_ctx.fillStyle = "#ff00ff";
-		_ctx.fillRect(vect.x, vect.y, 1, -1);
 		_ctx.strokeStyle = intersecting ? _borderColorIntersect : _borderColorNormal;
-		_ctx.strokeRect(vect.x, vect.y, 1, -1);
-	}; // drawVector( )
+		_ctx.strokeRect(vect.x, vect.y, 0.5, 0.5);
+	};
 
 	intersect.init = function(canvas, console) {
 		_canvas = canvas;
@@ -111,52 +98,27 @@ var intersect = (function() {
 		_ctx = canvas.getContext("2d");
 		_mouseOffset = new Vector(0, 0);
 
-		var s;
-		_shapes = [];
-
-		// circle 1
-		s = (new Circle(0, 0, 64)).setCenter(-80, 80);
-		_shapes.push(s);
-		// circle 2
-		s = s.clone();
-		s.r = 48;
-		s.setCenter(240, 80);
-		_shapes.push(s);
-
-		// polygon 1
-		s = new Polygon([
-			new Vector(64, 4),
-			new Vector(126, 50),
-			new Vector(102, 122),
-			new Vector(26, 122),
-			new Vector(2, 50)]);
-		s.setCenter(new Vector(-240, -80));
-		_shapes.push(s);
-		// polygon 2
-		s = new Polygon([
-			new Vector(0, 0),
-			new Vector(60, 30),
-			new Vector(90, -90),
-			new Vector(30, -60)]);
-		s.setCenter(new Vector(80, -80));
-		_shapes.push(s);
-
-		// rect 1
-		s = new Rect(-64, 64, 128, 128).setCenter(-240, 80);
-		_shapes.push(s);
-		// rect 2
-		s = s.clone();
-		s.h = 84;
-		s.w = 84;
-		s.setCenter(80, 80);
-		_shapes.push(s);
-
-		// vector 1
-		s = new Vector(0, 0).setCenter(-80, -80);
-		_shapes.push(s);
-		// vector 2
-		s = s.clone().setCenter(240, -80);
-		_shapes.push(s);
+		_shapes = [
+			new Circle(-80, 80, 64),
+			new Circle(240, 80, 48),
+			new Polygon([
+				new Vector(-240, -139),
+				new Vector(-178, -93),
+				new Vector(-202, -21),
+				new Vector(-278, -21),
+				new Vector(-302, -93),
+			]),
+			new Polygon([
+				new Vector(35, -50),
+				new Vector(95, -20),
+				new Vector(125, -140),
+				new Vector(65, -110),
+			]),
+			new Rect(-304, 16, 128, 128),
+			new Rect(38, 38, 84, 84),
+			new Vector(-80, -80),
+			new Vector(240, -80),
+		];
 
 		// generate intersecting flags
 		_intersecting = [];
@@ -167,11 +129,13 @@ var intersect = (function() {
 		// draw visuals
 		this.draw();
 		this.printDebug();
-		
+
 		// add event handlers for mouse
 		canvas.addEventListener('mousedown', this.mouseDown, false);
 		canvas.addEventListener('mousemove', this.mouseMove, false);
 		canvas.addEventListener('mouseup', this.mouseUp, false);
+
+		_camera.resized.register(() => this.draw());
 
 		// set init flag
 		this.isInit = true;
@@ -183,29 +147,28 @@ var intersect = (function() {
 			e.offsetY !== undefined ? e.offsetY : e.pageY - e.currentTarget.offsetTop
 		);
 	}; // mousePosition( )
-	
+
 	intersect.mouseDown = function(e) {
-		// back-translate mouse position into world coordinates
-		var pos = intersect.mousePosition(e);
-		pos.transform(_camera.getRenderMatrix().invert());
+		let mousePos = intersect.mousePosition(e);
+		let worldPos = _camera.canvasToWorld(mousePos);
 
 		for (var i = _shapes.length - 1; i >= 0; i--) {
-			if (Intersect.shapeVsShape(_shapes[i], pos)) {
+			if (Intersect.shapeVsShape(_shapes[i], worldPos)) {
 				_moving = _shapes[i];
-				_mouseOffset = _moving.getCenter().transform(_camera.getRenderMatrix()).add(intersect.mousePosition(e).negate());
+				_mouseOffset = _moving.getCenter().clone().subtract(worldPos);
 				break;
 			} // if
 		} // for( i )
 	}; // mouseDown( )
-	
+
 	intersect.mouseMove = function(e) {
 		if (_moving === undefined)
 			return;
-		
+
 		// back-translate mouse position into world coordinates
-		var pos = intersect.mousePosition(e).add(_mouseOffset);
-		pos.transform(_camera.getRenderMatrix().invert());
-		
+		var pos = intersect.mousePosition(e);
+		pos = _camera.canvasToWorld(pos).add(_mouseOffset);
+
 		// move selected object
 		_moving.setCenter(pos.x, pos.y);
 
@@ -225,7 +188,7 @@ var intersect = (function() {
 		intersect.draw();
 		intersect.printDebug();
 	}; // mouseMove( )
-	
+
 	intersect.mouseUp = function(e) {
 		_moving = undefined;
 	}; // mouseUp( )
