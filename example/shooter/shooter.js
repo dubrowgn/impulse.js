@@ -5,7 +5,7 @@
 const { Animation, Frame, Image, Model } = require("model2d");
 const { Camera, Entity, LinearSg, SceneTopDown } = require("scene2d");
 const { Circle, Intersect, Matrix, Rect, Vector } = require("shape2d");
-const { Collection, EventDelegate, Timing } = require("util");
+const { Collection, Event, Timing } = require("util");
 
 window.NetAdapter = (function()  {
 	// enumerations
@@ -36,20 +36,20 @@ window.NetAdapter = (function()  {
 		this._url = endpointAddress;
 
 		// init event delegates
-		this.closed = new EventDelegate();
-		this.errored = new EventDelegate();
-		this.opened = new EventDelegate();
-		this.receivedAddEntity = new EventDelegate();
-		this.receivedFaceEntity = new EventDelegate();
-		this.receivedInvalidMessage = new EventDelegate();
-		this.receivedLocalConnect = new EventDelegate();
-		this.receivedLocalDisconnect = new EventDelegate();
-		this.receivedMoveEntity = new EventDelegate();
-		this.receivedMeasurePing = new EventDelegate();
-		this.receivedPlayerDied = new EventDelegate();
-		this.receivedRemoteConnect = new EventDelegate();
-		this.receivedRemoteDisconnect = new EventDelegate();
-		this.receivedRemoveEntity = new EventDelegate();
+		this.closed = new Event();
+		this.errored = new Event();
+		this.opened = new Event();
+		this.receivedAddEntity = new Event();
+		this.receivedFaceEntity = new Event();
+		this.receivedInvalidMessage = new Event();
+		this.receivedLocalConnect = new Event();
+		this.receivedLocalDisconnect = new Event();
+		this.receivedMoveEntity = new Event();
+		this.receivedMeasurePing = new Event();
+		this.receivedPlayerDied = new Event();
+		this.receivedRemoteConnect = new Event();
+		this.receivedRemoteDisconnect = new Event();
+		this.receivedRemoveEntity = new Event();
 
 		// init web socket object
 		try {
@@ -212,12 +212,12 @@ window.Shooter = (function() {
 	}; // rand( )
 
 	var Shooter = function(canvas) {
-		this.connected = new EventDelegate();
-		this.deathsChanged = new EventDelegate();
-		this.fpsChanged = new EventDelegate();
-		this.healthChanged = new EventDelegate();
-		this.killsChanged = new EventDelegate();
-		this.pingChanged = new EventDelegate();
+		this.connected = new Event();
+		this.deathsChanged = new Event();
+		this.fpsChanged = new Event();
+		this.healthChanged = new Event();
+		this.killsChanged = new Event();
+		this.pingChanged = new Event();
 
 		// map
 		this._map = this.loadMap();
@@ -319,12 +319,12 @@ window.Shooter = (function() {
 
 		this._netAdapter = new NetAdapter('wss://impulsejs.com/shooter/server');
 
-		this._netAdapter.closed.add(function() {
+		this._netAdapter.closed.register(function() {
 			if (pingInterval !== undefined)
 				clearInterval(pingInterval);
 		});
 
-		this._netAdapter.opened.add(function() {
+		this._netAdapter.opened.register(function() {
 			this_._netAdapter.sendLocalConnect();
 			pingInterval = setInterval(function() {
 				pingStarted = Timing.now();
@@ -332,7 +332,7 @@ window.Shooter = (function() {
 			}, 1500);
 		});
 
-		this._netAdapter.receivedAddEntity.add(function(cid, eid, etid, x, y, dx, dy) {
+		this._netAdapter.receivedAddEntity.register(function(cid, eid, etid, x, y, dx, dy) {
 			switch (etid) {
 				case entityType.player:
 					this_._createPlayer(cid, eid, x, y, dx, dy);
@@ -346,16 +346,16 @@ window.Shooter = (function() {
 			} // switch
 		});
 
-		this._netAdapter.receivedFaceEntity.add(function(eid, faceRads) {
+		this._netAdapter.receivedFaceEntity.register(function(eid, faceRads) {
 			var ent = getEntityById(eid);
 			ent.setRotation(faceRads);
 		});
 
-		this._netAdapter.receivedInvalidMessage.add(function(data) {
+		this._netAdapter.receivedInvalidMessage.register(function(data) {
 			console.log("Received invalid message from server: " + data);
 		});
 
-		this._netAdapter.receivedLocalConnect.add(function(clientId) {
+		this._netAdapter.receivedLocalConnect.register(function(clientId) {
 			this_._clientId = clientId;
 
 			var eid = clientId * 100000;
@@ -368,31 +368,31 @@ window.Shooter = (function() {
 			this_.connected.dispatch(this_);
 		});
 
-		this._netAdapter.receivedMeasurePing.add(function() {
+		this._netAdapter.receivedMeasurePing.register(function() {
 			this_.pingChanged.dispatch(Timing.now() - pingStarted);
 		});
 
-		this._netAdapter.receivedMoveEntity.add(function(eid, x, y, dx, dy) {
+		this._netAdapter.receivedMoveEntity.register(function(eid, x, y, dx, dy) {
 			var ent = getEntityById(eid);
 			ent.setPosition(x, y);
 			ent.dx = dx;
 			ent.dy = dy;
 		});
 
-		this._netAdapter.receivedPlayerDied.add(function(cidDied, cidKilled) {
+		this._netAdapter.receivedPlayerDied.register(function(cidDied, cidKilled) {
 			if (cidKilled == this_._clientId) {
 				this_._kills++;
 				this_.killsChanged.dispatch(this_._kills);
 			} // if
 		});
 
-		this._netAdapter.receivedRemoteConnect.add(function(clientId) {
+		this._netAdapter.receivedRemoteConnect.register(function(clientId) {
 		});
 
-		this._netAdapter.receivedRemoteDisconnect.add(function(clientId) {
+		this._netAdapter.receivedRemoteDisconnect.register(function(clientId) {
 		});
 
-		this._netAdapter.receivedRemoveEntity.add(function(eid) {
+		this._netAdapter.receivedRemoveEntity.register(function(eid) {
 			var ent = getEntityById(eid);
 			this_._sceneGraph.removeEntity(ent);
 		});
@@ -675,48 +675,48 @@ window.Shooter = (function() {
 			entities.bushes[i].modelState.playAnimation("stand");
 		} // for( i )
 		entities.grass = [
-			new Entity(map.models.grass, new Vector(-960, 1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-960, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
 
-			new Entity(map.models.grass, new Vector(-960, 960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-960, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
 
-			new Entity(map.models.grass, new Vector(-960, 320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-960, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
 
-			new Entity(map.models.grass, new Vector(-960, -320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -320), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-960, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
 
-			new Entity(map.models.grass, new Vector(-960, -960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -960), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-960, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
 
-			new Entity(map.models.grass, new Vector(-960, -1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -1600), new Rect(-320, 320, 640, 640), undefined, entityFlag.none)
+			new Entity(map.models.grass, new Vector(-960, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(-320, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(320, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
+			new Entity(map.models.grass, new Vector(960, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none)
 		];
 		for (var i = 0; i < entities.grass.length; ++i) {
 			entities.grass[i].modelState.playAnimation("stand");
 		} // for( i )
-		entities.dirt = new Entity(map.models.dirt, new Vector(-260, 240), new Rect(-320, 320, 640, 640), undefined, entityFlag.none);
+		entities.dirt = new Entity(map.models.dirt, new Vector(-260, 240), new Rect(-320, -320, 640, 640), undefined, entityFlag.none);
 		entities.dirt.modelState.playAnimation("stand");
 		entities.walls = [
-			new Entity(map.models.innerWallH, new Vector(-196, -1149.5), new Rect(-533, 149.5, 1066, 299), undefined, entityFlag.collidable | entityFlag.wall),
-			new Entity(map.models.innerWallV, new Vector(702, 288.5), new Rect(-148, 1232.5, 296, 2465), undefined, entityFlag.collidable | entityFlag.wall),
-			new Entity(map.models.outerWallL, new Vector(-1184, 0), new Rect(-60, 1920, 120, 3840), undefined, entityFlag.collidable | entityFlag.wall),
-			new Entity(map.models.outerWallT, new Vector(0, 1824), new Rect(-1148, 60, 2296, 120), undefined, entityFlag.collidable | entityFlag.wall),
-			new Entity(map.models.outerWallR, new Vector(1184, 0), new Rect(-60, 1920, 120, 3840), undefined, entityFlag.collidable | entityFlag.wall),
-			new Entity(map.models.outerWallB, new Vector(0, -1824), new Rect(-1148, 60, 2296, 120), undefined, entityFlag.collidable | entityFlag.wall)
+			new Entity(map.models.innerWallH, new Vector(-196, -1149.5), new Rect(-533, -149.5, 1066, 299), undefined, entityFlag.collidable | entityFlag.wall),
+			new Entity(map.models.innerWallV, new Vector(702, 288.5), new Rect(-148, -1232.5, 296, 2465), undefined, entityFlag.collidable | entityFlag.wall),
+			new Entity(map.models.outerWallL, new Vector(-1184, 0), new Rect(-60, -1920, 120, 3840), undefined, entityFlag.collidable | entityFlag.wall),
+			new Entity(map.models.outerWallT, new Vector(0, 1824), new Rect(-1148, -60, 2296, 120), undefined, entityFlag.collidable | entityFlag.wall),
+			new Entity(map.models.outerWallR, new Vector(1184, 0), new Rect(-60, -1920, 120, 3840), undefined, entityFlag.collidable | entityFlag.wall),
+			new Entity(map.models.outerWallB, new Vector(0, -1824), new Rect(-1148, -60, 2296, 120), undefined, entityFlag.collidable | entityFlag.wall)
 		];
 		for (var i = 0; i < entities.walls.length; ++i) {
 			entities.walls[i].modelState.playAnimation("stand");

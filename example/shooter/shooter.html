@@ -24,29 +24,26 @@
 				ui_status_kills = document.getElementById("ui_status_kills");
 				ui_status_ping = document.getElementById("ui_status_ping");
 
-				window.addEventListener("resize", OnResize);
-				OnResize();
-
 				shooter = new Shooter(canvas);
 
-				shooter.deathsChanged.add(function(deaths) { ui_status_deaths.innerHTML = "Deaths: " + deaths; });
-				shooter.fpsChanged.add(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
-				shooter.healthChanged.add(function(current, max) { ui_status_health.style.width = (current / max) * 100 + "%"; });
-				shooter.killsChanged.add(function(kills) { ui_status_kills.innerHTML = "Kills: " + kills; });
-				shooter.pingChanged.add(function(ping) { ui_status_ping.innerHTML = "Ping: " + ping.toFixed(2) + "ms"; });
+				shooter.deathsChanged.register(function(deaths) { ui_status_deaths.innerHTML = "Deaths: " + deaths; });
+				shooter.fpsChanged.register(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
+				shooter.healthChanged.register(function(current, max) { ui_status_health.style.width = (current / max) * 100 + "%"; });
+				shooter.killsChanged.register(function(kills) { ui_status_kills.innerHTML = "Kills: " + kills; });
+				shooter.pingChanged.register(function(ping) { ui_status_ping.innerHTML = "Ping: " + ping.toFixed(2) + "ms"; });
 
-				shooter.connected.add(function() { shooter.run(); });
+				shooter.connected.register(function() { shooter.run(); });
 				shooter.connect();
 			} // start( )
-
-			function OnResize() {
-				canvas.width = window.innerWidth;
-				canvas.height = window.innerHeight;
-			} // OnResize( )
 		</script>
 		<style type="text/css">
-			canvas { position:absolute; }
-			body { margin:0; }
+			canvas {
+				height: 100%;
+				position: absolute;
+				width: 100%;
+				top: 0px;
+			}
+			body { margin: 0px; }
 			#ui_status_top { position:absolute; top:0; font:12pt helvetica; font-weight:bold; padding:2px; color:#fff; text-shadow: 1px 1px 4px #000; }
 			#ui_status_health {
 				width:100%;

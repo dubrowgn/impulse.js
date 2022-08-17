@@ -27,7 +27,7 @@ export class SceneTopDown extends Scene {
 			// draw the image sprite to the canvas
 			let img = new Image();
 			img.src = update.imagePath;
-			this.context.drawImage(img, r.l, r.t, r.w, r.h, 0, 0, r.w, r.h);
+			this.context.drawImage(img, r.l, r.b, r.w, r.h, 0, 0, r.w, r.h);
 
 			for (let path of update.soundPaths) {
 				new Audio(path).play();
