@@ -190,6 +190,33 @@ window.NetAdapter = (function()  {
 	return NetAdapter;
 })();
 
+class Metric {
+	#count = 0;
+	#max = Number.NEGATIVE_INFINITY;
+	#min = Number.POSITIVE_INFINITY;
+	#total = 0;
+
+	get avg() { return this.#total / this.#count; }
+	get count() { return this.#count; }
+	get max() { return this.#max; }
+	get min() { return this.#min; }
+	get total() { return this.#total; }
+
+	reset() {
+		this.#count = 0;
+		this.#max = Number.NEGATIVE_INFINITY;
+		this.#min = Number.POSITIVE_INFINITY;
+		this.#total = 0;
+	}
+
+	sample(val) {
+		this.#min = Math.min(this.#min, val);
+		this.#max = Math.max(this.#max, val);
+		this.#total += val;
+		this.#count++;
+	}
+}
+
 window.Shooter = (function() {
 	// enumerations
 	var entityFlag = {
@@ -251,6 +278,7 @@ window.Shooter = (function() {
 	Shooter.prototype._clientId = -1;
 	Shooter.prototype._deaths = 0;
 	Shooter.prototype._eid = 1;
+	Shooter.prototype._fpsMetric = new Metric();
 	Shooter.prototype._health = 100;
 	Shooter.prototype._kills = 0;
 	Shooter.prototype._inGameLoop = false;
@@ -410,8 +438,8 @@ window.Shooter = (function() {
 		this._scene.blank("#000");
 		this._scene.advance(dtMs);
 
-		// dispatch fps changed event
-		this.fpsChanged.dispatch(1000/dtMs);
+		// update fps metrics
+		this._fpsMetric.sample(1000 / dtMs);
 	}; // _draw( )
 
 	Shooter.prototype._fire = function() {
@@ -554,7 +582,7 @@ window.Shooter = (function() {
 			grass: new Model(
 				"grass",
 				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
-				{ main: new Image(1, new Matrix().translate(-320, -320), "assets/image/grass.jpg", 640, 640) },
+				{ main: new Image(1, new Matrix().translate(-161, -161), "assets/image/grass.png", 322, 322) },
 				{},
 			),
 			innerWallH: new Model(
@@ -674,37 +702,22 @@ window.Shooter = (function() {
 		for (var i = 0; i < entities.bushes.length; ++i) {
 			entities.bushes[i].modelState.playAnimation("stand");
 		} // for( i )
-		entities.grass = [
-			new Entity(map.models.grass, new Vector(-960, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-
-			new Entity(map.models.grass, new Vector(-960, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-
-			new Entity(map.models.grass, new Vector(-960, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, 320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-
-			new Entity(map.models.grass, new Vector(-960, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -320), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-
-			new Entity(map.models.grass, new Vector(-960, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -960), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-
-			new Entity(map.models.grass, new Vector(-960, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(-320, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(320, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none),
-			new Entity(map.models.grass, new Vector(960, -1600), new Rect(-320, -320, 640, 640), undefined, entityFlag.none)
-		];
+		entities.grass = [];
+		for (let x = 0; x < 8; x++) {
+			const tile = 320;
+			const tile_2 = tile / 2;
+			let l = -tile_2 * 7 + x * tile;
+			for (let y = 12; y > 0; y--) {
+				let t = -tile_2 * 13 + y * tile;
+				entities.grass.push(new Entity(
+					map.models.grass,
+					new Vector(l, t),
+					new Rect(-tile_2, -tile_2, tile, tile),
+					undefined,
+					entityFlag.none,
+				));
+			}
+		}
 		for (var i = 0; i < entities.grass.length; ++i) {
 			entities.grass[i].modelState.playAnimation("stand");
 		} // for( i )
@@ -816,7 +829,17 @@ window.Shooter = (function() {
 				drawing = false;
 			}, 1000/59);
 		} // else
+
+		// init fps handling
+		setInterval(() => {
+			this.fpsChanged.dispatch(this._fpsMetric);
+			this._fpsMetric.reset();
+		}, 1000);
 	}; // run( )
+
+	Shooter.prototype.setPixelRatio = function(ratio) {
+		this._camera.pixelRatio = ratio;
+	};
 
 	return Shooter;
 })();

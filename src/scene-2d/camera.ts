@@ -12,6 +12,7 @@ export class Camera {
 	protected canvasMatrix!: Matrix;
 	protected ctx: CanvasRenderingContext2D;
 	protected h!: number;
+	protected _pixelRatio: number = window.devicePixelRatio || 1;
 	protected resizeHandler: () => void;
 	protected targetH: number;
 	protected targetW: number;
@@ -56,8 +57,7 @@ export class Camera {
 	canvasToWorld(x: any, y?: number): Vector {
 		let vect = x instanceof Vector ? x.clone() : new Vector(x, y as number);
 
-		let dpr = window.devicePixelRatio || 1;
-		vect.scale(dpr);
+		vect.scale(this._pixelRatio);
 
 		return vect.transform(this.getRenderMatrix().invert());
 	}
@@ -102,6 +102,12 @@ export class Camera {
 
 		return this;
 	};
+
+	get pixelRatio() { return this._pixelRatio; }
+	set pixelRatio(ratio: number) {
+		this._pixelRatio = ratio;
+		this.updateCanvasValues();
+	}
 
 	setPosition(ent: Entity): this;
 	setPosition(vect: Vector): this;
@@ -164,12 +170,10 @@ export class Camera {
 	}
 
 	protected updateCanvasValues() {
-		let dpr = window.devicePixelRatio || 1;
-
 		let c = this.canvas;
 		let dims = this.canvasScreenDims(c);
-		c.width = dims.x * dpr;
-		c.height = dims.y * dpr;
+		c.width = dims.x * this._pixelRatio;
+		c.height = dims.y * this._pixelRatio;
 
 		// calculate zoom factor
 		let zoom = Math.min(

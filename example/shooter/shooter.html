@@ -18,6 +18,8 @@
 
 			function Start() {
 				canvas = document.getElementById("canvas");
+				in_quality = document.getElementById("in_quality");
+				ui_quality = document.getElementById("ui_quality");
 				ui_status_deaths = document.getElementById("ui_status_deaths");
 				ui_status_fps = document.getElementById("ui_status_fps");
 				ui_status_health = document.getElementById("ui_status_health");
@@ -26,8 +28,15 @@
 
 				shooter = new Shooter(canvas);
 
+				let onQualityChange = () => {
+					shooter.setPixelRatio(in_quality.value / 100 * (devicePixelRatio || 1));
+					ui_quality.innerText = `${in_quality.value}%`;
+				}
+				in_quality.addEventListener("input", onQualityChange);
+				onQualityChange();
+
 				shooter.deathsChanged.register(function(deaths) { ui_status_deaths.innerHTML = "Deaths: " + deaths; });
-				shooter.fpsChanged.register(function(fps) { ui_status_fps.innerHTML = "FPS: " + (fps | 0); });
+				shooter.fpsChanged.register((fps) => ui_status_fps.innerHTML = `FPS: ${fps.avg.toFixed(2)} [${fps.min.toFixed(2)}, ${fps.max.toFixed(2)}]`);
 				shooter.healthChanged.register(function(current, max) { ui_status_health.style.width = (current / max) * 100 + "%"; });
 				shooter.killsChanged.register(function(kills) { ui_status_kills.innerHTML = "Kills: " + kills; });
 				shooter.pingChanged.register(function(ping) { ui_status_ping.innerHTML = "Ping: " + ping.toFixed(2) + "ms"; });
@@ -44,13 +53,21 @@
 				top: 0px;
 			}
 			body { margin: 0px; }
-			#ui_status_top { position:absolute; top:0; font:12pt helvetica; font-weight:bold; padding:2px; color:#fff; text-shadow: 1px 1px 4px #000; }
+			#ui_status_top {
+				color: #fff;
+				font: 12pt helvetica;
+				font-weight: bold;
+				padding: 2px;
+				position: absolute;
+				text-shadow: 1px 1px 4px #000;
+				top: 0;
+			}
 			#ui_status_health {
-				width:100%;
-				height:24px;
-				background:url("assets/image/health.png");
-				position:absolute;;
-				bottom:0;
+				width: 100%;
+				height: 24px;
+				background: url("assets/image/health.png");
+				position: absolute;
+				bottom: 0;
 			}
 			#ui_status_ping { color:#fff; }
 		</style>
@@ -58,6 +75,7 @@
 	<body onload="Start();">
 		<canvas id="canvas"></canvas>
 		<div id="ui_status_top">
+			<div>Quality: <input id="in_quality" type="range" min="25" value="100" max="200" step="25"/> <span id="ui_quality">100%</span></div>
 			<div id="ui_status_fps">FPS: &mdash;</div>
 			<div id="ui_status_ping">Ping: &mdash;</div>
 			<div id="ui_status_kills">Kills: 0</div>
