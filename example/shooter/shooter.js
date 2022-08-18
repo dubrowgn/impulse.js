@@ -576,7 +576,7 @@ window.Shooter = (function() {
 					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 				},
-				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_brown.png", 1200, 1200) },
+				{ main: new Image(4, new Matrix().translate(-128, -128).scale(0.7), "assets/image/player_brown.png", 256, 256) },
 				{},
 			),
 			playerBlue: new Model(
@@ -586,7 +586,7 @@ window.Shooter = (function() {
 					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 				},
-				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_blue.png", 1200, 1200) },
+				{ main: new Image(4, new Matrix().translate(-128, -128).scale(0.7), "assets/image/player_blue.png", 256, 256) },
 				{},
 			),
 			playerGreen: new Model(
@@ -596,7 +596,7 @@ window.Shooter = (function() {
 					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 				},
-				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_green.png", 1200, 1200) },
+				{ main: new Image(4, new Matrix().translate(-128, -128).scale(0.7), "assets/image/player_green.png", 256, 256) },
 				{},
 			),
 			playerPurple: new Model(
@@ -606,7 +606,7 @@ window.Shooter = (function() {
 					walk: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 					shoot: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]),
 				},
-				{ main: new Image(1, new Matrix().translate(-600, -600).scale(1 / 6), "assets/image/player_purple.png", 1200, 1200) },
+				{ main: new Image(4, new Matrix().translate(-128, -128).scale(0.7), "assets/image/player_purple.png", 256, 256) },
 				{},
 			),
 			outerWallL: new Model(
@@ -636,25 +636,25 @@ window.Shooter = (function() {
 			shotBlue: new Model(
 				"shotBlue",
 				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
-				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_blue.png", 640, 640) },
+				{ main: new Image(1, new Matrix().translate(-96, -96).scale(0.5), "assets/image/shot_blue.png", 192, 192) },
 				{},
 			),
 			shotGreen: new Model(
 				"shotGreen",
 				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
-				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_green.png", 640, 640) },
+				{ main: new Image(1, new Matrix().translate(-96, -96).scale(0.5), "assets/image/shot_green.png", 192, 192) },
 				{},
 			),
 			shotPurple: new Model(
 				"shotPurple",
 				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
-				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_purple.png", 640, 640) },
+				{ main: new Image(1, new Matrix().translate(-96, -96).scale(0.5), "assets/image/shot_purple.png", 192, 192) },
 				{},
 			),
 			shotRed: new Model(
 				"shotRed",
 				{ stand: new Animation([new Frame(false, "main", 1, undefined, 0, 0)]) },
-				{ main: new Image(1, new Matrix().translate(-320, -320).scale(.20), "assets/image/shot_red.png", 640, 640) },
+				{ main: new Image(1, new Matrix().translate(-96, -96).scale(0.5), "assets/image/shot_red.png", 192, 192) },
 				{},
 			),
 		};
