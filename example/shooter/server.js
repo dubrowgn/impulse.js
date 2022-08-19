@@ -1,22 +1,22 @@
 "use strict";
 
-var config = {
+let config = {
 	host:"0.0.0.0",
 	port: 1400
 };
 
-var WebSocketServer = require("ws").Server;
-var wss = new WebSocketServer(config);
-var clients = [];
-var clientID = 1;
-var entities = [];
+let WebSocketServer = require("ws").Server;
+let wss = new WebSocketServer(config);
+let clients = [];
+let clientID = 1;
+let entities = [];
 
-function log(text) {
-	var now = new Date();
-	console.log("[%s %s] %s", now.toDateString(), now.toLocaleTimeString(), text);
-} // log( )
+function log(msg) {
+	let ts = JSON.parse(JSON.stringify(new Date()));
+	console.log(`[${ts}] ${msg}`);
+};
 
-var commandId = {
+let cmdId = {
 	localConnect:0,
 	localDisconnect:1,
 	remoteConnect:2,
@@ -32,75 +32,77 @@ var commandId = {
 function onConnection(ws) {
 	ws.clientID = clientID++;
 	clients[ws.clientID] = ws;
-	log("connection opened (clientID " + ws.clientID + ")");
+	log(`connection opened (clientID ${ws.clientID})`);
 
-	var send = ws.send.bind(ws);
+	let send = ws.send.bind(ws);
 	ws.send = function(msg) {
-		log(ws.clientID + " <-- " + msg);
+		log(`${ws.clientID} <-- ${msg}`);
 		if (ws.readyState === 1)
 			send(msg);
 	};
 
-	var propagate = function(msg) {
-		for (var cid = 0; cid < clients.length; ++cid) {
-			var client = clients[cid];
+	let propagate = function(msg) {
+		for (let cid = 0; cid < clients.length; ++cid) {
+			let client = clients[cid];
 			if (client !== undefined && client != ws)
 				client.send(msg);
-		} // for( cid )
+		}
 	};
 
 	ws.on("close", function() {
-		log("connection closed (clientID " + ws.clientID + ")");
+		log(`connection closed (clientID ${ws.clientID})`);
 
-		var client = clients[ws.clientID];
+		let client = clients[ws.clientID];
 		clients[ws.clientID] = undefined;
 
 		if (client !== undefined) {
 			// remove player entity from game world
-			entities[ws.clientID * 100000] = undefined;
-			propagate(commandId.removeEntity + " " + (ws.clientID * 100000));
+			let entId = ws.clientID * 100000;
+			entities[entId] = undefined;
+			propagate(`${cmdId.removeEntity} ${entId}`);
 
 			// send remote disconnect to all other connected clients
-			propagate(commandId.remoteDisconnect + " " + ws.clientID);
-		} // if
+			propagate(`${cmdId.remoteDisconnect} ${ws.clientID}`);
+		}
 	});
 	ws.on('error', function(e) {
-		log("Error (clientID " + ws.clientID + "): " + e.message);
+		log(`Error (clientID ${ws.clientID}): ${e.message}`);
 	});
-	ws.on("message", function(message) {
-		log(ws.clientID + " --> " + message);
+	ws.on("message", function(binMsg) {
+		let msg = new TextDecoder().decode(binMsg);
+		log(`${ws.clientID} --> ${msg}`);
 
-		var tokens = message.split(" ");
-		var cmd = parseInt(tokens[0]);
+		let tokens = msg.split(" ");
+		let cmd = parseInt(tokens[0]);
 
 		switch(cmd) {
-			case commandId.localConnect: // cid
+			case cmdId.localConnect: // cid
 				// return local connect request with new clientID
-				ws.send(commandId.localConnect + " " + ws.clientID);
+				ws.send(`${cmdId.localConnect} ${ws.clientID}`);
 
 				// send remote connect command to all other connected clients
-				propagate(commandId.remoteConnect + " " + ws.clientID);
+				propagate(`${cmdId.remoteConnect} ${ws.clientID}`);
 
 				break;
-			case commandId.localDisconnect: // ...
+			case cmdId.localDisconnect: // ...
 				// release connection for requesting client
 				clients[ws.clientID] = undefined;
-				ws.send(commandId.localDisconnect + "");
+				ws.send(`${cmdId.localDisconnect}`);
 
 				// remove player entity from game world
 				entities[ws.clientID * 100000] = undefined;
-				propagate(commandId.removeEntity + " " + (ws.clientID * 100000));
+				propagate(`${cmdId.removeEntity} ${ws.clientID * 100000}`);
 
 				// send remote disconnect to all other connected clients
-				propagate(commandId.remoteDisconnect + " " + ws.clientID);
+				propagate(`${cmdId.remoteDisconnect} ${ws.clientID}`);
 
 				break;
-			case commandId.measurePing: // ...
+			case cmdId.measurePing: // ...
 				// return measure ping request
-				ws.send(commandId.measurePing + "");
+				ws.send(cmdId.measurePing + "");
 
 				break;
-			case commandId.addEntity: // cid, eid, etid, x, y, dx, dy
+			case cmdId.addEntity: // cid, eid, etid, x, y, dx, dy
 				// create new entity object cache
 				entities[parseInt(tokens[2])] = {
 					cid: parseInt(tokens[1]),
@@ -110,69 +112,70 @@ function onConnection(ws) {
 					y: parseFloat(tokens[5]),
 					dx: parseFloat(tokens[6]),
 					dy: parseFloat(tokens[7]),
-					lastUpdated: new Date() | 0
+					lastUpdated: performance.now(),
 				};
 
 				// propagate message to all other connected clients
-				propagate(message);
+				propagate(msg);
 
 				break;
-			case commandId.faceEntity: // eid, face
+			case cmdId.faceEntity: // eid, face
 				// propagate message to all other connected clients
-				propagate(message);
+				propagate(msg);
 
 				break;
-			case commandId.removeEntity: // eid
+			case cmdId.removeEntity: // eid
 				// remove entity from server cache
 				entities[parseInt(tokens[1])] = undefined;
 
 				// propagate message to all other connected clients
-				propagate(message);
+				propagate(msg);
 
 				break;
-			case commandId.moveEntity: // eid, x, y, dx, dy
+			case cmdId.moveEntity: // eid, x, y, dx, dy
 				// update entity server cache
-				var ent = entities[parseInt(tokens[1])];
+				let ent = entities[parseInt(tokens[1])];
 				if (ent !== undefined) {
 					ent.x = parseFloat(tokens[2]);
 					ent.y = parseFloat(tokens[3]);
 					ent.dx = parseFloat(tokens[4]);
 					ent.dy = parseFloat(tokens[5]);
-					ent.lastUpdated = new Date() | 0;
-				} // if
+					ent.lastUpdated = performance.now();
+				}
 
 				// propagate message to all other connected clients
-				propagate(message);
+				propagate(msg);
 
 				break;
-			case commandId.playerDied: // cidDied, cidKilled
+			case cmdId.playerDied: // cidDied, cidKilled
 				// propagate message to all other connected clients
-				propagate(message);
+				propagate(msg);
 
 				break;
 			default: // ...
-				log("Received invalid message from client " + ws._clientId + ": " + message);
+				log(`Received invalid message from client #{ws._clientId}: ${msg}`);
 				break;
-		} // switch
+		}
 	});
 
 	// sync existing clients back to newly connected client
-	for (var cid = 0; cid < clients.length; ++cid) {
+	for (let cid = 0; cid < clients.length; ++cid) {
 		if (clients[cid] !== undefined)
-			ws.send(commandId.remoteConnect + " " + cid);
-	} // for( i )
+			ws.send(`${cmdId.remoteConnect} ${cid}`);
+	}
 
 	// sync existing entities back to newly connected client
-	for (var eid = 0; eid < entities.length; ++eid) {
-		var ent = entities[eid];
+	let now = performance.now();
+	for (let eid = 0; eid < entities.length; ++eid) {
+		let ent = entities[eid];
 		if (ent !== undefined) {
 			//cid, eid, etid, x, y, dx, dy
-			var dt = (new Date() - ent.lastUpdated) / 1000;
-			ws.send(commandId.addEntity + " " + ent.cid + " " + ent.eid + " " + ent.etid + " " + (ent.x + ent.dx * dt).toFixed(3) + " " + (ent.y + ent.dy * dt).toFixed(3) + " " + ent.dx.toFixed(3) + " " + ent.dy.toFixed(3));
-		} // if
-	} // for( i )
-} // onConnection( )
+			let dt = (now - ent.lastUpdated) / 1000;
+			ws.send(`${cmdId.addEntity} ${ent.cid} ${ent.eid} ${ent.etid} ${(ent.x + ent.dx * dt).toFixed(3)} ${(ent.y + ent.dy * dt).toFixed(3)} ${ent.dx.toFixed(3)} ${ent.dy.toFixed(3)}`);
+		}
+	}
+}
 
 wss.on("connection", onConnection);
 
-log("Server started on " + config.host + ":" + config.port);
+log(`Server started on ${config.host}:${config.port}`);
