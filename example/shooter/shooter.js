@@ -10,109 +10,91 @@ const { Event, Timing } = require("util");
 const serverEndpoint = "ws://localhost:1400"
 //const serverEndpoint = "wss://impulsejs.com/shooter/server"
 
-window.NetAdapter = (function()  {
-	// enumerations
-	let cmdId = {
-		localConnect:0,
-		localDisconnect:1,
-		remoteConnect:2,
-		remoteDisconnect:3,
-		measurePing:10,
-		addEntity:20,
-		faceEntity:21,
-		removeEntity:22,
-		moveEntity:23,
-		playerDied:24,
-	};
+const cmdId = {
+	localConnect: 0,
+	localDisconnect: 1,
+	remoteConnect: 2,
+	remoteDisconnect: 3,
+	measurePing: 10,
+	addEntity: 20,
+	faceEntity: 21,
+	removeEntity: 22,
+	moveEntity: 23,
+	playerDied: 24,
+};
 
-	// private methods
-	let log = function(msg) {
-		let d = new Date();
+function log(msg) {
+	let d = new Date();
 
-		let hh = d.getHours().toString().padStart(2, "0");
-		let mm = d.getMinutes().toString().padStart(2, "0");
-		let ss = d.getSeconds().toString().padStart(2, "0");
-		let fff = d.getMilliseconds().toString().padStart(3, "0");
+	let hh = d.getHours().toString().padStart(2, "0");
+	let mm = d.getMinutes().toString().padStart(2, "0");
+	let ss = d.getSeconds().toString().padStart(2, "0");
+	let fff = d.getMilliseconds().toString().padStart(3, "0");
 
-		console.log(`[${hh}:${mm}:${ss}.${fff}] ${msg}`);
-	};
+	console.log(`[${hh}:${mm}:${ss}.${fff}] ${msg}`);
+};
 
-	let NetAdapter = function(endpointAddress) {
-		this._url = endpointAddress;
+class NetAdapter {
+	closed = new Event();
+	errored = new Event();
+	opened = new Event();
+	receivedAddEntity = new Event();
+	receivedFaceEntity = new Event();
+	receivedInvalidMessage = new Event();
+	receivedLocalConnect = new Event();
+	receivedLocalDisconnect = new Event();
+	receivedMoveEntity = new Event();
+	receivedMeasurePing = new Event();
+	receivedPlayerDied = new Event();
+	receivedRemoteConnect = new Event();
+	receivedRemoteDisconnect = new Event();
+	receivedRemoveEntity = new Event();
+	#url;
+	#ws;
 
-		// init event delegates
-		this.closed = new Event();
-		this.errored = new Event();
-		this.opened = new Event();
-		this.receivedAddEntity = new Event();
-		this.receivedFaceEntity = new Event();
-		this.receivedInvalidMessage = new Event();
-		this.receivedLocalConnect = new Event();
-		this.receivedLocalDisconnect = new Event();
-		this.receivedMoveEntity = new Event();
-		this.receivedMeasurePing = new Event();
-		this.receivedPlayerDied = new Event();
-		this.receivedRemoteConnect = new Event();
-		this.receivedRemoteDisconnect = new Event();
-		this.receivedRemoveEntity = new Event();
+	constructor(endpoint) {
+		this.#url = endpoint;
 
 		// init web socket object
 		try {
-			log(`Connecting to ${endpointAddress}...`);
-			this._ws = new WebSocket(endpointAddress);
-			this._ws.onclose = () => this._onClose();
-			this._ws.onerror = e => this._onError(e);
-			this._ws.onmessage = msg => this._onMessage(msg);
-			this._ws.onopen = () => this._onOpen();
+			log(`Connecting to ${endpoint}...`);
+			this.#ws = new WebSocket(endpoint);
+			this.#ws.onclose = () => this.#onClose();
+			this.#ws.onerror = e => this.#onError(e);
+			this.#ws.onmessage = msg => this.#onMessage(msg);
+			this.#ws.onopen = () => this.#onOpen();
 
-			let send = this._ws.send.bind(this._ws);
-			this._ws.send = msg => {
-				log("--> " + endpointAddress + ": " + msg);
+			let send = this.#ws.send.bind(this.#ws);
+			this.#ws.send = msg => {
+				log("--> " + endpoint + ": " + msg);
 				send(msg);
 			};
 		} catch (ex) {
-			log(`Couldn't connect to ${endpointAddress}: ${ex}`);
+			log(`Couldn't connect to ${endpoint}: ${ex}`);
 		}
-	};
+	}
 
-	NetAdapter.prototype.closed = undefined;
-	NetAdapter.prototype.errored = undefined;
-	NetAdapter.prototype.opened = undefined;
-	NetAdapter.prototype.receivedAddEntity = undefined;
-	NetAdapter.prototype.receivedFaceEntity = undefined;
-	NetAdapter.prototype.receivedInvalidMessage = undefined;
-	NetAdapter.prototype.receivedLocalConnect = undefined;
-	NetAdapter.prototype.receivedLocalDisconnect = undefined;
-	NetAdapter.prototype.receivedMoveEntity = undefined;
-	NetAdapter.prototype.receivedMeasurePing = undefined;
-	NetAdapter.prototype.receivedPlayerDied = undefined;
-	NetAdapter.prototype.receivedRemoteConnect = undefined;
-	NetAdapter.prototype.receivedRemoteDisconnect = undefined;
-	NetAdapter.prototype.receivedRemoveEntity = undefined;
-	NetAdapter.prototype._url = undefined;
-	NetAdapter.prototype._ws = undefined;
-
-	NetAdapter.prototype.close = function() {
-		if (this._ws === undefined)
+	close() {
+		if (this.#ws === undefined)
 			return;
 
-		this._ws.close();
-		this._ws = undefined;
-	};
+		this.#ws.close();
+		this.#ws = undefined;
+	}
 
-	NetAdapter.prototype._onClose = function() {
-		log(`Closed connection to ${this._url}`);
+	#onClose() {
+		log(`Closed connection to ${this.#url}`);
 		this.closed.dispatch();
-	};
+	}
 
-	NetAdapter.prototype._onError = function(e) {
-		log(`WebSocket error occurred: ${this._url}`);
+	#onError(e) {
+		log(`WebSocket error occurred: ${this.#url}`);
 		console.log(e.data);
 		this.errored.dispatch(e.data);
-	};
+	}
 
-	NetAdapter.prototype._onMessage = function(msg) {
-		log(`<-- ${this._url}: ${msg.data}`);
+	#onMessage(msg) {
+		log(`<-- ${this.#url}: ${msg.data}`);
 		let tokens = msg.data.split(" ");
 		let cmd = parseInt(tokens[0]);
 		switch(cmd) {
@@ -150,47 +132,45 @@ window.NetAdapter = (function()  {
 				this.receivedInvalidMessage.dispatch(msg.data);
 				break;
 		}
-	};
+	}
 
-	NetAdapter.prototype._onOpen = function() {
-		log(`Connected to ${this._url}`);
+	#onOpen() {
+		log(`Connected to ${this.#url}`);
 		this.opened.dispatch();
-	};
+	}
 
-	NetAdapter.prototype.sendLocalConnect = function() {
-		this._ws.send(cmdId.localConnect);
-	};
+	sendLocalConnect() {
+		this.#ws.send(cmdId.localConnect);
+	}
 
-	NetAdapter.prototype.sendLocalDisconnect = function() {
-		this._ws.send(cmdId.localDisconnect);
-	};
+	sendLocalDisconnect() {
+		this.#ws.send(cmdId.localDisconnect);
+	}
 
-	NetAdapter.prototype.sendAddEntity = function(cid, eid, etid, x, y, dx, dy) {
-		this._ws.send(`${cmdId.addEntity} ${cid} ${eid} ${etid} ${x.toFixed(3)} ${y.toFixed(3)} ${dx.toFixed(3)} ${dy.toFixed(3)}`);
-	};
+	sendAddEntity(cid, eid, etid, x, y, dx, dy) {
+		this.#ws.send(`${cmdId.addEntity} ${cid} ${eid} ${etid} ${x.toFixed(3)} ${y.toFixed(3)} ${dx.toFixed(3)} ${dy.toFixed(3)}`);
+	}
 
-	NetAdapter.prototype.sendFaceEntity = function(eid, faceRads) {
-		this._ws.send(`${cmdId.faceEntity} ${eid} ${faceRads.toFixed(3)}`);
-	};
+	sendFaceEntity(eid, faceRads) {
+		this.#ws.send(`${cmdId.faceEntity} ${eid} ${faceRads.toFixed(3)}`);
+	}
 
-	NetAdapter.prototype.sendRemoveEntity = function(eid) {
-		this._ws.send(`${cmdId.removeEntity} ${eid}`);
-	};
+	sendRemoveEntity(eid) {
+		this.#ws.send(`${cmdId.removeEntity} ${eid}`);
+	}
 
-	NetAdapter.prototype.sendMoveEntity = function(eid, x, y, dx, dy) {
-		this._ws.send(`${cmdId.moveEntity} ${eid} ${x.toFixed(3)} ${y.toFixed(3)} ${dx.toFixed(3)} ${dy.toFixed(3)}`);
-	};
+	sendMoveEntity(eid, x, y, dx, dy) {
+		this.#ws.send(`${cmdId.moveEntity} ${eid} ${x.toFixed(3)} ${y.toFixed(3)} ${dx.toFixed(3)} ${dy.toFixed(3)}`);
+	}
 
-	NetAdapter.prototype.sendMeasurePing = function() {
-		this._ws.send(cmdId.measurePing);
-	};
+	sendMeasurePing() {
+		this.#ws.send(cmdId.measurePing);
+	}
 
-	NetAdapter.prototype.sendPlayerDied = function(cidDied, cidKilled) {
-		this._ws.send(`${cmdId.playerDied} ${cidDied} ${cidKilled}`);
-	};
-
-	return NetAdapter;
-})();
+	sendPlayerDied(cidDied, cidKilled) {
+		this.#ws.send(`${cmdId.playerDied} ${cidDied} ${cidKilled}`);
+	}
+}
 
 class Metric {
 	#count = 0;
@@ -219,84 +199,76 @@ class Metric {
 	}
 }
 
-window.Shooter = (function() {
-	// enumerations
-	let entityFlag = {
-		none:0,
-		player:1,
-		collidable:2,
-		projectile:4,
-		wall:8,
-	};
-	let entityType = {
-		player:1,
-		projectile:2,
-	};
+const entityFlag = {
+	none: 0,
+	player: 1,
+	collidable: 2,
+	projectile: 4,
+	wall: 8,
+};
 
-	// private functions
-	let rand = function(min = 0, max = 1) {
-		return min + Math.random() * (max - min);
-	};
+const entityType = {
+	player: 1,
+	projectile: 2,
+};
 
-	let Shooter = function(canvas) {
-		this.connected = new Event();
-		this.deathsChanged = new Event();
-		this.fpsChanged = new Event();
-		this.healthChanged = new Event();
-		this.killsChanged = new Event();
-		this.pingChanged = new Event();
+function rand(min = 0, max = 1) {
+	return min + Math.random() * (max - min);
+}
 
+class Shooter {
+	#camera;
+	#clientId = -1;
+	connected = new Event();
+	#deaths = 0;
+	deathsChanged = new Event();
+	#eid = 1;
+	fpsChanged = new Event();
+	#fpsMetric = new Metric();
+	#health = 100;
+	healthChanged = new Event();
+	#kills = 0;
+	killsChanged = new Event();
+	#lastDrawTime = 0;
+	#lastGameTime = 0;
+	#map;
+	#mouse;
+	#netAdapter;
+	#paused = false;
+	pingChanged = new Event();
+	#player;
+	#scene;
+	#sceneGraph;
+
+	constructor(canvas) {
 		// map
-		this._map = this.loadMap();
+		this.#map = this.#loadMap();
 
 		// scene
 		let sg = new LinearSg();
-		for (let grass of this._map.entities.grass) {
+		for (let grass of this.#map.entities.grass) {
 			sg.addEntity(grass);
 		}
-		sg.addEntity(this._map.entities.dirt);
-		for (let bush of this._map.entities.bushes) {
+		sg.addEntity(this.#map.entities.dirt);
+		for (let bush of this.#map.entities.bushes) {
 			sg.addEntity(bush);
 		}
-		for (let wall of this._map.entities.walls) {
+		for (let wall of this.#map.entities.walls) {
 			sg.addEntity(wall);
 		}
 
-		this._scene = new SceneTopDown(new Camera(canvas, 0, 0, 1920, 1080, 32), sg);
-		this._camera = this._scene.getCamera();
-		this._mouse = this._scene.getMouse();
-		this._sceneGraph = this._scene.getSceneGraph();
+		this.#scene = new SceneTopDown(new Camera(canvas, 0, 0, 1920, 1080, 32), sg);
+		this.#camera = this.#scene.getCamera();
+		this.#mouse = this.#scene.getMouse();
+		this.#sceneGraph = this.#scene.getSceneGraph();
 	};
 
-	Shooter.prototype.connected = undefined;
-	Shooter.prototype.deathsChanged = undefined;
-	Shooter.prototype.fpsChanged = undefined;
-	Shooter.prototype.healthChanged = undefined;
-	Shooter.prototype.killsChanged = undefined;
-	Shooter.prototype.pingChanged = undefined;
-	Shooter.prototype._camera = undefined;
-	Shooter.prototype._clientId = -1;
-	Shooter.prototype._deaths = 0;
-	Shooter.prototype._eid = 1;
-	Shooter.prototype._fpsMetric = new Metric();
-	Shooter.prototype._health = 100;
-	Shooter.prototype._kills = 0;
-	Shooter.prototype._lastDrawTime = 0;
-	Shooter.prototype._lastGameTime = 0;
-	Shooter.prototype._map = undefined;
-	Shooter.prototype._mouse = undefined;
-	Shooter.prototype._netAdapter = undefined;
-	Shooter.prototype._paused = false;
-	Shooter.prototype._player = undefined;
-	Shooter.prototype._scene = undefined;
-	Shooter.prototype._sceneGraph = undefined;
-
-	Shooter.prototype._createPlayer = function(clientId, eid, x, y, dx, dy) {
+	_createPlayer(clientId, eid, x, y, dx, dy) {
 		let models = [
-			this._map.models.playerBlue,
-			this._map.models.playerBrown,
-			this._map.models.playerGreen,
-			this._map.models.playerPurple
+			this.#map.models.playerBlue,
+			this.#map.models.playerBrown,
+			this.#map.models.playerGreen,
+			this.#map.models.playerPurple
 		];
 
 		let player = new Entity(models[clientId % 4], new Vector(x, y), new Circle(0, 0, 70), undefined, entityFlag.player | entityFlag.collidable);
@@ -304,17 +276,17 @@ window.Shooter = (function() {
 		player.eid = eid;
 		player.dx = dx;
 		player.dy = dy;
-		this._sceneGraph.addEntity(player);
+		this.#sceneGraph.addEntity(player);
 
 		return player;
-	};
+	}
 
-	Shooter.prototype._createProjectile = function(cid, eid, x, y, dx, dy) {
+	_createProjectile(cid, eid, x, y, dx, dy) {
 		let models = [
-			this._map.models.shotBlue,
-			this._map.models.shotRed,
-			this._map.models.shotGreen,
-			this._map.models.shotPurple
+			this.#map.models.shotBlue,
+			this.#map.models.shotRed,
+			this.#map.models.shotGreen,
+			this.#map.models.shotPurple
 		];
 
 		let shot = new Entity(models[cid % 4], new Vector(x, y), new Circle(0, 0, 25), undefined, entityFlag.projectile);
@@ -324,17 +296,17 @@ window.Shooter = (function() {
 		shot.dx = dx;
 		shot.dy = dy;
 		shot.bounce = 0;
-		this._sceneGraph.addEntity(shot);
+		this.#sceneGraph.addEntity(shot);
 
 		return shot;
-	};
+	}
 
-	Shooter.prototype.connect = function() {
+	connect() {
 		let pingStarted = 0;
 		let pingInterval;
 
 		let getEntityById = (id, flags) => {
-			for (let ent of this._sceneGraph.query(flags)) {
+			for (let ent of this.#sceneGraph.query(flags)) {
 				if (ent.eid == id)
 					return ent;
 			}
@@ -342,22 +314,22 @@ window.Shooter = (function() {
 			return undefined;
 		};
 
-		this._netAdapter = new NetAdapter(serverEndpoint);
+		this.#netAdapter = new NetAdapter(serverEndpoint);
 
-		this._netAdapter.closed.register(() => {
+		this.#netAdapter.closed.register(() => {
 			if (pingInterval !== undefined)
 				clearInterval(pingInterval);
 		});
 
-		this._netAdapter.opened.register(() => {
-			this._netAdapter.sendLocalConnect();
+		this.#netAdapter.opened.register(() => {
+			this.#netAdapter.sendLocalConnect();
 			pingInterval = setInterval(() => {
 				pingStarted = Timing.now();
-				this._netAdapter.sendMeasurePing();
+				this.#netAdapter.sendMeasurePing();
 			}, 1500);
 		});
 
-		this._netAdapter.receivedAddEntity.register((cid, eid, etid, x, y, dx, dy) => {
+		this.#netAdapter.receivedAddEntity.register((cid, eid, etid, x, y, dx, dy) => {
 			switch (etid) {
 				case entityType.player:
 					this._createPlayer(cid, eid, x, y, dx, dy);
@@ -371,33 +343,33 @@ window.Shooter = (function() {
 			}
 		});
 
-		this._netAdapter.receivedFaceEntity.register((eid, faceRads) => {
+		this.#netAdapter.receivedFaceEntity.register((eid, faceRads) => {
 			getEntityById(eid)
 				.setRotation(faceRads);
 		});
 
-		this._netAdapter.receivedInvalidMessage.register(data => {
+		this.#netAdapter.receivedInvalidMessage.register(data => {
 			console.log(`Received invalid message from server: ${data}`);
 		});
 
-		this._netAdapter.receivedLocalConnect.register(clientId => {
-			this._clientId = clientId;
+		this.#netAdapter.receivedLocalConnect.register(clientId => {
+			this.#clientId = clientId;
 
 			let eid = clientId * 100000;
 			let x = rand(-1184, 1184);
 			let y = rand(-1824, 1824);
 
-			this._player = this._createPlayer(clientId, eid, x, y, 0, 0);
-			this._netAdapter.sendAddEntity(clientId, eid, entityType.player, x, y, 0, 0);
+			this.#player = this._createPlayer(clientId, eid, x, y, 0, 0);
+			this.#netAdapter.sendAddEntity(clientId, eid, entityType.player, x, y, 0, 0);
 
 			this.connected.dispatch(this);
 		});
 
-		this._netAdapter.receivedMeasurePing.register(() => {
+		this.#netAdapter.receivedMeasurePing.register(() => {
 			this.pingChanged.dispatch(Timing.now() - pingStarted);
 		});
 
-		this._netAdapter.receivedMoveEntity.register((eid, x, y, dx, dy) => {
+		this.#netAdapter.receivedMoveEntity.register((eid, x, y, dx, dy) => {
 			let ent = getEntityById(eid);
 			if (ent === undefined) {
 				console.warn(`Entity id ${eid} already removed`);
@@ -409,118 +381,118 @@ window.Shooter = (function() {
 			ent.dy = dy;
 		});
 
-		this._netAdapter.receivedPlayerDied.register((cidDied, cidKilled) => {
-			if (cidKilled !== this._clientId)
+		this.#netAdapter.receivedPlayerDied.register((cidDied, cidKilled) => {
+			if (cidKilled !== this.#clientId)
 				return;
 
-			this._kills++;
-			this.killsChanged.dispatch(this._kills);
+			this.#kills++;
+			this.killsChanged.dispatch(this.#kills);
 		});
 
-		this._netAdapter.receivedRemoteConnect.register(clientId => { });
+		this.#netAdapter.receivedRemoteConnect.register(clientId => { });
 
-		this._netAdapter.receivedRemoteDisconnect.register(clientId => { });
+		this.#netAdapter.receivedRemoteDisconnect.register(clientId => { });
 
-		this._netAdapter.receivedRemoveEntity.register(eid => {
-			this._sceneGraph.removeEntity(getEntityById(eid));
+		this.#netAdapter.receivedRemoveEntity.register(eid => {
+			this.#sceneGraph.removeEntity(getEntityById(eid));
 		});
 
-		window.addEventListener("beforeunload", e => this._netAdapter.close());
-	};
+		window.addEventListener("beforeunload", e => this.#netAdapter.close());
+	}
 
-	Shooter.prototype._draw = function() {
+	_draw() {
 		// calculate time differential
 		let time = Timing.now();
-		let dtMs = time - this._lastDrawTime;
-		this._lastDrawTime = time;
+		let dtMs = time - this.#lastDrawTime;
+		this.#lastDrawTime = time;
 
 		// draw scene
-		this._scene.blank("#000");
-		this._scene.advance(dtMs);
+		this.#scene.blank("#000");
+		this.#scene.advance(dtMs);
 
 		// update fps metrics
-		this._fpsMetric.sample(1000 / dtMs);
-	};
+		this.#fpsMetric.sample(1000 / dtMs);
+	}
 
-	Shooter.prototype._fire = function() {
-		let eid = this._clientId * 100000 + (this._eid++);
-		let p = this._player;
+	_fire() {
+		let eid = this.#clientId * 100000 + (this.#eid++);
+		let p = this.#player;
 		let dir = new Vector(1, 0).rotate(p.getRotation());
 		let pos = dir.clone().scale(70).add(p.getPosition());
 
-		this._createProjectile(this._clientId, eid, pos.x, pos.y, dir.x, dir.y);
-		this._netAdapter.sendAddEntity(this._clientId, eid, entityType.projectile, pos.x, pos.y, dir.x, dir.y);
+		this._createProjectile(this.#clientId, eid, pos.x, pos.y, dir.x, dir.y);
+		this.#netAdapter.sendAddEntity(this.#clientId, eid, entityType.projectile, pos.x, pos.y, dir.x, dir.y);
 
 		new Audio("assets/audio/laser.ogg").play();
-	};
+	}
 
-	Shooter.prototype._gameLoop = function() {
+	_gameLoop() {
 		// calculate time differential
 		let time = Timing.now();
-		let dt = (time - this._lastGameTime) / 1000;
-		this._lastGameTime = time;
+		let dt = (time - this.#lastGameTime) / 1000;
+		this.#lastGameTime = time;
 
-		if (this._paused)
+		if (this.#paused)
 			return;
 
 		// handle players
-		for (let player of this._sceneGraph.query(entityFlag.player)) {
+		for (let player of this.#sceneGraph.query(entityFlag.player)) {
 			// move play entities
 			let direction = new Vector(player.dx, player.dy);
 			player.translate(direction.normalize().scale(900 * dt));
 
 			// collision detection and response
-			player.translate(this._sceneGraph.getMtv(player, entityFlag.collidable));
+			player.translate(this.#sceneGraph.getMtv(player, entityFlag.collidable));
 		}
 
 		// handle shots
-		for (let shot of this._sceneGraph.query(entityFlag.projectile)) {
+		for (let shot of this.#sceneGraph.query(entityFlag.projectile)) {
 			// move play entities
 			let direction = new Vector(shot.dx, shot.dy);
 			shot.translate(direction.normalize().scale(1400 * dt));
 
 			// shot-vs-player collision detection and response
-			if (shot.cid !== this._clientId) {
-				if (Intersect.shapeVsShape(shot.getCollidable().getCenter(), this._player.getCollidable())) {
-					this._health -= 7;
-					if (this._health < 0)
-						this._health = 0;
+			if (shot.cid !== this.#clientId) {
+				if (Intersect.shapeVsShape(shot.getCollidable().getCenter(), this.#player.getCollidable())) {
+					this.#health -= 7;
+					if (this.#health < 0)
+						this.#health = 0;
 
-					this._sceneGraph.removeEntity(shot);
-					this._netAdapter.sendRemoveEntity(shot.eid);
+					this.#sceneGraph.removeEntity(shot);
+					this.#netAdapter.sendRemoveEntity(shot.eid);
 
 					// respawn?
-					if (this._health === 0) {
-						this._health = 100;
-						let p = this._player;
+					if (this.#health === 0) {
+						this.#health = 100;
+						let p = this.#player;
 						let x = rand(-1184, 1184);
 						let y = rand(-1824, 1824);
 						p.setPosition(x, y);
 
 						// increment death counter
-						this._deaths++;
-						this.deathsChanged.dispatch(this._deaths);
+						this.#deaths++;
+						this.deathsChanged.dispatch(this.#deaths);
 
 						// send network update commands
-						this._netAdapter.sendMoveEntity(p.eid, x, y, p.dx, p.dy);
-						this._netAdapter.sendPlayerDied(this._clientId, shot.cid);
+						this.#netAdapter.sendMoveEntity(p.eid, x, y, p.dx, p.dy);
+						this.#netAdapter.sendPlayerDied(this.#clientId, shot.cid);
 					}
 
-					this.healthChanged.dispatch(this._health, 100);
+					this.healthChanged.dispatch(this.#health, 100);
 
 					continue;
 				}
 			}
 
 			// shot-vs-wall collision detection and response
-			let intersects = this._sceneGraph.queryCenterIn(shot, entityFlag.wall);
+			let intersects = this.#sceneGraph.queryCenterIn(shot, entityFlag.wall);
 			if (intersects.length === 0)
 				continue;
 
 			if (shot.bounce === 3) {
-				this._sceneGraph.removeEntity(shot);
-				if (shot.cid === this._clientId)
-					this._netAdapter.sendRemoveEntity(shot.eid);
+				this.#sceneGraph.removeEntity(shot);
+				if (shot.cid === this.#clientId)
+					this.#netAdapter.sendRemoveEntity(shot.eid);
 
 				continue;
 			}
@@ -529,7 +501,7 @@ window.Shooter = (function() {
 			shot.bounce++;
 
 			// calculate MTV, and translate shot out of collision
-			let mtv = this._sceneGraph.getMtv(shot, entityFlag.wall);
+			let mtv = this.#sceneGraph.getMtv(shot, entityFlag.wall);
 			shot.translate(mtv);
 
 			// split direction into perpendicular and parallel vectors for bounce response
@@ -540,20 +512,20 @@ window.Shooter = (function() {
 			shot.dx = dir.x;
 			shot.dy = dir.y;
 
-			if (shot.cid == this._clientId) {
+			if (shot.cid == this.#clientId) {
 				let pos = shot.getPosition();
-				this._netAdapter.sendMoveEntity(shot.eid, pos.x, pos.y, dir.x, dir.y);
+				this.#netAdapter.sendMoveEntity(shot.eid, pos.x, pos.y, dir.x, dir.y);
 			}
 		}
 
 		// update camera position
-		this._camera.setPosition(this._player);
+		this.#camera.setPosition(this.#player);
 
 		// update player orientation
-		this._player.face(this._mouse.getPosition());
-	};
+		this.#player.face(this.#mouse.getPosition());
+	}
 
-	Shooter.prototype.loadMap = function() {
+	#loadMap() {
 		// models
 		let models = {
 			bush: new Model(
@@ -722,12 +694,12 @@ window.Shooter = (function() {
 
 		// return completed map object
 		return { entities, models };
-	};
+	}
 
-	Shooter.prototype.run = function() {
+	run() {
 		// init keyboard bindings
 		let keyChanged = () => {
-			let p = this._player;
+			let p = this.#player;
 			if (p === undefined)
 				return;
 
@@ -735,7 +707,7 @@ window.Shooter = (function() {
 			p.dy = (key.isPressed("s") ? -1 : 0) + (key.isPressed("w") ? 1 : 0);
 
 			let pos = p.getPosition();
-			this._netAdapter.sendMoveEntity(p.eid, pos.x, pos.y, p.dx, p.dy);
+			this.#netAdapter.sendMoveEntity(p.eid, pos.x, pos.y, p.dx, p.dy);
 		};
 
 		let keyFilter = new Set(["w", "a", "s", "d"]);
@@ -757,39 +729,39 @@ window.Shooter = (function() {
 
 		// init limited key bindings
 		setInterval(() => {
-			if (this._mouse.getButtons().left)
+			if (this.#mouse.getButtons().left)
 				this._fire();
 		}, 1000 / 10);
 
 		// init rotation bcast
 		let lastFace = 0;
 		setInterval(() => {
-			if (this._player === undefined)
+			if (this.#player === undefined)
 				return;
 
-			let face = this._player.getRotation();
+			let face = this.#player.getRotation();
 			// only push update if thousands of a degree changed
 			if ((face * 100 | 0) === (lastFace * 100 | 0))
 				return;
 
-			this._netAdapter.sendFaceEntity(this._player.eid, this._player.getRotation())
+			this.#netAdapter.sendFaceEntity(this.#player.eid, this.#player.getRotation())
 			lastFace = face;
 		}, 1000 / 30);
 
 		// init regen timer (1hp/s)
 		setInterval(() => {
-			if (this._health < 100) {
-				this._health += .04;
-				this.healthChanged.dispatch(this._health, 100);
+			if (this.#health < 100) {
+				this.#health += .04;
+				this.healthChanged.dispatch(this.#health, 100);
 			}
 		}, 40);
 
 		// init game loop
-		this._lastGameTime = Timing.now();
+		this.#lastGameTime = Timing.now();
 		setInterval(() => this._gameLoop(), 10);
 
 		// init draw loop
-		this._lastDrawTime = Timing.now();
+		this.#lastDrawTime = Timing.now();
 		let callback = () => {
 			this._draw();
 			requestAnimationFrame(callback);
@@ -798,16 +770,16 @@ window.Shooter = (function() {
 
 		// init fps handling
 		setInterval(() => {
-			this.fpsChanged.dispatch(this._fpsMetric);
-			this._fpsMetric.reset();
+			this.fpsChanged.dispatch(this.#fpsMetric);
+			this.#fpsMetric.reset();
 		}, 1000);
-	};
+	}
 
-	Shooter.prototype.setPixelRatio = function(ratio) {
-		this._camera.pixelRatio = ratio;
-	};
+	setPixelRatio(ratio) {
+		this.#camera.pixelRatio = ratio;
+	}
+};
 
-	return Shooter;
-})();
+window.Shooter = Shooter;
 
 })();
