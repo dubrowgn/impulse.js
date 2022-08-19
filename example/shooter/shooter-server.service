@@ -1,0 +1,19 @@
+[Unit]
+Description=Shooter demo server service
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=node /srv/shooter_server.js
+Restart=always
+RestartSec=4
+
+DynamicUser=yes
+ProtectHome=true
+BindReadOnlyPaths=/web/impulsejs/node/shooter-demo:/srv
+CapabilityBoundingSet=
+SystemCallFilter=~@chown @clock @cpu-emulation @debug @module @mount @obsolete @privileged @reboot @resources @swap
+RestrictNamespaces=true
+
+[Install]
+WantedBy=network-online.target
